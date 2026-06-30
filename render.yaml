@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: connect2edtech
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: cd backend && npm start
+    rootDir: .
+    envVars:
+      - key: NODE_VERSION
+        value: 20

@@ -1,0 +1,64 @@
+# ==========================================
+# Connect2Future Edtech - Master Gitignore
+# ==========================================
+
+# --- Environment Secrets & Credentials ---
+# Never commit raw data streams, API keys, or database links
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+*.env
+
+# --- IDE & Local Workspace Settings ---
+# Prevents sharing personal editor layouts and terminal paths
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# --- Large Media & Documentation Assets ---
+# Keeps UI screenshots and massive raw binary assets out of deployment pipelines
+/assets/*.pngux
+/assets/*.jpgux
+**/assets/ChatGPT Image*
+*.zip
+*.tar.gz
+*.rar
+
+# --- Dependency Directories ---
+# Third-party packages should be restored via package managers
+node_modules/
+jspm_packages/
+bin/
+obj/
+packages/
+
+# --- Build Outputs & Logs ---
+# Compiled code, system reports, and logs
+# Note: Build outputs are generated during CI/CD, do not commit
+# Frontend dist will be copied to backend/dist during build for production
+/frontend/dist/
+/backend/dist/
+/dist/
+/build/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- System & OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Temporary Test Files ---
+test-mongo.mjs
+_check_*.txt
+_fix_*.txt
