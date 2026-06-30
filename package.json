@@ -6,7 +6,7 @@
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "npm start",
     "frontend": "npm run dev",
-    "build": "npm run build --workspace=frontend && robocopy frontend\\dist backend\\dist /E /NFL /NDL",
+   "build": "npm run build --workspace=frontend",
     "start": "npm run backend"
   },
   "workspaces": ["backend", "frontend"]
