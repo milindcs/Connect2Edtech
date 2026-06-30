@@ -44,7 +44,6 @@ packages/
 # Compiled code, system reports, and logs
 # Note: Build outputs are generated during CI/CD, do not commit
 # Frontend dist will be copied to backend/dist during build for production
-/frontend/dist/
 /backend/dist/
 /dist/
 /build/

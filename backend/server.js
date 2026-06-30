@@ -1,15 +1,9 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
+dotenv.config();
 
-dotenv.config({ path: path.join(process.cwd(), '.env') });
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -311,35 +305,32 @@ app.post('/send-certificate', async (req, res) => {
   }
 });
 
-// Serve frontend - check multiple paths for Render deployment compatibility
-const distPaths = [
-  path.join(__dirname, 'dist'),
-  path.join(__dirname, '..', 'frontend', 'dist'),
-  path.join(__dirname, '..', '..', 'frontend', 'dist'),
-];
-const distDir = distPaths.find(p => fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) || distPaths[1];
-const publicAssetsDir = path.join(__dirname, '..', 'frontend', 'assets');
-const publicDir = path.join(__dirname, '..', 'frontend', 'public');
-
-app.use('/assets', express.static(publicAssetsDir));
-app.use(express.static(distDir));
-app.use(express.static(publicDir));
-
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(distDir, 'index.html'), (err) => { if (err) next(err) });
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    application: 'Connect2Edtech Backend',
+    status: 'Running',
+    version: '1.0.0'
+  });
 });
 
-const PORT = process.env.PORT || 5000;
+// 404 handler for unknown API routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found'
+  });
+});
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running: http://127.0.0.1:${PORT}`);
-  connectMongo().then(() => console.log('[MongoDB] connected')).catch((err) => console.log('[MongoDB] connection failed:', err.message));
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    app.listen(PORT + 1, () => console.log(`Server running: http://127.0.0.1:${PORT + 1}`));
-  } else {
-    console.error('Server error:', err);
-    process.exit(1);
-  }
+const PORT = process.env.PORT || 10000;
+
+// Connect to MongoDB once
+connectMongo().catch((err) => {
+  console.error('[MongoDB]', err.message);
+});
+
+// Start Express server
+app.listen(PORT, () => {
+  console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
 });
