@@ -212,7 +212,28 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+{/* ABOUT PREVIEW */}
+      <section id="about" className="section">
+        <div className="container">
+          <h2 className="section-title">About Connect2Edtech</h2>
 
+          <div className="about-images-row">
+            <img src="/assets/Screenshot 2026-06-16 130637.png" alt="About image 1" />
+            <img src="/assets/Screenshot 2026-06-16 131016.png" alt="About image 2" />
+            <img src="/assets/IMG-20260616-WA0037.jpg" alt="About image 3" />
+            <img src="/assets/IMG-20260616-WA0038.jpg" alt="About image 4" />
+          </div>
+
+          <p className="section-description">
+            Connect2Edtech is a comprehensive learning platform bridging the gap between academic education and industry requirements.
+            We provide practical training, certifications, mentorship, internships, and career guidance to help students become job-ready professionals.
+          </p>
+
+          <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
+            <Link to="/about" className="btn primary">Learn More About Us</Link>
+          </div>
+        </div>
+      </section>
       {/* LEADERSHIP */}
       <section className="section">
         <div className="container">
@@ -386,28 +407,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ABOUT PREVIEW */}
-      <section id="about" className="section">
-        <div className="container">
-          <h2 className="section-title">About Connect2Edtech</h2>
-
-          <div className="about-images-row">
-            <img src="/assets/Screenshot 2026-06-16 130637.png" alt="About image 1" />
-            <img src="/assets/Screenshot 2026-06-16 131016.png" alt="About image 2" />
-            <img src="/assets/IMG-20260616-WA0037.jpg" alt="About image 3" />
-            <img src="/assets/IMG-20260616-WA0038.jpg" alt="About image 4" />
-          </div>
-
-          <p className="section-description">
-            Connect2Edtech is a comprehensive learning platform bridging the gap between academic education and industry requirements.
-            We provide practical training, certifications, mentorship, internships, and career guidance to help students become job-ready professionals.
-          </p>
-
-          <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
-            <Link to="/about" className="btn primary">Learn More About Us</Link>
-          </div>
-        </div>
-      </section>
+      
 
 
       {/* CONTACT PREVIEW */}
