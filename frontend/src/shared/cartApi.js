@@ -1,4 +1,5 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || 'https://connect2edtech.onrender.com'
+export const API_BASE =
+  import.meta.env.VITE_API_URL || "https://connect2edtech.onrender.com"
 
 function getSessionId() {
   // best-effort guest cart id; no local persistence required for cart items

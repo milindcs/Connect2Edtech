@@ -7,13 +7,15 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: [
-    "https://lucky-bublanina-32962b.netlify.app",
-    "http://localhost:5173"
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "https://connect2edtech-19.onrender.com",
+      "http://localhost:5173"
+    ],
+    credentials: true,
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
