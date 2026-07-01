@@ -29,6 +29,23 @@ export default function HomePage() {
   }, [])
 
   const featuredCourses = useMemo(() => Object.values(coursesData).slice(0, 6), [])
+  const pageImages = [
+    { src: '/assets/Screenshot 2026-06-16 130637.png', alt: 'About preview image 1', title: 'About Gallery', link: '/about' },
+    { src: '/assets/Screenshot 2026-06-16 131016.png', alt: 'About preview image 2', title: 'About Gallery', link: '/about' },
+    { src: '/assets/IMG-20260616-WA0037.jpg', alt: 'About preview image 3', title: 'About Gallery', link: '/about' },
+    { src: '/assets/IMG-20260616-WA0038.jpg', alt: 'About preview image 4', title: 'About Gallery', link: '/about' },
+    { src: '/assets/IMG-20260628-WA0001.jpg', alt: 'CEO image', title: 'Leadership', link: '/about' },
+    { src: '/assets/IMG-20260616-WA0051.jpg', alt: 'MD image', title: 'Leadership', link: '/about' },
+    { src: '/assets/Gemini_Generated_Image_u91l8ru91l8ru91l.png', alt: 'Mission preview', title: 'Mission & Vision', link: '/about' },
+    { src: '/assets/Gemini_Generated_Image_6bqcq36bqcq36bqc (1).png', alt: 'Vision preview', title: 'Mission & Vision', link: '/about' },
+    ...featuredCourses.map((course) => ({
+      src: course.image || '/edtech.png',
+      alt: course.title,
+      title: course.title,
+      link: `/course/${course.key}`,
+    })),
+    { src: '/edtech.png', alt: 'Cart and checkout preview', title: 'Cart & Checkout', link: '/cart' },
+  ]
 
   return (
     <>
@@ -46,6 +63,106 @@ export default function HomePage() {
             <Link to="/contact" className="btn secondary">Contact Us</Link>
           </div>
           <img className="hero-image" src="/assets/untitled design.jpg" alt="Hero Design" />
+        </div>
+      </section>
+
+      {/* QUICK ACCESS */}
+      <section className="section">
+        <div className="container">
+          <h2 className="section-title">Quick Access</h2>
+          <p className="section-subtitle">Jump directly to any Connect2Edtech page from the homepage.</p>
+
+          <div className="hub-grid">
+            <Link to="/about" className="hub-card">
+              <span className="hub-icon">ℹ️</span>
+              <div className="hub-content">
+                <h3>About Us</h3>
+                <p>Learn about our vision, team, and training philosophy.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/courses" className="hub-card">
+              <span className="hub-icon">💻</span>
+              <div className="hub-content">
+                <h3>Courses</h3>
+                <p>Browse all course offerings and full program details.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/enrollment" className="hub-card">
+              <span className="hub-icon">📝</span>
+              <div className="hub-content">
+                <h3>Enrollment</h3>
+                <p>Complete enrollment steps to reserve your seat in a course.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/cart" className="hub-card">
+              <span className="hub-icon">🛒</span>
+              <div className="hub-content">
+                <h3>Cart</h3>
+                <p>Review selected courses and prepare for checkout.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/checkout" className="hub-card">
+              <span className="hub-icon">💳</span>
+              <div className="hub-content">
+                <h3>Checkout</h3>
+                <p>Complete your payment and secure your enrollment.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/contact" className="hub-card">
+              <span className="hub-icon">📞</span>
+              <div className="hub-content">
+                <h3>Contact</h3>
+                <p>Get in touch with our team for questions and support.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/certifications" className="hub-card">
+              <span className="hub-icon">✅</span>
+              <div className="hub-content">
+                <h3>Certifications</h3>
+                <p>Find certification programs and verification options.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/verify-certificate" className="hub-card">
+              <span className="hub-icon">🔍</span>
+              <div className="hub-content">
+                <h3>Verify Certificate</h3>
+                <p>Check the authenticity of issued credential documents.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/receive-certificate" className="hub-card">
+              <span className="hub-icon">📄</span>
+              <div className="hub-content">
+                <h3>Receive Certificate</h3>
+                <p>Request and download your completion or internship certificates.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/signup" className="hub-card">
+              <span className="hub-icon">🧑‍🎓</span>
+              <div className="hub-content">
+                <h3>Sign Up</h3>
+                <p>Create your student account and access our platform.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -131,6 +248,30 @@ export default function HomePage() {
               <h3>Karthik Gowda J.A.</h3>
               <h4>Managing Director (MD), Connect2Future</h4>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PAGE IMAGE GALLERY */}
+      <section className="section bg-light">
+        <div className="container">
+          <h2 className="section-title">Explore More Page Visuals</h2>
+          <p className="section-subtitle">A quick homepage gallery showing page images from across the site.</p>
+
+          <div className="image-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 24 }}>
+            {pageImages.map((img, idx) => (
+              <Link key={idx} to={img.link} className="gallery-card" style={{ display: 'block', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', background: '#ffffff', textDecoration: 'none' }}>
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
+                />
+                <div style={{ padding: '16px' }}>
+                  <h3 style={{ margin: 0, fontSize: '1rem', color: '#111' }}>{img.title}</h3>
+                  <p style={{ margin: '8px 0 0', color: '#555', fontSize: '0.9rem' }}>{img.alt}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
