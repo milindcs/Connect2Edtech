@@ -29,31 +29,6 @@ export default function HomePage() {
   }, [])
 
   const featuredCourses = useMemo(() => Object.values(coursesData).slice(0, 6), [])
-  const pageImages = [
-    // About
-    { src: '/assets/Screenshot 2026-06-16 130637.png', alt: 'About preview image 1', title: 'About Gallery', link: '/about' },
-    { src: '/assets/Screenshot 2026-06-16 131016.png', alt: 'About preview image 2', title: 'About Gallery', link: '/about' },
-    { src: '/assets/IMG-20260616-WA0037.jpg', alt: 'About preview image 3', title: 'About Gallery', link: '/about' },
-    { src: '/assets/IMG-20260616-WA0038.jpg', alt: 'About preview image 4', title: 'About Gallery', link: '/about' },
-
-    // Leadership / Mission & Vision
-    { src: '/assets/IMG-20260628-WA0001.jpg', alt: 'CEO image', title: 'Leadership', link: '/about' },
-    { src: '/assets/IMG-20260616-WA0051.jpg', alt: 'MD image', title: 'Leadership', link: '/about' },
-    { src: '/assets/Gemini_Generated_Image_u91l8ru91l8ru91l.png', alt: 'Mission preview', title: 'Mission & Vision', link: '/about' },
-    { src: '/assets/Gemini_Generated_Image_6bqcq36bqcq36bqc (1).png', alt: 'Vision preview', title: 'Mission & Vision', link: '/about' },
-
-    // Courses (from coursesData)
-    ...featuredCourses.map((course) => ({
-      src: course.image || '/edtech.png',
-      alt: course.title,
-      title: course.title,
-      link: `/course/${course.key}`,
-    })),
-
-    // Cart/Checkout
-    { src: '/edtech.png', alt: 'Cart and checkout preview', title: 'Cart & Checkout', link: '/cart' },
-  ]
-
 
   return (
     <>
@@ -256,45 +231,6 @@ export default function HomePage() {
               <h3>Karthik Gowda J.A.</h3>
               <h4>Managing Director (MD), Connect2Future</h4>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* IMAGE GALLERY LINKS TO OTHER PAGES */}
-      <section className="section bg-light">
-        <div className="container">
-          <h2 className="section-title">Explore More</h2>
-          <p className="section-subtitle">Quick visual navigation to other pages across Connect2Edtech.</p>
-
-          <div
-            className="image-gallery-grid"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 24 }}
-          >
-            {pageImages.map((img, idx) => (
-              <Link
-                key={idx}
-                to={img.link}
-                className="gallery-card"
-                style={{
-                  display: 'block',
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                  background: '#ffffff',
-                  textDecoration: 'none',
-                }}
-              >
-                <img
-                  src={img.src}
-                  alt={img.alt}
-                  style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
-                />
-                <div style={{ padding: '16px' }}>
-                  <h3 style={{ margin: 0, fontSize: '1rem', color: '#111' }}>{img.title}</h3>
-                  <p style={{ margin: '8px 0 0', color: '#555', fontSize: '0.9rem' }}>{img.alt}</p>
-                </div>
-              </Link>
-            ))}
           </div>
         </div>
       </section>
