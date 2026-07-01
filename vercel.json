@@ -1,4 +1,5 @@
 {
   "buildCommand": "npm run vercel-build -w frontend",
-  "installCommand": "npm install --omit=optional --include=dev"
+  "installCommand": "npm install --omit=optional --include=dev",
+  "outputDirectory": "frontend/dist"
 }

@@ -465,7 +465,11 @@ connectMongo().catch((err) => {
   console.error('[MongoDB]', err.message);
 });
 
-// Start Express server
-app.listen(PORT, () => {
-  console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
-});
+// Start Express server only in local development mode
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
+  });
+}
+
+export default app;
