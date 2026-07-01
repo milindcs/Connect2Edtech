@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "vercel-build": "npm install --include=optional && vite build"
+    "vercel-build": "npm install --omit=optional && vite build"
   },
   "dependencies": {
     "react": "^19.1.1",
