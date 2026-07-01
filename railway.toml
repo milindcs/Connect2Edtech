@@ -1,0 +1,3 @@
+# Railway build configuration
+# Use npm install for Railpack builds so workspace optional dependencies are installed correctly.
+RAILPACK_INSTALL_CMD = "npm install"
