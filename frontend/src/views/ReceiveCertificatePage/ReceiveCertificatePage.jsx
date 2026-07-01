@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function ReceiveCertificatePage() {
   const [formData, setFormData] = useState({
@@ -53,6 +54,22 @@ export default function ReceiveCertificatePage() {
       params.append('year', formData.year)
       params.append('message', formData.message)
 
+      const msgParts = [
+        '📜 Certificate Request',
+        `Decision: ${cleanText(formData.decision)}`,
+        `Name: ${cleanText(formData.name)}`,
+        `Email: ${cleanText(formData.email)}`,
+        `Delivery Email: ${cleanText(formData.certificate_email)}`,
+        formData.phone ? `Phone: ${cleanText(formData.phone)}` : null,
+        `Certificate Type: ${cleanText(formData.certificate_type)}`,
+        `Program: ${cleanText(formData.program)}`,
+        formData.student_id ? `Student ID: ${cleanText(formData.student_id)}` : null,
+        formData.year ? `Year: ${cleanText(formData.year)}` : null,
+        formData.message ? `Details: ${cleanText(formData.message)}` : null
+      ].filter(Boolean)
+
+      let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
+
       const res = await fetch('/send-certificate', {
         method: 'POST',
         headers: {
@@ -62,19 +79,15 @@ export default function ReceiveCertificatePage() {
       })
 
       const data = await res.json().catch(() => ({}))
-
       if (data.whatsappUrl) {
-        showToast('Certificate request sent! Opening WhatsApp...', 'success')
-        setTimeout(() => {
-          window.open(data.whatsappUrl, '_blank', 'noopener,noreferrer')
-        }, 800)
-        setResult({ success: true, message: 'Certificate request sent! Check WhatsApp for confirmation.' })
-      } else {
-        setResult({
-          success: true,
-          message: 'Your certificate request has been sent! Our onboarding team will verify your completion records and dispatch it by email.'
-        })
+        whatsappUrl = data.whatsappUrl
       }
+
+      showToast('Certificate request sent! Opening WhatsApp...', 'success')
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+      }, 800)
+      setResult({ success: true, message: 'Certificate request sent! Check WhatsApp for confirmation.' })
       setFormData({
         decision: '',
         name: '',

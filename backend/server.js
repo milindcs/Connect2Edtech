@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -10,6 +11,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 const WHATSAPP_PHONE = '917019436720';
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
 
 // MongoDB Models
 const SignupSubmissionSchema = new mongoose.Schema({
@@ -111,6 +117,105 @@ const trimmed = (v) => (typeof v === 'string' ? v.trim() : '');
 
 function buildWhatsAppUrl(message) {
   return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+}
+
+function getMailTransporter() {
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
+
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
+}
+
+async function sendCertificateEmail(request) {
+  const transporter = getMailTransporter();
+  if (!transporter) {
+    throw new Error('SMTP configuration is missing');
+  }
+
+  const recipients = [request.certificate_email.trim()];
+  if (request.cc_email && request.cc_email.trim()) {
+    recipients.push(request.cc_email.trim());
+  }
+
+  const subject = 'Your Connect2Edtech Certificate Request';
+  const plainContent = [
+    'Hello from Connect2Edtech,',
+    '',
+    'Your certificate request has been processed. Here are the details:',
+    `Decision: ${request.decision || '—'}`,
+    `Name: ${request.name || '—'}`,
+    `Email: ${request.email || '—'}`,
+    `Certificate Delivery Email: ${request.certificate_email || '—'}`,
+    request.cc_email ? `CC: ${request.cc_email}` : null,
+    request.phone ? `Phone: ${request.phone}` : null,
+    `Certificate Type: ${request.certificate_type || '—'}`,
+    `Program: ${request.program || '—'}`,
+    request.student_id ? `Student ID: ${request.student_id}` : null,
+    request.year ? `Year: ${request.year}` : null,
+    request.message ? `Details: ${request.message}` : null,
+    '',
+    'Thank you for choosing Connect2Edtech.',
+  ].filter(Boolean).join('\n');
+
+  const certContent = [
+    'CONNECT2EDTECH',
+    '',
+    'Certificate of Completion',
+    '',
+    'This is to certify that',
+    `${request.name || '—'}`,
+    '',
+    'has successfully completed',
+    `${request.certificate_type || '—'}`,
+    '',
+    `Program: ${request.program || '—'}`,
+    `Year: ${request.year || '—'}`,
+    '',
+    'Issued by Connect2Edtech',
+    `Date: ${new Date().toISOString().slice(0, 10)}`,
+  ].join('\n');
+
+  const htmlContent = [
+    '<p>Hello from Connect2Edtech,</p>',
+    '<p>Your certificate request has been processed. Here are the details:</p>',
+    '<ul>',
+    `<li><strong>Decision:</strong> ${request.decision || '—'}</li>`,
+    `<li><strong>Name:</strong> ${request.name || '—'}</li>`,
+    `<li><strong>Email:</strong> ${request.email || '—'}</li>`,
+    `<li><strong>Certificate Delivery Email:</strong> ${request.certificate_email || '—'}</li>`,
+    request.cc_email ? `<li><strong>CC:</strong> ${request.cc_email}</li>` : '',
+    request.phone ? `<li><strong>Phone:</strong> ${request.phone}</li>` : '',
+    `<li><strong>Certificate Type:</strong> ${request.certificate_type || '—'}</li>`,
+    `<li><strong>Program:</strong> ${request.program || '—'}</li>`,
+    request.student_id ? `<li><strong>Student ID:</strong> ${request.student_id}</li>` : '',
+    request.year ? `<li><strong>Year:</strong> ${request.year}</li>` : '',
+    request.message ? `<li><strong>Details:</strong> ${request.message}</li>` : '',
+    '</ul>',
+    '<p>Thank you for choosing Connect2Edtech.</p>',
+  ].filter(Boolean).join('')
+
+  return transporter.sendMail({
+    from: MAIL_FROM,
+    to: request.certificate_email.trim(),
+    cc: request.cc_email && request.cc_email.trim() ? request.cc_email.trim() : undefined,
+    subject,
+    text: plainContent,
+    html: htmlContent,
+    attachments: [
+      {
+        filename: `Certificate_${(request.name || 'Student').replace(/\s+/g, '_')}.txt`,
+        content: certContent,
+        contentType: 'text/plain',
+      },
+    ],
+  });
 }
 
 // Health check
@@ -281,24 +386,54 @@ app.post('/send-certificate', async (req, res) => {
     const { name, email, decision, certificate_email, cc_email, phone, certificate_type, program, student_id, year, message } = req.body || {};
     const studentName = (name || '').trim();
     const studentEmail = (email || '').trim();
+    const deliveryEmail = (certificate_email || '').trim();
 
-    if (!studentName || !studentEmail) {
-      return res.status(400).json({ ok: false, error: 'Missing required fields: name and email' });
+    if (!studentName || !studentEmail || !deliveryEmail) {
+      return res.status(400).json({ ok: false, error: 'Missing required fields: name, email and certificate_email' });
     }
 
     const conn = await connectMongo();
+    let saveRecord = null;
     if (conn && mongoose.connection.readyState === 1) {
-      await CertificateRequest.create({
+      saveRecord = await CertificateRequest.create({
         decision: trimmed(decision), name: studentName, email: studentEmail,
-        certificate_email: trimmed(certificate_email), cc_email: trimmed(cc_email), phone: trimmed(phone),
+        certificate_email: trimmed(deliveryEmail), cc_email: trimmed(cc_email), phone: trimmed(phone),
         certificate_type: trimmed(certificate_type), program: trimmed(program), student_id: trimmed(student_id),
         year: trimmed(year), message: trimmed(message), requestSource: 'send-certificate',
-        hostname: req.hostname || '', ip: '',
+        hostname: req.hostname || '', ip: getClientIp(req),
       });
     }
 
-    const msg = [`📜 Certificate Request`, `Decision: ${trimmed(decision) || '—'}`, `Name: ${studentName}`, `Email: ${studentEmail}`, `Delivery Email: ${trimmed(certificate_email) || '—'}`, cc_email ? `CC: ${trimmed(cc_email)}` : null, phone ? `Phone: ${trimmed(phone)}` : null, `Certificate Type: ${trimmed(certificate_type) || '—'}`, `Program: ${trimmed(program) || '—'}`, student_id ? `Student ID: ${trimmed(student_id)}` : null, year ? `Year: ${trimmed(year)}` : null, message ? `Details: ${trimmed(message)}` : null].filter(Boolean).join('\n');
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
+    const msg = [`📜 Certificate Request`, `Decision: ${trimmed(decision) || '—'}`, `Name: ${studentName}`, `Email: ${studentEmail}`, `Delivery Email: ${trimmed(deliveryEmail) || '—'}`, cc_email ? `CC: ${trimmed(cc_email)}` : null, phone ? `Phone: ${trimmed(phone)}` : null, `Certificate Type: ${trimmed(certificate_type) || '—'}`, `Program: ${trimmed(program) || '—'}`, student_id ? `Student ID: ${trimmed(student_id)}` : null, year ? `Year: ${trimmed(year)}` : null, message ? `Details: ${trimmed(message)}` : null].filter(Boolean).join('\n');
+
+    let mailResult = null;
+    let mailError = '';
+    try {
+      mailResult = await sendCertificateEmail({
+        decision: trimmed(decision),
+        name: studentName,
+        email: studentEmail,
+        certificate_email: deliveryEmail,
+        cc_email: trimmed(cc_email),
+        phone: trimmed(phone),
+        certificate_type: trimmed(certificate_type),
+        program: trimmed(program),
+        student_id: trimmed(student_id),
+        year: trimmed(year),
+        message: trimmed(message),
+      });
+    } catch (emailErr) {
+      mailError = String(emailErr.message || emailErr);
+      console.error('Certificate email failed:', emailErr);
+    }
+
+    if (saveRecord) {
+      saveRecord.mailSent = Boolean(mailResult);
+      saveRecord.mailError = mailError;
+      await saveRecord.save();
+    }
+
+    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg), emailSent: Boolean(mailResult), emailError: mailError });
   } catch (err) {
     console.error(err);
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(`📜 Certificate Request\nName: ${trimmed(req.body?.name) || '—'}`) });

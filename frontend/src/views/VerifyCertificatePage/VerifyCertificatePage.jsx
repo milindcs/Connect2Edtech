@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function VerifyCertificatePage() {
   const [formData, setFormData] = useState({

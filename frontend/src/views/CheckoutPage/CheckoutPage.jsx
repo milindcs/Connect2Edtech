@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { cartList, checkoutSubmit, cartClear } from '../../shared/cartApi'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState([])
@@ -69,6 +70,18 @@ export default function CheckoutPage() {
       : formData.courseTitle.trim();
     const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
 
+    const msgParts = [
+      'Hello Connect2Edtech! (Checkout Request)',
+      `Name: ${cleanText(formData.name)}`,
+      `Email: ${cleanText(formData.email)}`,
+      `Phone: ${cleanText(formData.phone)}`,
+      `Courses: ${cleanText(coursesString)}`,
+      totalAmount ? `Total Amount: ₹${totalAmount.toFixed(2)}` : null,
+      formData.note ? `Note: ${cleanText(formData.note)}` : null
+    ].filter(Boolean)
+
+    let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
+
     // Submit to backend (gets WhatsApp URL)
     try {
       const res = await fetch('/api/checkout/submit', {
@@ -86,18 +99,20 @@ export default function CheckoutPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (data.whatsappUrl) {
+        whatsappUrl = data.whatsappUrl
         try { await cartClear() } catch {}
-        setCart([])
-        window.dispatchEvent(new Event('cart-updated'))
-        setIsSubmitted(true)
-        showToast('Order verified! Connecting to WhatsApp...', 'success')
-        setTimeout(() => {
-          window.open(data.whatsappUrl, '_blank', 'noopener,noreferrer')
-        }, 800)
       }
     } catch (e2) {
       console.error(e2)
     }
+
+    setCart([])
+    window.dispatchEvent(new Event('cart-updated'))
+    setIsSubmitted(true)
+    showToast('Order verified! Connecting to WhatsApp...', 'success')
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    }, 800)
   }
 
   const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)

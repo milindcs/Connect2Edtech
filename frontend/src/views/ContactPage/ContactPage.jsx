@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { cartList } from '../../shared/cartApi'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 async function contactSubmit(payload) {
   return fetch('/api/contact', {
@@ -73,14 +74,14 @@ export default function ContactPage() {
 
     const msgParts = [
       'Hello Connect2Edtech! (General Contact Inquiry)',
-      `Name: ${formData.name}`,
-      `Email: ${formData.email}`,
-      `Phone: ${formData.phone}`,
-      `Message: ${formData.message}`,
-      coursesString ? `Selected Courses: ${coursesString}` : null
+      `Name: ${cleanText(formData.name)}`,
+      `Email: ${cleanText(formData.email)}`,
+      `Phone: ${cleanText(formData.phone)}`,
+      `Message: ${cleanText(formData.message)}`,
+      coursesString ? `Selected Courses: ${cleanText(coursesString)}` : null
     ].filter(Boolean)
 
-    const whatsappUrl = `https://wa.me/917019436720?text=${encodeURIComponent(msgParts.join('\n'))}`
+    let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
     // Persist contact submission to backend (gets WhatsApp URL)
     try {
@@ -97,19 +98,17 @@ export default function ContactPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (data.whatsappUrl) {
-        showToast('Inquiry captured! Opening WhatsApp...', 'success')
-        setTimeout(() => {
-          window.open(data.whatsappUrl, '_blank', 'noopener,noreferrer')
-        }, 800)
+        whatsappUrl = data.whatsappUrl
       }
+      showToast('Inquiry captured! Opening WhatsApp...', 'success')
     } catch (err) {
       console.error(err)
-      // Still open WhatsApp if API fails
       showToast('Opening WhatsApp directly...', 'success')
-      setTimeout(() => {
-        window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-      }, 800)
     }
+
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    }, 800)
 
     setIsSubmitted(true)
   }

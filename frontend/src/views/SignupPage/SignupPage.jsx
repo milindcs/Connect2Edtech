@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function SignupPage() {
   const navigate = useNavigate()
@@ -84,14 +85,23 @@ const handleSubmit = async (e) => {
 
     setIsSubmitting(true)
 
-    try {
-      const payload = {
-        ...formData,
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim()
-      }
+    const payload = {
+      ...formData,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim()
+    }
 
+    const fallbackMsg = [
+      'Hello Connect2Edtech! (New Signup)',
+      `Name: ${cleanText(payload.name)}`,
+      `Email: ${cleanText(payload.email)}`,
+      `Phone: ${cleanText(payload.phone)}`
+    ].filter(Boolean).join('\n')
+
+    let whatsappUrl = buildWhatsAppUrl(fallbackMsg)
+
+    try {
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,16 +114,17 @@ const handleSubmit = async (e) => {
       })
 
       const data = await res.json().catch(() => ({}))
-      
       if (data.whatsappUrl) {
-        showToast('Details captured! Redirecting to WhatsApp...', 'success')
-        setTimeout(() => {
-          window.open(data.whatsappUrl, '_blank', 'noopener,noreferrer')
-          navigate('/')
-        }, 800)
+        whatsappUrl = data.whatsappUrl
       } else if (!data.ok) {
         throw new Error(data.error || 'Signup submission failed')
       }
+
+      showToast('Details captured! Redirecting to WhatsApp...', 'success')
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+        navigate('/')
+      }, 800)
     } catch {
       showToast('Could not save signup details. Please try again.', 'error')
     } finally {

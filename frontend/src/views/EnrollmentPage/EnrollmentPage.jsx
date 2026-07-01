@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { cartList, checkoutSubmit, cartClear } from '../../shared/cartApi'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function EnrollmentPage() {
   const [cart, setCart] = useState([])
@@ -81,15 +82,15 @@ export default function EnrollmentPage() {
 
     const msgParts = [
       'Hello Connect2Edtech! (New Enrollment Submission)',
-      `Name: ${formData.name}`,
-      `Email: ${formData.email}`,
-      `Phone: ${formData.phone}`,
-      `Courses: ${coursesString}`,
+      `Name: ${cleanText(formData.name)}`,
+      `Email: ${cleanText(formData.email)}`,
+      `Phone: ${cleanText(formData.phone)}`,
+      `Courses: ${cleanText(coursesString)}`,
       `Total Amount: ₹${totalAmount.toFixed(2)}`,
-      formData.message ? `Requirements: ${formData.message}` : null
+      formData.message ? `Requirements: ${cleanText(formData.message)}` : null
     ].filter(Boolean)
 
-    const whatsappUrl = `https://wa.me/917019436720?text=${encodeURIComponent(msgParts.join('\n'))}`
+    let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
     // Submit to backend (gets WhatsApp URL)
     try {
@@ -108,6 +109,7 @@ export default function EnrollmentPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (data.whatsappUrl) {
+        whatsappUrl = data.whatsappUrl
         try { await cartClear() } catch {}
       }
     } catch (e2) {
