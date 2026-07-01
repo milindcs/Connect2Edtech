@@ -102,7 +102,7 @@ const handleSubmit = async (e) => {
     let whatsappUrl = buildWhatsAppUrl(fallbackMsg)
 
     try {
-      const res = await fetch('/api/signup', {
+      const res = await fetch(API_BASE + '/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

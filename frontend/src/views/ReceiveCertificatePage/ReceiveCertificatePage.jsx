@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { API_BASE } from '../../shared/cartApi'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function ReceiveCertificatePage() {
@@ -70,7 +71,7 @@ export default function ReceiveCertificatePage() {
 
       let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
-      const res = await fetch('/send-certificate', {
+      const res = await fetch(API_BASE + '/send-certificate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { API_BASE } from '../../shared/cartApi'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function VerifyCertificatePage() {
@@ -72,7 +73,7 @@ export default function VerifyCertificatePage() {
       params.append('_subject', 'Certificate Request - Connect2Edtech')
       params.append('inquiry_type', 'Certificate Request')
 
-      const res = await fetch('/send-certificate', {
+      const res = await fetch(API_BASE + '/send-certificate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString()

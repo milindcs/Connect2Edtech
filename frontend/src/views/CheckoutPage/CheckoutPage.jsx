@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { cartList, checkoutSubmit, cartClear } from '../../shared/cartApi'
+import { cartList, checkoutSubmit, cartClear, API_BASE } from '../../shared/cartApi'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function CheckoutPage() {
@@ -84,7 +84,7 @@ export default function CheckoutPage() {
 
     // Submit to backend (gets WhatsApp URL)
     try {
-      const res = await fetch('/api/checkout/submit', {
+      const res = await fetch(API_BASE + '/api/checkout/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

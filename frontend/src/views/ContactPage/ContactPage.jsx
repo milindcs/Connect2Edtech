@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { cartList } from '../../shared/cartApi'
+import { cartList, API_BASE } from '../../shared/cartApi'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 async function contactSubmit(payload) {
-  return fetch('/api/contact', {
+  return fetch(API_BASE + '/api/contact', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
