@@ -6,15 +6,28 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+const CORS_ORIGINS = [
+  "https://connect2edtech.onrender.com",
+  "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: [
-      "https://connect2edtech.onrender.com",
-      "http://localhost:5173"
-    ],
+    origin(origin, cb) {
+      // allow requests with no origin (e.g. curl, mobile apps)
+      if (!origin) return cb(null, true);
+      if (CORS_ORIGINS.includes(origin)) return cb(null, true);
+      return cb(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   })
 );
+
+// Explicitly respond to preflight requests
+app.options('*', cors());
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
