@@ -49,6 +49,7 @@ packages/
 /backend/dist/
 /dist/
 /build/
+/frontend/dist/
 logs/
 *.log
 npm-debug.log*
