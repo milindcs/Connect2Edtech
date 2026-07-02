@@ -35,19 +35,23 @@ export default function HomePage() {
       {/* HERO */}
       <section className="hero">
         <div className="container">
-          <h1>Empowering Students with Industry-Ready Skills</h1>
-          <p>
-            Learn Today. Lead Tomorrow. Explore technical, non-technical, business, and emerging technology
-            programs designed for career success.
-          </p>
-          <div className="hero-buttons">
-            <Link to="/courses" className="btn primary">Explore Courses</Link>
-            <Link to="/enrollment" className="btn primary">Enroll Now</Link>
-            <Link to="/contact" className="btn secondary">Contact Us</Link>
+          <div className="hero-content">
+            <h1>Empowering Students with Industry-Ready Skills</h1>
+            <p>
+              Learn Today. Lead Tomorrow. Explore technical, non-technical, business, and emerging technology
+              programs designed for career success.
+            </p>
+            <div className="hero-buttons">
+              <Link to="/courses" className="btn primary">Explore Courses</Link>
+              <Link to="/enrollment" className="btn primary">Enroll Now</Link>
+              <Link to="/contact" className="btn secondary">Contact Us</Link>
+            </div>
           </div>
+
           <img className="hero-image" src="/assets/untitled design.jpg" alt="Hero Design" />
         </div>
       </section>
+
 
       {/* QUICK ACCESS */}
       <section className="section">

@@ -192,7 +192,7 @@ export default function EnrollmentPage() {
                       <div className="cart-mini-item" key={item.key}>
                         <img
                           className="cart-mini-thumb"
-                          src={item.image || '/edtech.png'}
+                          src={item.image || '/assets/edtech.png'}
                           alt={item.title || 'Course'}
                         />
                         <div style={{ minWidth: 0, flexGrow: 1 }}>

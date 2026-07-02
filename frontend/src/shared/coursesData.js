@@ -6,7 +6,7 @@ export const coursesData = {
     description:
       'Master programming concepts through hands-on practice with popular languages including Python, JavaScript, Java, C++, and modern languages like Go and Rust.',
     price: 449,
-    image: '/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
+    image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [
       'Syntax & Data Structures fundamentals',
@@ -23,7 +23,7 @@ export const coursesData = {
     description:
       'Complete training in both front-end and back-end web development with modern frameworks and tools.',
     price: 499,
-    image: '/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
+    image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
     features: [
       'Front-End: HTML, CSS, JavaScript frameworks',
@@ -40,7 +40,7 @@ export const coursesData = {
     description:
       'Learn to analyze and interpret complex data with industry-standard tools and techniques.',
     price: 549,
-    image: '/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
+    image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
       'Statistical Analysis',
@@ -57,7 +57,7 @@ export const coursesData = {
     description:
       'Comprehensive security training covering network security, cryptography, and ethical hacking.',
     price: 599,
-    image: '/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
+    image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Online • Self-paced',
     features: [
       'Network Security fundamentals',
@@ -74,7 +74,7 @@ export const coursesData = {
     description:
       'Learn practical concepts through guided modules, real-world exercises, and structured assessments.',
     price: 499,
-    image: '/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
+    image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [
       'Structured learning path',
@@ -91,7 +91,7 @@ export const coursesData = {
     description:
       'We help design programs, workshops, internships, and certification workflows that improve student outcomes.',
     price: 799,
-    image: '/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
+    image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Institutional • Program design',
     features: [
       'Industry-relevant program design',
@@ -108,7 +108,7 @@ export const coursesData = {
     description:
       'Get help with LMS setup, digital classroom tooling, student engagement, and academic tech support.',
     price: 699,
-    image: '/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
+    image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Implementation • Support',
     features: [
       'LMS implementation',
@@ -125,7 +125,7 @@ export const coursesData = {
     description:
       'Build competence with training modules, certification preparation, and real-world learning experiences.',
     price: 599,
-    image: '/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
+    image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Blended • Industry aligned',
     features: [
       'Industry-aligned curriculum',
@@ -142,7 +142,7 @@ export const coursesData = {
     description:
       'We provide free digital literacy and guided learning to help create equal opportunities.',
     price: 0,
-    image: '/Gemini_Generated_Image_u91l8ru91l8ru91l.png',
+    image: '/assets/Gemini_Generated_Image_u91l8ru91l8ru91l.png',
     meta: 'Scholarship • Free',
     features: [
       'Digital literacy foundations',
@@ -159,7 +159,7 @@ export const coursesData = {
     description:
       'Improve business and communication foundations with practical modules and guided practice.',
     price: 399,
-    image: '/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
+    image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
       'Business analytics fundamentals',
@@ -176,7 +176,7 @@ export const coursesData = {
     description:
       'Learn emerging technology concepts with hands-on activities and curated learning paths.',
     price: 599,
-    image: '/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
+    image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
     features: [
       'IoT fundamentals',
@@ -193,7 +193,7 @@ export const coursesData = {
     description:
       'Get comprehensive career counseling, interview preparation, and placement assistance to launch your professional career.',
     price: 199,
-    image: '/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
+    image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Online • Support',
     features: [
       'Career counseling',
@@ -210,7 +210,7 @@ export const coursesData = {
     description:
       'Comprehensive non-technical training covering advanced analytics, finance, change management, and more.',
     price: 499,
-    image: '/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
+    image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
       'Business analytics fundamentals',

@@ -109,7 +109,7 @@ export default function CartPage() {
                     <div className="card cart-item" key={item.key}>
                       <img
                         className="cart-thumb"
-                        src={item.image || '/edtech.png'}
+                        src={item.image || '/assets/edtech.png'}
                         alt={item.title || 'Course'}
                       />
                       <div className="cart-item-body">

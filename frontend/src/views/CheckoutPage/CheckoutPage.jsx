@@ -168,7 +168,7 @@ export default function CheckoutPage() {
                     <div className="cart-mini-item" key={item.key}>
                       <img
                         className="cart-mini-thumb"
-                        src={item.image || '/edtech.png'}
+                        src={item.image || '/assets/edtech.png'}
                         alt={item.title}
                       />
                       <div style={{ flexGrow: 1, minWidth: 0 }}>
