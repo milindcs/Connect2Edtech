@@ -10,3 +10,8 @@
 - [ ] Implement CORS for all pages/endpoints (backend) 
 - [ ] Commit and push after CORS changes
 
+- [ ] GitHub: Add PR template + contributing docs
+- [ ] GitHub: Add CI workflow (frontend build + backend import check)
+- [ ] GitHub: Add release workflow (tag v*)
+- [ ] GitHub: Create branch and open PR
+

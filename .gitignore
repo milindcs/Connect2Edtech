@@ -64,3 +64,7 @@ Thumbs.db
 test-mongo.mjs
 _check_*.txt
 _fix_*.txt
+
+# --- Nested Git Repositories ---
+# Ignore nested git repositories to avoid conflicts
+Connect2Edtech-Courses/
