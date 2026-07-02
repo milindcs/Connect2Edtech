@@ -5,10 +5,8 @@ export const coursesData = {
     subtitle: 'Quantitative aptitude, logical reasoning, and exam-focused practice.',
     description:
       'Build strong aptitude foundations with timed practice sets, shortcuts, and step-by-step problem-solving techniques.',
-    price: '1000',
-    hr:'36hr',
-    price:'2000',
-    hr:'72hr',
+    price: '2000',
+    hr: '36hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [
@@ -25,10 +23,8 @@ export const coursesData = {
     subtitle: 'Communication, confidence, teamwork, and workplace readiness.',
     description:
       'Develop real-world communication skills with guided activities, role-plays, and practical feedback.',
-    price: '1000',
-    hr:'36hr',
-    price:'2000',
-    hr:'72hr',
+    price: '2000',
+    hr: '36hr',
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
     features: [
@@ -45,10 +41,8 @@ export const coursesData = {
     subtitle: 'AI basics to applied ML concepts and hands-on projects.',
     description:
       'Learn AI fundamentals and build practical AI/ML project workflows with curated modules and exercises.',
-    price: '1000',
-    hr:'36hr',
-    price:'2000',
-    hr:'72hr',
+    price: '2000',
+    hr: '36hr',
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
@@ -65,10 +59,8 @@ export const coursesData = {
     subtitle: 'Build full-stack web apps with MongoDB, Express, React & Node.',
     description:
       'Learn the MERN stack end-to-end through hands-on web app development and real-world style projects.',
-   price:'2000',
-   hr:'36hr',
-   price:'4,500',
-   hr:'80hr',
+price: '2000',
+    hr: '36hr',
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
     features: [
@@ -85,10 +77,8 @@ export const coursesData = {
     subtitle: 'Core Java, OOP concepts, and practical programming for development.',
     description:
       'Strengthen Java fundamentals with OOP concepts, coding practice, and mini-projects.',
- price:'2000',
-   hr:'36hr',
-   price:'4,500',
-   hr:'80hr',
+price: '2000',
+    hr: '36hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [

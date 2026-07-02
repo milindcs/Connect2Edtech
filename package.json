@@ -1,19 +1,21 @@
 {
-  "name": "connect2edtech",
+  "name": "frontend",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "backend": "npm start -w backend",
-    "frontend": "npm run dev -w frontend",
-    "build": "npm run build -w frontend",
-    "start": "npm run backend"
+  "type": "module",
+  "engines": {
+    "node": "20.x"
   },
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
-  "devDependencies": {
-    "concurrently": "^10.0.3"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.2",
+    "vite": "^5.4.0"
   }
 }
