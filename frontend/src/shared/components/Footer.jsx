@@ -29,9 +29,6 @@ export default function Footer() {
               <Link to="/courses">Courses</Link>
             </li>
             <li>
-              <Link to="/certifications">Certifications</Link>
-            </li>
-            <li>
               <Link to="/contact">Contact</Link>
             </li>
           </ul>

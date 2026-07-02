@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { cartList, checkoutSubmit, cartClear, API_BASE } from '../../shared/cartApi'
-import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
+import { buildWhatsAppUrl, cleanText, WHATSAPP_PHONE } from '../../shared/whatsappUtils'
 
 export default function EnrollmentPage() {
   const [cart, setCart] = useState([])
@@ -141,7 +141,7 @@ export default function EnrollmentPage() {
                 Browse More Courses
               </Link>
               <a 
-                href={`https://wa.me/917019436720?text=${encodeURIComponent('Hi, I just submitted my enrollment on Connect2Edtech!')}`} 
+                href={buildWhatsAppUrl('Hi, I just submitted my enrollment on Connect2Edtech!')} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn primary"

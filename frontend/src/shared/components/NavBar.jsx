@@ -6,11 +6,8 @@ const navItems = [
   { to: '/', label: 'Home' },
   { to: '/about', label: 'About' },
   { to: '/courses', label: 'Courses' },
-  { to: '/certifications', label: 'Certifications' },
   { to: '/enrollment', label: 'Enroll' },
   { to: '/checkout', label: 'Checkout' },
-  { to: '/verify-certificate', label: 'Verify' },
-  { to: '/receive-certificate', label: 'Get Certificate' },
   { to: '/signup', label: 'Sign Up' },
   { to: '/contact', label: 'Contact' },
 ]

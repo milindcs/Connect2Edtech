@@ -10,9 +10,6 @@ import EnrollmentPage from '../views/EnrollmentPage/EnrollmentPage'
 import CartPage from '../views/CartPage/CartPage'
 import CheckoutPage from '../views/CheckoutPage/CheckoutPage'
 import ContactPage from '../views/ContactPage/ContactPage'
-import CertificationsPage from '../views/CertificationsPage/CertificationsPage'
-import VerifyCertificatePage from '../views/VerifyCertificatePage/VerifyCertificatePage'
-import ReceiveCertificatePage from '../views/ReceiveCertificatePage/ReceiveCertificatePage'
 import SignupPage from '../views/SignupPage/SignupPage'
 import AllImagesPage from '../views/AllImagesPage/AllImagesPage'
 
@@ -28,14 +25,14 @@ export default function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="/certifications" element={<CertificationsPage />} />
-        <Route path="/verify-certificate" element={<VerifyCertificatePage />} />
-        <Route path="/receive-certificate" element={<ReceiveCertificatePage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/all-images" element={<AllImagesPage />} />
 
+
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
+
     </SiteLayout>
   )
 }

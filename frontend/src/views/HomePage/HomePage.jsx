@@ -32,26 +32,6 @@ export default function HomePage() {
 
   return (
     <>
-      {/* HERO */}
-      <section className="hero">
-        <div className="container">
-          <div className="hero-content">
-            <h1>Empowering Students with Industry-Ready Skills</h1>
-            <p>
-              Learn Today. Lead Tomorrow. Explore technical, non-technical, business, and emerging technology
-              programs designed for career success.
-            </p>
-            <div className="hero-buttons">
-              <Link to="/courses" className="btn primary">Explore Courses</Link>
-              <Link to="/enrollment" className="btn primary">Enroll Now</Link>
-              <Link to="/contact" className="btn secondary">Contact Us</Link>
-            </div>
-          </div>
-
-          <img className="hero-image" src="/assets/untitled design.jpg" alt="Hero Design" />
-        </div>
-      </section>
-
 
       {/* QUICK ACCESS */}
       <section className="section">
@@ -114,32 +94,6 @@ export default function HomePage() {
               <span className="hub-arrow">→</span>
             </Link>
 
-            <Link to="/certifications" className="hub-card">
-              <span className="hub-icon">✅</span>
-              <div className="hub-content">
-                <h3>Certifications</h3>
-                <p>Find certification programs and verification options.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
-
-            <Link to="/verify-certificate" className="hub-card">
-              <span className="hub-icon">🔍</span>
-              <div className="hub-content">
-                <h3>Verify Certificate</h3>
-                <p>Check the authenticity of issued credential documents.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
-
-            <Link to="/receive-certificate" className="hub-card">
-              <span className="hub-icon">📄</span>
-              <div className="hub-content">
-                <h3>Receive Certificate</h3>
-                <p>Request and download your completion or internship certificates.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
 
             <Link to="/signup" className="hub-card">
               <span className="hub-icon">🧑‍🎓</span>
@@ -160,14 +114,6 @@ export default function HomePage() {
           <p className="section-subtitle">We bridge the gap between academic learning and industry requirements.</p>
 
           <div className="hub-grid">
-            <Link to="/certifications" className="hub-card">
-              <span className="hub-icon">🎓</span>
-              <div className="hub-content">
-                <h3>Verifiable Certifications</h3>
-                <p>Industry-recognized credentials you can share with employers.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
 
             <Link to="/courses" className="hub-card">
               <span className="hub-icon">💻</span>
@@ -187,14 +133,6 @@ export default function HomePage() {
               <span className="hub-arrow">→</span>
             </Link>
 
-            <Link to="/certifications" className="hub-card">
-              <span className="hub-icon">✅</span>
-              <div className="hub-content">
-                <h3>Placement Assistance</h3>
-                <p>Career guidance, resume reviews, and interview preparation support.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
 
             <Link to="/courses" className="hub-card">
               <span className="hub-icon">📚</span>
@@ -308,50 +246,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CERTIFICATIONS & VERIFICATION */}
-      <section className="section bg-light">
-        <div className="container">
-          <h2 className="section-title">Certifications & Verification</h2>
-          <p className="section-subtitle">Earn verifiable credentials and verify student certificates through our dashboard.</p>
-
-          <div className="card-grid">
-            <div className="card">
-              <div className="card-number">Course Completion</div>
-              <h3>Course Completion Certificate</h3>
-              <p>Issued after successful completion of training modules, assignments, and practical exercises.</p>
-              <div className="card-actions">
-                <Link to="/certifications" className="btn primary">Explore Types</Link>
-                <Link to="/verify-certificate" className="btn secondary">Verify</Link>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-number">Internship</div>
-              <h3>Internship Certification</h3>
-              <p>Validates hands-on internship work and mentorship participation.</p>
-              <div className="card-actions">
-                <Link to="/certifications" className="btn primary">Explore Types</Link>
-                <Link to="/receive-certificate" className="btn secondary">Receive</Link>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-number">Industry</div>
-              <h3>Industry Certification</h3>
-              <p>Advanced credential for specialized domain expertise and placement readiness.</p>
-              <div className="card-actions">
-                <Link to="/certifications" className="btn primary">Explore Types</Link>
-                <Link to="/verify-certificate" className="btn secondary">Verify</Link>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
-            <Link to="/verify-certificate" className="btn primary">Verify Certificate</Link>
-            <Link to="/receive-certificate" className="btn secondary">Request / Receive Certificate</Link>
-          </div>
-        </div>
-      </section>
 
       {/* ENROLLMENT FLOW */}
       <section className="section">
@@ -377,8 +271,8 @@ export default function HomePage() {
             </div>
             <div className="step">
               <div className="step-number">4</div>
-              <h3>Learn & Get Certified</h3>
-              <p>Complete training, earn your certificate, and launch your career.</p>
+               <h3>Launch Your Career</h3>
+               <p>Complete training and start your career with job-ready skills.</p>
             </div>
           </div>
 
@@ -418,14 +312,14 @@ export default function HomePage() {
       <section className="section">
         <div className="container">
           <h2 className="section-title">Get In Touch</h2>
-          <p className="section-subtitle">Have questions about courses, certifications, internships, or placements? We're here to help.</p>
+          <p className="section-subtitle">Have questions about courses, internships, or placements? We're here to help.</p>
 
           <div className="two-col" style={{ marginTop: 40 }}>
             <div className="card">
               <h3 style={{ fontSize: '1.5rem', marginBottom: 12, color: '#000000' }}>Contact Information</h3>
-              <p style={{ color: '#333333', marginBottom: 20 }}>
-                Reach out to us directly or visit our office in Mysuru. Our team is ready to assist you with course selection, enrollment, and certification queries.
-              </p>
+               <p style={{ color: '#333333', marginBottom: 20 }}>
+                  Reach out to us directly or visit our office in Mysuru. Our team is ready to assist you with course selection and enrollment.
+                </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <p style={{ color: '#000000' }}>
                   📍 Location: Mysuru, Karnataka, India
@@ -449,7 +343,7 @@ export default function HomePage() {
                 {[
                   'Course Selection Guidance',
                   'Internship Project Verification',
-                  'Verifiable Certification Processes',
+                  'Career Guidance & CV Review',
                   'University / Institutional Collaborations',
                   'Placement Guidance & CV Review'
                 ].map((x, i) => (

@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { cartList, API_BASE } from '../../shared/cartApi'
-import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
-
-async function contactSubmit(payload) {
-  return fetch(API_BASE + '/api/contact', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }).then((r) => {
-    if (!r.ok) throw new Error('Contact submission failed')
-    return r.json()
-  })
-}
+import { buildWhatsAppUrl, cleanText, WHATSAPP_PHONE } from '../../shared/whatsappUtils'
 
 export default function ContactPage() {
 
@@ -85,7 +74,7 @@ export default function ContactPage() {
 
     // Persist contact submission to backend (gets WhatsApp URL)
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch(API_BASE + '/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +123,7 @@ export default function ContactPage() {
               Explore Courses
             </Link>
             <a
-              href="https://wa.me/917019436720"
+              href={buildWhatsAppUrl('Hi, I just submitted my contact inquiry on Connect2Edtech!')}
               target="_blank"
               rel="noopener noreferrer"
               className="btn primary"
@@ -261,7 +250,7 @@ export default function ContactPage() {
               <div>
                 <p style={{ fontWeight: 600 }}>WhatsApp Assistance</p>
                 <a
-                  href="https://wa.me/917019436720"
+                  href={buildWhatsAppUrl('Hi, I need help with Connect2Edtech courses and enrollment!')}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: '#25D366', fontWeight: 700 }}
