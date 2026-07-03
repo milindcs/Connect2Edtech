@@ -1,21 +1,4 @@
 export const coursesData = {
-  programming: {
-    key: 'programming',
-    title: 'Programming Languages',
-    subtitle: 'Foundational tools for writing instructions that computers execute.',
-    description:
-      'Master programming concepts through hands-on practice with popular languages including Python, JavaScript, Java, C++, and modern languages like Go and Rust.',
-    price: 449,
-    image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
-    meta: 'Online • Self-paced',
-    features: [
-      'Syntax & Data Structures fundamentals',
-      'Algorithms implementation',
-      'Object-Oriented Programming (OOP)',
-      'Functional Programming patterns',
-      'Hands-on coding exercises',
-    ],
-  },
   webdev: {
     key: 'webdev',
     title: 'Web Development',
@@ -82,23 +65,6 @@ export const coursesData = {
       'Mentor feedback (demo)',
       'Assessments and progress tracking',
       'Career-ready skill focus',
-    ],
-  },
-  university: {
-    key: 'university',
-    title: 'University Collaborations',
-    subtitle: 'Partnering with universities to deliver impactful programs and placements.',
-    description:
-      'We help design programs, workshops, internships, and certification workflows that improve student outcomes.',
-    price: 799,
-    image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
-    meta: 'Institutional • Program design',
-    features: [
-      'Industry-relevant program design',
-      'Internship & workshop support',
-      'Certification workflow setup',
-      'Placement-driven initiatives',
-      'Reporting & outcomes (demo)',
     ],
   },
   management: {
@@ -227,8 +193,6 @@ export const normalizeCourseKey = (rawKey) => {
   const k = String(rawKey).trim().toLowerCase()
 
   const map = {
-    programming: 'programming',
-    'programming languages': 'programming',
     webdev: 'webdev',
     'web development': 'webdev',
     datascience: 'datascience',
@@ -238,8 +202,6 @@ export const normalizeCourseKey = (rawKey) => {
     program: 'technical',
     technical: 'technical',
     'technical training': 'technical',
-    university: 'university',
-    'university collaborations': 'university',
     management: 'management',
     'edtech management': 'management',
     skills: 'skills',

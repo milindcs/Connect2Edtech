@@ -266,7 +266,6 @@ export default function ContactPage() {
                 <li>Course Selection Guidance</li>
                 <li>Internship Project Verification</li>
                 <li>Verifiable Certification Processes</li>
-                <li>University / Institutional Collaborations</li>
                 <li>Placement Guidance & CV Review</li>
               </ul>
             </div>

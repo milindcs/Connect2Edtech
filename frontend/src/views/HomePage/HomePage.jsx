@@ -138,7 +138,7 @@ export default function HomePage() {
               <span className="hub-icon">📚</span>
               <div className="hub-content">
                 <h3>Wide Course Catalog</h3>
-                <p>From programming and data science to management and emerging tech.</p>
+                <p>From data science and web development to management and emerging tech.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
@@ -344,7 +344,6 @@ export default function HomePage() {
                   'Course Selection Guidance',
                   'Internship Project Verification',
                   'Career Guidance & CV Review',
-                  'University / Institutional Collaborations',
                   'Placement Guidance & CV Review'
                 ].map((x, i) => (
                   <li key={i} style={{ fontSize: '0.95rem', color: '#333333', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
