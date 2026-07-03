@@ -8,10 +8,8 @@ import CoursesPage from '../views/CoursesPage/CoursesPage'
 import CourseDetailsPage from '../views/CourseDetailsPage/CourseDetailsPage'
 import EnrollmentPage from '../views/EnrollmentPage/EnrollmentPage'
 import CartPage from '../views/CartPage/CartPage'
-import CheckoutPage from '../views/CheckoutPage/CheckoutPage'
 import ContactPage from '../views/ContactPage/ContactPage'
 import SignupPage from '../views/SignupPage/SignupPage'
-import AllImagesPage from '../views/AllImagesPage/AllImagesPage'
 
 export default function App() {
   return (
@@ -23,10 +21,8 @@ export default function App() {
         <Route path="/course/:course" element={<CourseDetailsPage />} />
         <Route path="/enrollment" element={<EnrollmentPage />} />
         <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/all-images" element={<AllImagesPage />} />
 
 
         <Route path="*" element={<Navigate to="/" replace />} />

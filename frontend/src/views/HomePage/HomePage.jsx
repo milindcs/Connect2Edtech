@@ -189,16 +189,16 @@ export default function HomePage() {
               <span className="hub-icon">🛒</span>
               <div className="hub-content">
                 <h3>Cart</h3>
-                <p>Review selected courses and prepare for checkout.</p>
+                <p>Review selected courses and proceed to enrollment.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
 
-            <Link to="/checkout" className="hub-card">
-              <span className="hub-icon">💳</span>
+            <Link to="/enrollment" className="hub-card">
+              <span className="hub-icon">📝</span>
               <div className="hub-content">
-                <h3>Checkout</h3>
-                <p>Complete your payment and secure your enrollment.</p>
+                <h3>Enrollment</h3>
+                <p>Complete enrollment steps to reserve your seat in a program.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>

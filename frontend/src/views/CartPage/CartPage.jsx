@@ -74,7 +74,7 @@ export default function CartPage() {
       showToast('Your cart is empty. Add a course first.', 'error')
       return
     }
-    navigate('/checkout')
+    navigate('/enrollment')
   }
 
   const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
@@ -85,7 +85,7 @@ export default function CartPage() {
         <div className="cart-card">
           <h2 className="section-title">Your Cart</h2>
           <p className="section-subtitle">
-            Manage your selected programs and proceed to checkout to secure your training slots.
+            Manage your selected programs and proceed to enrollment to secure your training slots.
           </p>
 
           {cart.length === 0 ? (
@@ -158,7 +158,7 @@ export default function CartPage() {
                     Add More Courses
                   </Link>
                   <button type="button" className="btn primary" onClick={handleCheckout}>
-                    Proceed to Checkout
+                    Proceed to Enrollment
                   </button>
                 </div>
               </div>
