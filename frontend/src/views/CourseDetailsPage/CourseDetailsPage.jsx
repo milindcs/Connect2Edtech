@@ -119,7 +119,7 @@ export default function CourseDetailsPage() {
                 {course.price === 0 ? 'Free' : `₹${course.price.toFixed(2)}`}
               </div>
               <p className="hint" id="detail-meta" style={{ marginBottom: 20 }}>
-                Category: {course.meta}
+                Category: {course.meta}{course.hr && ` • ${course.hr}`}
               </p>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

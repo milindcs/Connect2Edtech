@@ -21,7 +21,7 @@ export default function CoursesPage() {
   ]
 
   const getCategoryForCourse = (key) => {
-    if (['webdev', 'datascience', 'security', 'emerging', 'technical'].includes(key)) {
+    if (['webdev', 'datascience', 'security', 'aptitude', 'softskills', 'ai1000', 'mern', 'java', 'bigdata', 'cyber', 'pythonfullstack', 'cpp2000', 'technical'].includes(key)) {
       return 'technical';
     }
     if (['nontechnical', 'nontechplus', 'placement'].includes(key)) {
