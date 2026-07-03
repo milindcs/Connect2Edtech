@@ -111,43 +111,51 @@ export default function HomePage() {
       <section className="section bg-light">
         <div className="container">
           <h2 className="section-title">Why Choose Connect2Edtech</h2>
-          <p className="section-subtitle">We bridge the gap between academic learning and industry requirements.</p>
+          <p className="section-subtitle">College partnerships that turn campus learning into job-ready careers.</p>
 
           <div className="hub-grid">
 
             <Link to="/courses" className="hub-card">
-              <span className="hub-icon">💻</span>
+              <span className="hub-icon">🏛️</span>
               <div className="hub-content">
-                <h3>Practical, Job-Ready Curriculum</h3>
-                <p>Hands-on projects and real-world exercises, not just theory.</p>
+                <h3>College Partnerships</h3>
+                <p>We collaborate with institutions to embed industry-relevant training directly into campus programs.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
-
-            <Link to="/about" className="hub-card">
-              <span className="hub-icon">🤝</span>
-              <div className="hub-content">
-                <h3>Mentorship & Internships</h3>
-                <p>Guided learning with experienced professionals and real project exposure.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
-
 
             <Link to="/courses" className="hub-card">
-              <span className="hub-icon">📚</span>
+              <span className="hub-icon">🏫</span>
               <div className="hub-content">
-                <h3>Wide Course Catalog</h3>
-                <p>From data science and web development to management and emerging tech.</p>
+                <h3>On-Campus Training</h3>
+                <p>Practical sessions and workshops delivered at the college, aligned with the curriculum.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
 
-            <Link to="/contact" className="hub-card">
-              <span className="hub-icon">💬</span>
+            <Link to="/courses" className="hub-card">
+              <span className="hub-icon">🛠️</span>
               <div className="hub-content">
-                <h3>Dedicated Support</h3>
-                <p>Get help with course selection, onboarding, and certification queries.</p>
+                <h3>Real Projects</h3>
+                <p>Students build production-style projects that strengthen portfolios and resumes.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/courses" className="hub-card">
+              <span className="hub-icon">✅</span>
+              <div className="hub-content">
+                <h3>Assessment & Certification</h3>
+                <p>Structured evaluations and verifiable certificates to validate skills and learning outcomes.</p>
+              </div>
+              <span className="hub-arrow">→</span>
+            </Link>
+
+            <Link to="/courses" className="hub-card">
+              <span className="hub-icon">🚀</span>
+              <div className="hub-content">
+                <h3>Placement Support</h3>
+                <p>Career guidance, interview prep, and placement assistance to help students launch professional careers.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
@@ -167,8 +175,7 @@ export default function HomePage() {
           </div>
 
           <p className="section-description">
-            Connect2Edtech is a comprehensive learning platform bridging the gap between academic education and industry requirements.
-            We provide practical training, certifications, mentorship, internships, and career guidance to help students become job-ready professionals.
+            Connect2Edtech partners with colleges to deliver practical, industry-aligned training on campus. We guide students from hands-on projects to verified certifications and placement-ready careers.
           </p>
 
           <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
@@ -251,28 +258,38 @@ export default function HomePage() {
       <section className="section">
         <div className="container">
           <h2 className="section-title">How It Works</h2>
-          <p className="section-subtitle">Start your learning journey in four simple steps.</p>
+          <p className="section-subtitle">Our end-to-end college partnership model in six steps.</p>
 
           <div className="process" style={{ marginTop: 40 }}>
             <div className="step">
               <div className="step-number">1</div>
-              <h3>Browse Courses</h3>
-              <p>Explore our catalog and find the right program for your career goals.</p>
+              <h3>Partner With Colleges</h3>
+              <p>We collaborate with institutions to embed industry-relevant training into campus programs.</p>
             </div>
             <div className="step">
               <div className="step-number">2</div>
-              <h3>Add to Cart</h3>
-              <p>Select courses and add them to your cart for enrollment.</p>
+              <h3>Train On Campus</h3>
+              <p>Practical sessions and workshops are delivered at the college by experienced mentors.</p>
             </div>
             <div className="step">
               <div className="step-number">3</div>
-              <h3>Enroll & Confirm</h3>
-              <p>Complete the enrollment form and confirm via WhatsApp with our team.</p>
+              <h3>Build Real Projects</h3>
+              <p>Students work on production-style projects to build hands-on skills and strong portfolios.</p>
             </div>
             <div className="step">
               <div className="step-number">4</div>
-               <h3>Launch Your Career</h3>
-               <p>Complete training and start your career with job-ready skills.</p>
+              <h3>Assess</h3>
+              <p>Structured evaluations measure understanding, application, and project quality.</p>
+            </div>
+            <div className="step">
+              <div className="step-number">5</div>
+              <h3>Certify</h3>
+              <p>Successful candidates receive verifiable certificates recognizing their skills and learning outcomes.</p>
+            </div>
+            <div className="step">
+              <div className="step-number">6</div>
+              <h3>Placement Support</h3>
+              <p>Career guidance, interview prep, and placement assistance to launch professional careers.</p>
             </div>
           </div>
 
@@ -341,10 +358,10 @@ export default function HomePage() {
               <h3 style={{ fontSize: '1.5rem', marginBottom: 12, color: '#000000' }}>What We Can Help With</h3>
               <ul style={{ listStyle: 'none', marginBottom: 0 }}>
                 {[
-                  'Course Selection Guidance',
+                  'College Partnership Inquiries',
+                  'Campus Training Scheduling',
                   'Internship Project Verification',
-                  'Career Guidance & CV Review',
-                  'Placement Guidance & CV Review'
+                  'Certification & Placement Support'
                 ].map((x, i) => (
                   <li key={i} style={{ fontSize: '0.95rem', color: '#333333', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ color: '#000000' }}>✓</span>
@@ -360,11 +377,11 @@ export default function HomePage() {
       {/* CTA */}
       <section className="cta">
         <div className="container">
-          <h2>Start Building Your Tech Career Today</h2>
-          <p>Explore our curriculum and enroll in our programs to secure future-ready skills.</p>
+          <h2>Launch Careers Through College Partnerships</h2>
+          <p>Explore our campus training model with real projects, certification, and placement support.</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/courses" className="btn primary">Explore Courses</Link>
-            <Link to="/enrollment" className="btn secondary">Enroll Now</Link>
+            <Link to="/courses" className="btn primary">Explore Programs</Link>
+            <Link to="/enrollment" className="btn secondary">Partner With Us</Link>
             <Link to="/contact" className="btn secondary">Talk to Us</Link>
           </div>
         </div>

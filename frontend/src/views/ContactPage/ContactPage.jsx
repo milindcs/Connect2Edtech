@@ -107,7 +107,7 @@ export default function ContactPage() {
       <section className="detail-hero" style={{ marginBottom: 48 }}>
         <h1 style={{ fontSize: '3rem', marginBottom: 12 }}>Contact Our Team</h1>
         <p className="section-subtitle">
-          Have questions about our training courses, certifications, placement support, or partnerships? We are here to help.
+          Have questions about college partnerships, on-campus training, certifications, or placement support? We are here to help.
         </p>
       </section>
 
@@ -263,10 +263,10 @@ export default function ContactPage() {
             <div className="support-box" style={{ marginTop: 'auto' }}>
               <h3 style={{ fontSize: '1.1rem', marginBottom: 12 }}>How We Can Help:</h3>
               <ul style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <li>Course Selection Guidance</li>
-                <li>Internship Project Verification</li>
-                <li>Verifiable Certification Processes</li>
-                <li>Placement Guidance & CV Review</li>
+                <li>College Partnership Inquiries</li>
+                <li>On-Campus Training Scheduling</li>
+                <li>Real Project Collaboration</li>
+                <li>Certification & Placement Support</li>
               </ul>
             </div>
           </div>

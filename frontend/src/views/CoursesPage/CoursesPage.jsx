@@ -68,9 +68,9 @@ export default function CoursesPage() {
   return (
     <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
       <section className="detail-hero" style={{ marginBottom: 48 }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: 12 }}>Explore Tech Programs</h1>
+        <h1 style={{ fontSize: '3rem', marginBottom: 12 }}>Campus Training Programs</h1>
         <p className="section-subtitle">
-          Select courses designed by industry experts to advance your technical and career-ready skillsets.
+          College-partnership programs designed for on-campus training, real projects, and placement outcomes.
         </p>
       </section>
 
