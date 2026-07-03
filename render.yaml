@@ -1,10 +1,13 @@
 services:
   - type: web
-    name: connect2edtech
-    env: node
-    buildCommand: npm install && npm run build -w frontend
-    startCommand: cd backend && npm start
-    rootDir: .
+    name: connect2edtech-api
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: node server.js
     envVars:
-      - key: NODE_VERSION
-        value: 20
+      - key: MONGODB_URI
+        sync: false
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /health
