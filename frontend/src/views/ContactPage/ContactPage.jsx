@@ -119,9 +119,9 @@ export default function ContactPage() {
             We've recorded your inquiry. Redirecting to WhatsApp so you can chat directly with our advisor.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <Link to="/courses" className="btn secondary">
-              Explore Courses
-            </Link>
+<Link to="/courses" className="btn secondary">
+               Browse Courses
+             </Link>
             <a
               href={buildWhatsAppUrl('Hi, I just submitted my contact inquiry on Connect2Edtech!')}
               target="_blank"
