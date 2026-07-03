@@ -206,30 +206,32 @@ export default function HomePage() {
           <div className="card-grid">
             {featuredCourses.map((c) => (
               <div key={c.key} className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div className="card-number">{c.price === 0 ? 'Free' : `₹${c.price}`}</div>
-                <h3 style={{ marginBottom: 8, color: '#000000' }}>{c.title}</h3>
-                <p style={{ marginBottom: 10 }}>{c.subtitle}</p>
-                <p style={{ color: '#333333', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>
-                  {c.meta}
-                </p>
-                <ul style={{ listStyle: 'none', marginBottom: 20 }}>
-                  {c.features.slice(0, 2).map((f, i) => (
-                    <li
-                      key={i}
-                      style={{
-                        fontSize: '0.9rem',
-                        color: '#333333',
-                        marginBottom: 8,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8
-                      }}
-                    >
-                      <span style={{ color: '#ff00ff' }}>✦</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
+                <Link to={`/course/${c.key}`} style={{ textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
+                  <div className="card-number">{c.price === 0 ? 'Free' : `₹${c.price}`}</div>
+                  <h3 style={{ marginBottom: 8, color: '#000000' }}>{c.title}</h3>
+                  <p style={{ marginBottom: 10 }}>{c.subtitle}</p>
+                  <p style={{ color: '#333333', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>
+                    {c.meta}
+                  </p>
+                  <ul style={{ listStyle: 'none', marginBottom: 20 }}>
+                    {c.features.slice(0, 2).map((f, i) => (
+                      <li
+                        key={i}
+                        style={{
+                          fontSize: '0.9rem',
+                          color: '#333333',
+                          marginBottom: 8,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8
+                        }}
+                      >
+                        <span style={{ color: '#ff00ff' }}>✦</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </Link>
                 <div className="card-actions" style={{ marginTop: 'auto' }}>
                   <Link to={`/course/${c.key}`} className="btn primary" style={{ flexGrow: 1 }}>View Details</Link>
                 </div>
