@@ -35,8 +35,8 @@ export default function HomePage() {
             <h1>Connect2Edtech</h1>
             <p>College partnerships that turn campus learning into job-ready careers. Practical training, real projects, certification, and placement support.</p>
 <div className="hero-buttons">
-               <Link to={`/course/${featuredCourses[0]?.key || 'webdev'}`} className="btn primary">Explore Programs</Link>
-               <Link to="/enrollment" className="btn secondary">Partner With Us</Link>
+<Link to="/courses" className="btn primary">Explore Programs</Link>
+                <Link to="/enrollment" className="btn secondary">Course Enrollment Form</Link>
              </div>
           </div>
         </div>
@@ -340,8 +340,8 @@ export default function HomePage() {
                 </p>
               </div>
               <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <Link to="/contact" className="btn primary">Open Contact Form</Link>
-                <Link to="/courses" className="btn secondary">Browse Courses</Link>
+<Link to="/contact" className="btn primary">Contact Us</Link>
+                 <Link to="/courses" className="btn secondary">Browse Courses</Link>
               </div>
             </div>
 
@@ -371,10 +371,10 @@ export default function HomePage() {
           <h2>Launch Careers Through College Partnerships</h2>
           <p>Explore our campus training model with real projects, certification, and placement support.</p>
 <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-             <Link to="/courses" className="btn primary">Explore Programs</Link>
-             <Link to="/enrollment" className="btn secondary">Partner With Us</Link>
-             <Link to="/contact" className="btn secondary">Talk to Us</Link>
-           </div>
+              <Link to="/courses" className="btn primary">Explore Programs</Link>
+              <Link to="/enrollment" className="btn secondary">Course Enrollment Form</Link>
+              <Link to="/contact" className="btn secondary">Talk to Us</Link>
+            </div>
         </div>
       </section>
     </>
