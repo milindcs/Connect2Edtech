@@ -103,49 +103,51 @@ export default function CoursesPage() {
           <p style={{ fontSize: '1.2rem' }}>No programs found matching your filters.</p>
         </div>
       ) : (
-        <div className="card-grid animate-on-scroll animate-slide stagger-3">
-          {filteredCourses.map((c) => (
-            <div className="card" key={c.key} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div className="card-number">
-                {c.price === 0 ? 'Free Training' : `₹${c.price}`}
-              </div>
-              <h3 style={{ fontSize: '1.4rem', marginBottom: 8 }}>{c.title}</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>{c.meta}</p>
-              <p style={{ fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: 20 }}>{c.subtitle}</p>
-              
-              <ul style={{ listStyle: 'none', marginBottom: 24, flexGrow: 1 }}>
-                {c.features.slice(0, 3).map((f, i) => (
-                  <li key={i} style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: 'var(--border-focus)' }}>✦</span> {f}
-                  </li>
-                ))}
-                {c.features.length > 3 && (
-                  <li style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    + {c.features.length - 3} more modules
-                  </li>
-                )}
-              </ul>
+<div className="card-grid animate-on-scroll animate-slide stagger-3">
+           {filteredCourses.map((c) => (
+             <div key={c.key} className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+               <Link to={`/course/${c.key}`} style={{ textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
+                 <div className="card-number">
+                   {c.price === 0 ? 'Free Training' : `₹${c.price}`}
+                 </div>
+                 <h3 style={{ fontSize: '1.4rem', marginBottom: 8 }}>{c.title}</h3>
+                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>{c.meta}</p>
+                 <p style={{ fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: 20 }}>{c.subtitle}</p>
+                 
+                 <ul style={{ listStyle: 'none', marginBottom: 24 }}>
+                   {c.features.slice(0, 3).map((f, i) => (
+                     <li key={i} style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                       <span style={{ color: 'var(--border-focus)' }}>✦</span> {f}
+                     </li>
+                   ))}
+                   {c.features.length > 3 && (
+                     <li style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                       + {c.features.length - 3} more modules
+                     </li>
+                   )}
+                 </ul>
+               </Link>
 
-              <div className="card-actions" style={{ marginTop: 'auto' }}>
-                <button
-                  type="button"
-                  className="btn primary"
-                  style={{ flexGrow: 1 }}
-                  onClick={() => handleAddToCart(c)}
-                >
-                  Add to Cart
-                </button>
-                <Link
-                  to={`/course/${c.key}`}
-                  className="btn secondary"
-                  style={{ textAlign: 'center' }}
-                >
-                  Details
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+               <div className="card-actions" style={{ marginTop: 'auto' }}>
+                 <button
+                   type="button"
+                   className="btn primary"
+                   style={{ flexGrow: 1 }}
+                   onClick={() => handleAddToCart(c)}
+                 >
+                   Add to Cart
+                 </button>
+                 <Link
+                   to={`/course/${c.key}`}
+                   className="btn secondary"
+                   style={{ textAlign: 'center' }}
+                 >
+                   View Details
+                 </Link>
+               </div>
+             </div>
+           ))}
+         </div>
       )}
 
       {/* Toast Alerts Overlay */}
