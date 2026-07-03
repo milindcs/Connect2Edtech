@@ -832,6 +832,10 @@ input:focus, select:focus, textarea:focus {
   grid-template-columns: 1.5fr 1fr 1.5fr;
   gap: 60px;
   margin-bottom: 40px;
+  justify-content: center;
+  max-width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .footer-column h3 {
@@ -840,16 +844,19 @@ input:focus, select:focus, textarea:focus {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #ffffff;
+  text-align: center;
 }
 
 .footer-column p {
   color: #f0f0f0;
   font-size: 0.95rem;
   margin-bottom: 20px;
+  text-align: center;
 }
 
 .contact-info {
   list-style: none;
+  text-align: center;
 }
 
 .contact-info li {
@@ -870,6 +877,7 @@ input:focus, select:focus, textarea:focus {
 
 .footer-column ul:not(.contact-info) {
   list-style: none;
+  text-align: center;
 }
 
 .footer-column ul:not(.contact-info) li {
@@ -889,6 +897,7 @@ input:focus, select:focus, textarea:focus {
 .newsletter-form {
   display: flex;
   gap: 12px;
+  justify-content: center;
 }
 
 .newsletter-form input {
