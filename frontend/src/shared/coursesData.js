@@ -169,16 +169,21 @@ export const coursesData = {
       'Job market guidance',
     ],
   },
-  nontechplus: {
+nontechplus: {
     key: 'nontechplus',
     title: 'Non-Technical Training Plus',
     subtitle: 'Advanced business analytics and management skills.',
     description:
       'Comprehensive non-technical training covering advanced analytics, finance, change management, and more.',
-price: 499,
+    price: 499,
+    hr: '36hr',
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
+      'Business analytics fundamentals',
+      'Financial literacy for managers',
+      'Change management frameworks',
+      'Risk management & compliance',
       'Customer experience strategy',
     ],
   },
