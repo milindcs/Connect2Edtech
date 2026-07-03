@@ -258,10 +258,14 @@ const handleSubmit = async (e) => {
               By signing up, you agree to be contacted about your learning journey.
             </div>
 
-            <div className="hint" style={{ marginTop: 10 }}>
-              Already have an account? <Link to="/contact">Contact support</Link> (login not implemented).
-            </div>
-          </form>
+<div className="hint" style={{ marginTop: 10 }}>
+               Already have an account? <Link to="/contact">Contact support</Link> (login not implemented).
+             </div>
+
+             <div style={{ marginTop: 24, textAlign: 'center' }}>
+               <Link to="/" className="btn secondary">← Back to Home</Link>
+             </div>
+           </form>
         </div>
       </div>
 

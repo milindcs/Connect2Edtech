@@ -46,22 +46,25 @@ export default function AboutPage() {
             <p>We are a visionary educational technology organization dedicated to bridging the gap between traditional learning and the rapidly evolving demands of the global workforce. By creating comprehensive, cutting-edge curricula, we transform complex digital landscapes into accessible, structured pathways for learners everywhere.</p>
           </div>
 
-          <div className="mission-vision-container">
-            <div className="mv-inner">
-              <div>
-                <h3>Our Mission</h3>
-                <img className="round-image" src="/assets/Gemini_Generated_Image_u91l8ru91l8ru91l.png" alt="Our Mission" />
-                <p>To build a globally connected ecosystem where every learner has seamless access to future-proof skills, empowering them to become proactive creators, innovators, and leaders of tomorrow's digital world.</p>
-              </div>
+<div className="mission-vision-container">
+             <div className="mv-inner">
+               <div>
+                 <h3>Our Mission</h3>
+                 <img className="round-image" src="/assets/Gemini_Generated_Image_u91l8ru91l8ru91l.png" alt="Our Mission" />
+                 <p>To build a globally connected ecosystem where every learner has seamless access to future-proof skills, empowering them to become proactive creators, innovators, and leaders of tomorrow's digital world.</p>
+               </div>
 
-              <div>
-                <h3>Our Vision</h3>
-                <img className="round-image" src="/assets/Gemini_Generated_Image_6bqcq36bqcq36bqc (1).png" alt="Our Vision" />
-                <p><strong>Empower Through Innovation:</strong> To design and deliver comprehensive, industry-aligned curricula focusing on Digital Literacy, Computational Thinking, and Coding Fundamentals.</p>
-                <p><strong>Bridge the Gap:</strong> To provide educational institutions and students with the critical tools required to transition smoothly into the future of technology.</p>
-              </div>
-            </div>
-          </div>
+               <div>
+                 <h3>Our Vision</h3>
+                 <img className="round-image" src="/assets/Gemini_Generated_Image_6bqcq36bqcq36bqc (1).png" alt="Our Vision" />
+                 <p><strong>Empower Through Innovation:</strong> To design and deliver comprehensive, industry-aligned curricula focusing on Digital Literacy, Computational Thinking, and Coding Fundamentals.</p>
+                 <p><strong>Bridge the Gap:</strong> To provide educational institutions and students with the critical tools required to transition smoothly into the future of technology.</p>
+               </div>
+             </div>
+             <div style={{ marginTop: 24, textAlign: 'center' }}>
+               <Link to="/" className="btn secondary">Back to Home</Link>
+             </div>
+           </div>
         </div>
       </section>
 

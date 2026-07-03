@@ -292,6 +292,10 @@ export default function EnrollmentPage() {
           </div>
         ))}
       </div>
+
+      <div style={{ marginTop: 32, textAlign: 'center' }}>
+        <Link to="/" className="btn secondary">← Back to Home</Link>
+      </div>
     </div>
   )
 }

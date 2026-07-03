@@ -103,11 +103,14 @@ export default function CourseDetailsPage() {
                 ))}
               </ul>
 
-              <div className="btn-row" style={{ marginTop: 24 }}>
-                <Link to="/courses" className="btn secondary">
-                  ← Back to Courses
-                </Link>
-              </div>
+<div className="btn-row" style={{ marginTop: 24 }}>
+                 <Link to="/courses" className="btn secondary">
+                   ← Back to Courses
+                 </Link>
+                 <Link to="/" className="btn secondary">
+                   ← Back to Home
+                 </Link>
+               </div>
             </div>
 
             <aside className="card" aria-label="Course Summary" style={{ width: '100%' }}>
