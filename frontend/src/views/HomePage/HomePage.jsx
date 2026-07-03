@@ -1,31 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
 
 export default function HomePage() {
-  const [cartCount, setCartCount] = useState(0)
-
-  useEffect(() => {
-    const sync = async () => {
-      try {
-        const { cartList } = await import('../../shared/cartApi.js')
-        const res = await cartList()
-        const items = Array.isArray(res?.items) ? res.items : []
-        setCartCount(items.length)
-      } catch {
-        setCartCount(0)
-      }
-    }
-
-    sync()
-    window.addEventListener('cart-updated', sync)
-    window.addEventListener('storage', sync)
-    return () => {
-      window.removeEventListener('cart-updated', sync)
-      window.removeEventListener('storage', sync)
-    }
-  }, [])
-
   useEffect(() => {
     const sections = document.querySelectorAll('.animate-on-scroll')
     if (!('IntersectionObserver' in window)) {
@@ -95,24 +72,6 @@ export default function HomePage() {
               <div className="hub-content">
                 <h3>Enrollment</h3>
                 <p>Complete enrollment steps to reserve your seat in a course.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
-
-            <Link to="/cart" className="hub-card">
-              <span className="hub-icon">🛒</span>
-              <div className="hub-content">
-                <h3>Cart</h3>
-                <p>Review selected courses and proceed to enrollment.</p>
-              </div>
-              <span className="hub-arrow">→</span>
-            </Link>
-
-            <Link to="/enrollment" className="hub-card">
-              <span className="hub-icon">📝</span>
-              <div className="hub-content">
-                <h3>Enrollment</h3>
-                <p>Complete enrollment steps to reserve your seat in a program.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
@@ -278,10 +237,9 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
-            <Link to="/courses" className="btn primary">Open Full Courses Catalog</Link>
-            <Link to="/cart" className="btn secondary">My Cart ({cartCount})</Link>
-          </div>
+<div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+             <Link to="/courses" className="btn primary">Open Full Courses Catalog</Link>
+           </div>
         </div>
       </section>
 
@@ -325,10 +283,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 28 }}>
-            <Link to="/cart" className="btn primary">Go to Cart ({cartCount})</Link>
-            <Link to="/enrollment" className="btn secondary">Start Enrollment</Link>
-          </div>
+<div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 28 }}>
+             <Link to="/enrollment" className="btn primary">Start Enrollment</Link>
+           </div>
         </div>
       </section>
 
