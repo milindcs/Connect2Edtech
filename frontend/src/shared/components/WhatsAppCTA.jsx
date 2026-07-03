@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const PHONE = '7019436720';
@@ -16,6 +16,8 @@ function clean(value) {
 
 export default function WhatsAppCTA() {
   const [href, setHref] = useState('https://wa.me/' + PHONE);
+  const [position, setPosition] = useState({ x: null, y: null });
+  const dragState = useRef({ dragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0, moved: false });
   const location = useLocation();
 
   useEffect(() => {
@@ -65,7 +67,6 @@ export default function WhatsAppCTA() {
       ];
 
 
-      // Read details from the DOM (useful for course details or cert details page)
       const course = getVisibleText('#detail-course-name');
       const certType = getSelectedOptionText(document.getElementById('verifyType')) || getVisibleText('#previewType') || getVisibleText('#certTitle');
       const program = getVisibleText('#previewProgram') || getVisibleText('#detail-course-name');
@@ -161,7 +162,6 @@ export default function WhatsAppCTA() {
 
     updateWhatsAppLinks();
 
-    // Listeners for user input and storage events to refresh message
     document.addEventListener('input', updateWhatsAppLinks, true);
     document.addEventListener('change', updateWhatsAppLinks, true);
     window.addEventListener('storage', updateWhatsAppLinks);
@@ -173,6 +173,72 @@ export default function WhatsAppCTA() {
     };
   }, [location]);
 
+  const getInitialX = () => {
+    if (position.x !== null) return position.x;
+    return window.innerWidth - 140;
+  };
+
+  const getInitialY = () => {
+    if (position.y !== null) return position.y;
+    return window.innerHeight - 80;
+  };
+
+  const handlePointerDown = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragState.current = {
+      dragging: true,
+      startX: clientX,
+      startY: clientY,
+      initialX: getInitialX(),
+      initialY: getInitialY(),
+      moved: false,
+    };
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handlePointerMove = (e) => {
+      if (!dragState.current.dragging) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - dragState.current.startX;
+      const dy = clientY - dragState.current.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        dragState.current.moved = true;
+      }
+      const newX = Math.max(0, Math.min(window.innerWidth - 60, dragState.current.initialX + dx));
+      const newY = Math.max(0, Math.min(window.innerHeight - 60, dragState.current.initialY + dy));
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handlePointerUp = () => {
+      dragState.current.dragging = false;
+    };
+
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+    window.addEventListener('touchmove', handlePointerMove, { passive: false });
+    window.addEventListener('touchend', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('touchmove', handlePointerMove);
+      window.removeEventListener('touchend', handlePointerUp);
+    };
+  }, []);
+
+  const handleClick = (e) => {
+    if (dragState.current.moved) {
+      e.preventDefault();
+      dragState.current.moved = false;
+    }
+  };
+
+  const left = getInitialX();
+  const top = getInitialY();
+
   return (
     <a
       id="whatsappFloatingCta"
@@ -181,6 +247,10 @@ export default function WhatsAppCTA() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
+      style={{ left, top, right: 'auto', bottom: 'auto' }}
+      onMouseDown={handlePointerDown}
+      onTouchStart={handlePointerDown}
+      onClick={handleClick}
     >
       <span className="whatsapp-floating-icon" aria-hidden="true">
         <svg
