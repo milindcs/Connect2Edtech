@@ -67,7 +67,7 @@ export default function CoursesPage() {
 
   return (
     <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
-      <section className="detail-hero" style={{ marginBottom: 48 }}>
+      <section className="detail-hero animate-on-scroll animate-fade-up" style={{ marginBottom: 48 }}>
         <h1 style={{ fontSize: '3rem', marginBottom: 12 }}>Campus Training Programs</h1>
         <p className="section-subtitle">
           College-partnership programs designed for on-campus training, real projects, and placement outcomes.
@@ -103,7 +103,7 @@ export default function CoursesPage() {
           <p style={{ fontSize: '1.2rem' }}>No programs found matching your filters.</p>
         </div>
       ) : (
-        <div className="card-grid">
+        <div className="card-grid animate-on-scroll animate-slide stagger-3">
           {filteredCourses.map((c) => (
             <div className="card" key={c.key} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div className="card-number">

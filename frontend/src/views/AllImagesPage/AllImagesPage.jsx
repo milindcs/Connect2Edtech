@@ -41,7 +41,7 @@ export default function AllImagesPage() {
 
   return (
     <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
-      <section className="detail-hero" style={{ marginBottom: 32 }}>
+      <section className="detail-hero animate-on-scroll animate-fade-up" style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: '2.4rem', marginBottom: 8 }}>All Images (Referenced Assets)</h1>
         <p className="section-subtitle">
           This list is limited to image URLs already referenced by the frontend/app. For a complete listing
@@ -56,6 +56,7 @@ export default function AllImagesPage() {
       </div>
 
       <div
+        className="animate-on-scroll animate-scale stagger-2"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
 
@@ -8,7 +8,6 @@ export default function HomePage() {
   useEffect(() => {
     const sync = async () => {
       try {
-        // Cart is server-backed; just count items.
         const { cartList } = await import('../../shared/cartApi.js')
         const res = await cartList()
         const items = Array.isArray(res?.items) ? res.items : []
@@ -17,7 +16,6 @@ export default function HomePage() {
         setCartCount(0)
       }
     }
-
 
     sync()
     window.addEventListener('cart-updated', sync)
@@ -28,13 +26,133 @@ export default function HomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    const sections = document.querySelectorAll('.animate-on-scroll')
+    if (!('IntersectionObserver' in window)) {
+      sections.forEach((el) => el.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+    sections.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
   const featuredCourses = useMemo(() => Object.values(coursesData).slice(0, 6), [])
+  const sliderRef = useRef(null)
+  const dragRef = useRef({ dragging: false, startX: 0, scrollLeft: 0, moved: false })
+
+  const heroSlides = [
+    {
+      tag: 'Partnership',
+      title: 'Partner With Colleges',
+      text: 'We collaborate with institutions to embed industry-relevant training directly into campus programs.',
+      cta: { to: '/courses', label: 'Explore Programs' },
+    },
+    {
+      tag: 'Training',
+      title: 'Train On Campus',
+      text: 'Practical sessions and workshops are delivered at the college by experienced mentors.',
+      cta: { to: '/courses', label: 'View Courses' },
+    },
+    {
+      tag: 'Projects',
+      title: 'Build Real Projects',
+      text: 'Students work on production-style projects to build hands-on skills and strong portfolios.',
+      cta: { to: '/courses', label: 'See Programs' },
+    },
+    {
+      tag: 'Certification',
+      title: 'Assess & Certify',
+      text: 'Structured evaluations and verifiable certificates recognizing skills and learning outcomes.',
+      cta: { to: '/courses', label: 'Get Certified' },
+    },
+    {
+      tag: 'Careers',
+      title: 'Placement Support',
+      text: 'Career guidance, interview prep, and placement assistance to launch professional careers.',
+      cta: { to: '/courses', label: 'Start Careers' },
+    },
+  ]
+
+  const handleSliderPointerDown = (e) => {
+    const slider = sliderRef.current
+    if (!slider) return
+    dragRef.current = {
+      dragging: true,
+      startX: e.touches ? e.touches[0].clientX : e.clientX,
+      scrollLeft: slider.scrollLeft,
+      moved: false,
+    }
+    e.preventDefault()
+  }
+
+  const handleSliderPointerMove = (e) => {
+    if (!dragRef.current.dragging) return
+    const slider = sliderRef.current
+    if (!slider) return
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const dx = clientX - dragRef.current.startX
+    if (Math.abs(dx) > 3) dragRef.current.moved = true
+    slider.scrollLeft = dragRef.current.scrollLeft - dx
+  }
+
+  const handleSliderPointerUp = () => {
+    dragRef.current.dragging = false
+  }
+
+  const scrollToSlide = (index) => {
+    const slider = sliderRef.current
+    if (!slider) return
+    const slide = slider.querySelector('.hero-slide')
+    if (!slide) return
+    const gap = 24
+    const offset = index * (slide.offsetWidth + gap)
+    slider.scrollTo({ left: offset, behavior: 'smooth' })
+  }
 
   return (
     <>
+      {/* DRAGGABLE HERO SLIDER */}
+      <section className="hero-slider animate-on-scroll animate-fade-up">
+        <div
+          ref={sliderRef}
+          className="hero-slider-track"
+          onMouseDown={handleSliderPointerDown}
+          onMouseMove={handleSliderPointerMove}
+          onMouseUp={handleSliderPointerUp}
+          onMouseLeave={handleSliderPointerUp}
+          onTouchStart={handleSliderPointerDown}
+          onTouchMove={handleSliderPointerMove}
+          onTouchEnd={handleSliderPointerUp}
+        >
+          {heroSlides.map((slide, idx) => (
+            <div key={idx} className="hero-slide">
+              <span className="hero-slide-tag">{slide.tag}</span>
+              <h3>{slide.title}</h3>
+              <p>{slide.text}</p>
+              <Link to={slide.cta.to} className="btn primary">{slide.cta.label}</Link>
+            </div>
+          ))}
+        </div>
+        <div className="hero-slider-dots">
+          {heroSlides.map((_, idx) => (
+            <button key={idx} type="button" className="hero-slider-dot" onClick={() => scrollToSlide(idx)} aria-label={`Slide ${idx + 1}`} />
+          ))}
+        </div>
+      </section>
 
       {/* QUICK ACCESS */}
-      <section className="section">
+      <section className="section animate-on-scroll animate-fade-up stagger-1">
         <div className="container">
           <h2 className="section-title">Quick Access</h2>
           <p className="section-subtitle">Jump directly to any Connect2Edtech page from the homepage.</p>
@@ -108,7 +226,7 @@ export default function HomePage() {
       </section>
 
       {/* WHY CHOOSE US */}
-      <section className="section bg-light">
+      <section className="section bg-light animate-on-scroll animate-fade-left stagger-2">
         <div className="container">
           <h2 className="section-title">Why Choose Connect2Edtech</h2>
           <p className="section-subtitle">College partnerships that turn campus learning into job-ready careers.</p>
@@ -162,8 +280,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-{/* ABOUT PREVIEW */}
-      <section id="about" className="section">
+      {/* ABOUT PREVIEW */}
+      <section id="about" className="section animate-on-scroll animate-fade-right stagger-2">
         <div className="container">
           <h2 className="section-title">About Connect2Edtech</h2>
 
@@ -184,7 +302,7 @@ export default function HomePage() {
         </div>
       </section>
       {/* LEADERSHIP */}
-      <section className="section">
+      <section className="section animate-on-scroll animate-scale stagger-3">
         <div className="container">
           <h2 className="section-title">Meet Our Leadership</h2>
           <p className="section-subtitle">
@@ -206,7 +324,7 @@ export default function HomePage() {
       </section>
 
       {/* FEATURED COURSES */}
-      <section className="section">
+      <section className="section animate-on-scroll animate-slide stagger-4">
 
         <div className="container">
           <h2 className="section-title">Featured Courses</h2>
@@ -255,7 +373,7 @@ export default function HomePage() {
 
 
       {/* ENROLLMENT FLOW */}
-      <section className="section">
+      <section className="section animate-on-scroll animate-fade-up stagger-5">
         <div className="container">
           <h2 className="section-title">How It Works</h2>
           <p className="section-subtitle">Our end-to-end college partnership model in six steps.</p>
@@ -301,7 +419,7 @@ export default function HomePage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="section bg-light">
+      <section className="section bg-light animate-on-scroll animate-fade-left stagger-5">
         <div className="container">
           <h2 className="section-title">Success Stories</h2>
           <p className="section-subtitle">What our students say about their learning experience with us.</p>
@@ -375,7 +493,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="cta">
+      <section className="cta animate-on-scroll animate-scale stagger-6">
         <div className="container">
           <h2>Launch Careers Through College Partnerships</h2>
           <p>Explore our campus training model with real projects, certification, and placement support.</p>

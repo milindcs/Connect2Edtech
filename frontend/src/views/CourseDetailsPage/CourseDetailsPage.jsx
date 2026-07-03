@@ -76,12 +76,12 @@ export default function CourseDetailsPage() {
   return (
     <div className="container" style={{ padding: '60px 24px' }}>
       <div className="detail-shell">
-        <section className="detail-hero">
+        <section className="detail-hero animate-on-scroll animate-fade-up">
           <h1 id="detail-title">{course.title} Details</h1>
           <p id="detail-subtitle">{course.subtitle}</p>
         </section>
 
-        <section className="detail-body">
+        <section className="detail-body animate-on-scroll animate-slide stagger-2">
           <div className="two-col">
             <div>
               {course.image && (
