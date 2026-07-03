@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
 
@@ -48,106 +48,20 @@ export default function HomePage() {
   }, [])
 
   const featuredCourses = useMemo(() => Object.values(coursesData).slice(0, 6), [])
-  const sliderRef = useRef(null)
-  const dragRef = useRef({ dragging: false, startX: 0, scrollLeft: 0, moved: false })
-
-  const heroSlides = [
-    {
-      tag: 'Partnership',
-      title: 'Partner With Colleges',
-      text: 'We collaborate with institutions to embed industry-relevant training directly into campus programs.',
-      cta: { to: '/courses', label: 'Explore Programs' },
-    },
-    {
-      tag: 'Training',
-      title: 'Train On Campus',
-      text: 'Practical sessions and workshops are delivered at the college by experienced mentors.',
-      cta: { to: '/courses', label: 'View Courses' },
-    },
-    {
-      tag: 'Projects',
-      title: 'Build Real Projects',
-      text: 'Students work on production-style projects to build hands-on skills and strong portfolios.',
-      cta: { to: '/courses', label: 'See Programs' },
-    },
-    {
-      tag: 'Certification',
-      title: 'Assess & Certify',
-      text: 'Structured evaluations and verifiable certificates recognizing skills and learning outcomes.',
-      cta: { to: '/courses', label: 'Get Certified' },
-    },
-    {
-      tag: 'Careers',
-      title: 'Placement Support',
-      text: 'Career guidance, interview prep, and placement assistance to launch professional careers.',
-      cta: { to: '/courses', label: 'Start Careers' },
-    },
-  ]
-
-  const handleSliderPointerDown = (e) => {
-    const slider = sliderRef.current
-    if (!slider) return
-    dragRef.current = {
-      dragging: true,
-      startX: e.touches ? e.touches[0].clientX : e.clientX,
-      scrollLeft: slider.scrollLeft,
-      moved: false,
-    }
-    e.preventDefault()
-  }
-
-  const handleSliderPointerMove = (e) => {
-    if (!dragRef.current.dragging) return
-    const slider = sliderRef.current
-    if (!slider) return
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX
-    const dx = clientX - dragRef.current.startX
-    if (Math.abs(dx) > 3) dragRef.current.moved = true
-    slider.scrollLeft = dragRef.current.scrollLeft - dx
-  }
-
-  const handleSliderPointerUp = () => {
-    dragRef.current.dragging = false
-  }
-
-  const scrollToSlide = (index) => {
-    const slider = sliderRef.current
-    if (!slider) return
-    const slide = slider.querySelector('.hero-slide')
-    if (!slide) return
-    const gap = 24
-    const offset = index * (slide.offsetWidth + gap)
-    slider.scrollTo({ left: offset, behavior: 'smooth' })
-  }
 
   return (
     <>
-      {/* DRAGGABLE HERO SLIDER */}
-      <section className="hero-slider animate-on-scroll animate-fade-up">
-        <div
-          ref={sliderRef}
-          className="hero-slider-track"
-          onMouseDown={handleSliderPointerDown}
-          onMouseMove={handleSliderPointerMove}
-          onMouseUp={handleSliderPointerUp}
-          onMouseLeave={handleSliderPointerUp}
-          onTouchStart={handleSliderPointerDown}
-          onTouchMove={handleSliderPointerMove}
-          onTouchEnd={handleSliderPointerUp}
-        >
-          {heroSlides.map((slide, idx) => (
-            <div key={idx} className="hero-slide">
-              <span className="hero-slide-tag">{slide.tag}</span>
-              <h3>{slide.title}</h3>
-              <p>{slide.text}</p>
-              <Link to={slide.cta.to} className="btn primary">{slide.cta.label}</Link>
+      {/* HERO SECTION WITH LEFT-RIGHT TEXT ANIMATION */}
+      <section className="hero animate-on-scroll animate-fade-left">
+        <div className="container">
+          <div className="hero-content">
+            <h1>Connect2Edtech</h1>
+            <p>College partnerships that turn campus learning into job-ready careers. Practical training, real projects, certification, and placement support.</p>
+            <div className="hero-buttons">
+              <Link to="/courses" className="btn primary">Explore Programs</Link>
+              <Link to="/enrollment" className="btn secondary">Partner With Us</Link>
             </div>
-          ))}
-        </div>
-        <div className="hero-slider-dots">
-          {heroSlides.map((_, idx) => (
-            <button key={idx} type="button" className="hero-slider-dot" onClick={() => scrollToSlide(idx)} aria-label={`Slide ${idx + 1}`} />
-          ))}
+          </div>
         </div>
       </section>
 
