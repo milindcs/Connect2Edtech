@@ -205,7 +205,7 @@ export default function HomePage() {
 
         <div className="container">
           <h2 className="section-title">Featured Courses</h2>
-          <p className="section-subtitle">A quick look at programs you can explore, add to cart, and enroll in.</p>
+          <p className="section-subtitle">A quick look at programs you can explore and enroll in.</p>
 
           <div className="card-grid">
             {featuredCourses.map((c) => (
@@ -217,7 +217,7 @@ export default function HomePage() {
                   <p style={{ color: '#333333', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>
                     {c.meta}
                   </p>
-                  <ul style={{ listStyle: 'none', marginBottom: 20 }}>
+<ul style={{ listStyle: 'none', marginBottom: 20 }}>
                     {c.features.slice(0, 2).map((f, i) => (
                       <li
                         key={i}

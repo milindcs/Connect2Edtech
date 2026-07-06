@@ -4,13 +4,10 @@ import * as coursesDataModule from '../../shared/coursesData'
 
 const coursesData = coursesDataModule?.coursesData || coursesDataModule?.default || coursesDataModule
 
-import { cartAdd } from '../../shared/cartApi'
-
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
-  const [toasts, setToasts] = useState([])
 
   useEffect(() => {
     document.title = 'Courses - Core Technology Domains'
@@ -51,30 +48,6 @@ export default function CoursesPage() {
     return 'special';
   }
 
-  const showToast = (message, type = 'success') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  }
-
-  const handleAddToCart = async (course) => {
-
-    try {
-      await cartAdd({
-        courseKey: course.key,
-        title: course.title,
-        price: course.price,
-        image: course.image || '',
-      })
-      window.dispatchEvent(new Event('cart-updated'))
-      showToast(`Added ${course.title} to your cart!`, 'success')
-    } catch (e) {
-      console.error(e)
-      showToast('Could not add to cart. Please try again.', 'error')
-    }
-  }
 
 
   const filteredCourses = Object.values(coursesData).filter((c) => {
@@ -149,36 +122,19 @@ export default function CoursesPage() {
                  </ul>
                </Link>
 
-               <div className="card-actions" style={{ marginTop: 'auto' }}>
-                 <button
-                   type="button"
-                   className="btn primary"
-                   style={{ flexGrow: 1 }}
-                   onClick={() => handleAddToCart(c)}
-                 >
-                   Add to Cart
-                 </button>
-                 <Link
-                   to={`/course/${c.key}`}
-                   className="btn secondary"
-                   style={{ textAlign: 'center' }}
-                 >
-                   View Details
-                 </Link>
-               </div>
+                <div className="card-actions" style={{ marginTop: 'auto' }}>
+                  <Link
+                    to={`/course/${c.key}`}
+                    className="btn primary"
+                    style={{ flexGrow: 1, textAlign: 'center' }}
+                  >
+                    View Details
+                  </Link>
+                </div>
              </div>
            ))}
          </div>
       )}
-
-      {/* Toast Alerts Overlay */}
-      <div className="toast-container">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast show ${t.type}`}>
-            {t.message}
-          </div>
-        ))}
-      </div>
 
       <div style={{ marginTop: 32, textAlign: 'center' }}>
         <Link to="/" className="btn secondary">← Back to Home</Link>

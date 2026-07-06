@@ -31,35 +31,6 @@ export default function WhatsAppCTA() {
       return clean(select.selectedOptions[0].textContent);
     }
 
-    async function getCartItems() {
-      try {
-        const { cartList } = await import('../../shared/cartApi.js')
-        const res = await cartList()
-        const items = Array.isArray(res?.items) ? res.items : []
-        return items
-      } catch {
-        return []
-      }
-    }
-
-
-    async function getCartSummary() {
-      const cart = await getCartItems();
-      if (!cart.length) return [];
-
-
-      const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-      return [
-        {
-          label: 'Cart courses',
-          value: cart.map(item => `${item.title || item.key || 'Course'}${item.key ? ' (Key: ' + item.key + ')' : ''}${item.price ? ' - ₹' + item.price : ''}`).join('; ')
-        },
-        {
-          label: 'Cart total',
-          value: '₹' + total.toFixed(2)
-        }
-      ];
-    }
 
     async function getPageDetails() {
       const details = [
@@ -81,8 +52,7 @@ export default function WhatsAppCTA() {
       if (detailMeta) details.push({ label: 'Course meta', value: detailMeta });
       if (certMeta) details.push({ label: 'Certification meta', value: certMeta });
 
-      const cartSummary = await getCartSummary()
-      return details.concat(cartSummary);
+      return details;
 
     }
 

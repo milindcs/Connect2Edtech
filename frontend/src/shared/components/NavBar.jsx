@@ -15,37 +15,10 @@ const navItems = [
 export default function NavBar({ pathname }) {
 
   const [isOpen, setIsOpen] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
-
-  const updateCartCount = async () => {
-    // Cart is server-backed; fetch current count.
-    try {
-      // Lazy-load to avoid circular deps during module init
-      const { cartList } = await import('../../shared/cartApi.js')
-      const res = await cartList()
-      const items = Array.isArray(res?.items) ? res.items : []
-      setCartCount(items.length)
-    } catch {
-      setCartCount(0)
-    }
-  }
-
 
   useEffect(() => {
     setIsOpen(false)
-    updateCartCount()
   }, [pathname])
-
-  useEffect(() => {
-    updateCartCount()
-    window.addEventListener('storage', updateCartCount)
-    window.addEventListener('cart-updated', updateCartCount)
-    
-    return () => {
-      window.removeEventListener('storage', updateCartCount)
-      window.removeEventListener('cart-updated', updateCartCount)
-    }
-  }, [])
 
   return (
     <header className="site-header">
@@ -77,10 +50,6 @@ export default function NavBar({ pathname }) {
                 {it.label}
               </Link>
             ))}
-            <Link to="/cart" className="cart-nav-link">
-              🛒 Cart
-              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-            </Link>
           </nav>
         </div>
       </div>

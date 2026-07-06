@@ -7,6 +7,7 @@
 - [x] Remove/optionally delete frontend CartPage and CheckoutPage components
 - [x] Run frontend build and backend start to verify no runtime/import errors
 
+- [x] Rebuild course pages to remove cart functionality
 - [ ] Implement CORS for all pages/endpoints (backend) 
 - [ ] Commit and push after CORS changes
 

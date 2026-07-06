@@ -52,17 +52,12 @@ export default function ContactPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const coursesString = cart.length > 0
-      ? cart.map((item) => item.title).join(', ')
-      : ''
-
     const msgParts = [
       'Hello Connect2Edtech! (General Contact Inquiry)',
       `Name: ${cleanText(formData.name)}`,
       `Email: ${cleanText(formData.email)}`,
       `Phone: ${cleanText(formData.phone)}`,
-      `Message: ${cleanText(formData.message)}`,
-      coursesString ? `Selected Courses: ${cleanText(coursesString)}` : null
+      `Message: ${cleanText(formData.message)}`
     ].filter(Boolean)
 
     let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
@@ -72,13 +67,13 @@ export default function ContactPage() {
       const res = await fetch(API_BASE + '/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          courses: coursesString,
-        })
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        courses: '',
+      })
       })
       const data = await res.json().catch(() => ({}))
       if (data.whatsappUrl) {

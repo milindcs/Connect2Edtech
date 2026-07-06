@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
-import { cartAdd } from '../../shared/cartApi'
 
 
 export default function CourseDetailsPage() {
   const { course: courseParam } = useParams()
   const [course, setCourse] = useState(null)
-  const [toasts, setToasts] = useState([])
 
   useEffect(() => {
     const key = normalizeCourseKey(courseParam)
@@ -40,30 +38,6 @@ export default function CourseDetailsPage() {
     return () => observer.disconnect()
   }, [courseParam])
 
-  const showToast = (message, type = 'success') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  }
-
-  const handleAddToCart = async () => {
-    if (!course) return
-    try {
-      await cartAdd({
-        courseKey: course.key,
-        title: course.title,
-        price: course.price,
-        image: course.image || '',
-      })
-      window.dispatchEvent(new Event('cart-updated'))
-      showToast(`Added ${course.title} to your cart!`, 'success')
-    } catch (e) {
-      console.error(e)
-      showToast('Could not add to cart. Please try again.', 'error')
-    }
-  }
 
 
   if (!course) {
@@ -77,14 +51,6 @@ export default function CourseDetailsPage() {
           <Link to="/courses" className="btn primary">
             Browse All Courses
           </Link>
-        </div>
-
-        <div className="toast-container">
-          {toasts.map((t) => (
-            <div key={t.id} className={`toast show ${t.type}`}>
-              {t.message}
-            </div>
-          ))}
         </div>
       </div>
     )
@@ -139,36 +105,21 @@ export default function CourseDetailsPage() {
                 Category: {course.meta}{course.hr && ` • ${course.hr}`}
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button
-                  id="addToCartBtn"
-                  type="button"
-                  className="btn primary"
-                  onClick={handleAddToCart}
-                >
-                  Add to Cart
-                </button>
-                <Link
-                  id="enrollFromDetail"
-                  to="/enrollment"
-                  className="btn secondary"
-                  style={{ textAlign: 'center' }}
-                >
-                  Enroll Now
-                </Link>
-              </div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                 <Link
+                   id="enrollFromDetail"
+                   to="/enrollment"
+                   className="btn primary"
+                   style={{ textAlign: 'center' }}
+                 >
+                   Enroll Now
+                 </Link>
+               </div>
             </aside>
           </div>
         </section>
       </div>
 
-      <div className="toast-container">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast show ${t.type}`}>
-            {t.message}
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

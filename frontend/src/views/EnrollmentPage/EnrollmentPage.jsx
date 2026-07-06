@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { cartList, checkoutSubmit, cartClear } from '../../shared/cartApi'
+import { API_BASE } from '../../shared/cartApi'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function EnrollmentPage() {
-  const [cart, setCart] = useState([])
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,28 +15,7 @@ export default function EnrollmentPage() {
 
   useEffect(() => {
     document.title = 'Enrollment - Connect2Edtech'
-    loadCart()
-
-    const onUpdated = () => loadCart()
-    window.addEventListener('cart-updated', onUpdated)
-    return () => window.removeEventListener('cart-updated', onUpdated)
   }, [])
-
-  const loadCart = async () => {
-    try {
-      const res = await cartList()
-      const items = (res?.items || []).map((x) => ({
-        key: x.courseKey,
-        title: x.title,
-        price: x.price,
-        image: x.image,
-        at: x.addedAt,
-      }))
-      setCart(Array.isArray(items) ? items : [])
-    } catch {
-      setCart([])
-    }
-  }
 
 
   const showToast = (message, type = 'success') => {
@@ -54,26 +31,8 @@ export default function EnrollmentPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleClearCart = async () => {
-    if (!window.confirm('Clear your selected courses?')) return
-    try {
-      await cartClear()
-      setCart([])
-      window.dispatchEvent(new Event('cart-updated'))
-      showToast('Selected courses cleared.', 'success')
-    } catch {
-      showToast('Could not clear courses.', 'error')
-    }
-  }
-
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (cart.length === 0) {
-      showToast('Your cart is empty. Add a course first.', 'error')
-      return
-    }
 
     const name = formData.name.trim()
     const email = formData.email.trim()
@@ -88,52 +47,39 @@ export default function EnrollmentPage() {
       return
     }
 
-    const coursesString = cart.map((item) => `${item.title} (Key: ${item.key}, Price: ₹${item.price})`).join('; ')
-    const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
-
     const msgParts = [
       'Hello Connect2Edtech! (New Enrollment Submission)',
       `Name: ${cleanText(name)}`,
       `Email: ${cleanText(email)}`,
       `Phone: ${cleanText(phone)}`,
-      `Courses: ${cleanText(coursesString)}`,
-      `Total Amount: ₹${totalAmount.toFixed(2)}`,
       formData.message ? `Requirements: ${cleanText(formData.message)}` : null
     ].filter(Boolean)
 
     let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
-    const clientCartSnapshot = cart.map((item) => ({
-      courseKey: item.key,
-      title: item.title,
-      price: item.price,
-      image: item.image || '',
-    }))
-
     try {
-      const data = await checkoutSubmit({
-        submissionType: 'enrollment',
-        name,
-        email,
-        phone,
-        note: formData.message,
-        courseTitle: cart.map((item) => item.title).join(', '),
-        totalAmount,
-        clientCartSnapshot,
+      const res = await fetch(API_BASE + '/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          message: formData.message,
+          courses: 'Enrollment inquiry',
+        })
       })
-      if (data?.whatsappUrl) {
+      const data = await res.json().catch(() => ({}))
+      if (data.whatsappUrl) {
         whatsappUrl = data.whatsappUrl
-        await cartClear()
       }
+      showToast('Enrollment submitted! Connecting to support on WhatsApp...', 'success')
     } catch (err) {
       console.error(err)
+      showToast('Opening WhatsApp...', 'success')
     }
 
-    setCart([])
-    window.dispatchEvent(new Event('cart-updated'))
-
     setIsSubmitted(true)
-    showToast('Enrollment verified. Connecting to support on WhatsApp...', 'success')
     setTimeout(() => {
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
     }, 800)
@@ -183,50 +129,20 @@ export default function EnrollmentPage() {
         <div className="enroll-card">
           <h2 className="section-title">Course Enrollment Form</h2>
           <p className="section-subtitle">
-            Submit your contact information to register for the courses selected in your cart.
+            Submit your contact information to enroll in your desired courses.
           </p>
 
           <div className="two-col">
-            <section className="enroll-summary" aria-label="Enrollment Summary">
-              <h2 className="summary-title">Your Selected Courses</h2>
-              
-              <div className="cart-mini" id="selectedCourses">
-                {cart.length === 0 ? (
-                  <div style={{ padding: '20px 0' }}>
-                    <p className="hint">Cart is empty. Add a course first to register.</p>
-                    <Link to="/courses" className="btn secondary" style={{ width: '100%', marginTop: 12, textAlign: 'center' }}>
-                      Browse Courses
-                    </Link>
-                  </div>
-                ) : (
-                  cart.map((item) => {
-                    const addedDate = item.at ? new Date(item.at).toLocaleDateString() : ''
-                    return (
-                      <div className="cart-mini-item" key={item.key}>
-                        <img
-                          className="cart-mini-thumb"
-                          src={item.image || '/assets/edtech.png'}
-                          alt={item.title || 'Course'}
-                        />
-                        <div style={{ minWidth: 0, flexGrow: 1 }}>
-                          <p className="cart-mini-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {item.title}
-                          </p>
-                          <p className="cart-mini-meta">
-                            {addedDate ? 'Added: ' + addedDate + ' • ' : ''}Key: {item.key}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
+            <section aria-label="Enrollment Information">
+              <h2 className="summary-title">How Enrollment Works</h2>
+              <div style={{ padding: '20px 0' }}>
+                <p className="hint" style={{ marginBottom: 16 }}>
+                  Fill out the enrollment form with your contact details and course interests. Our team will contact you to complete the enrollment process.
+                </p>
+                <Link to="/courses" className="btn secondary" style={{ width: '100%', marginTop: 12, textAlign: 'center' }}>
+                  Browse Available Courses
+                </Link>
               </div>
-              
-              {cart.length > 0 && (
-                <div className="hint" style={{ marginTop: 16, borderTop: '1px solid var(--border-color)', paddingTop: 16 }}>
-                  Total selected courses: <strong>{cart.length}</strong>
-                </div>
-              )}
             </section>
 
             <section aria-label="Enrollment Form">
@@ -282,14 +198,9 @@ export default function EnrollmentPage() {
                 </label>
 
                 <div className="form-actions">
-                  <button type="submit" className="btn primary" style={{ flexGrow: 1 }} disabled={cart.length === 0}>
+                  <button type="submit" className="btn primary" style={{ flexGrow: 1 }}>
                     Submit Enrollment
                   </button>
-                  {cart.length > 0 && (
-                    <button type="button" className="btn-ghost" style={{ color: 'var(--error)' }} onClick={handleClearCart}>
-                      Clear Selected
-                    </button>
-                  )}
                 </div>
               </form>
             </section>
