@@ -1,9 +1,13 @@
 import React, { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { coursesData } from '../../shared/coursesData'
+import * as coursesDataModule from '../../shared/coursesData'
+
+const coursesData = coursesDataModule?.coursesData || coursesDataModule?.default || coursesDataModule
+
 
 export default function HomePage() {
   useEffect(() => {
+    document.title = 'Connect2Edtech - Home'
     const sections = document.querySelectorAll('.animate-on-scroll')
     if (!('IntersectionObserver' in window)) {
       sections.forEach((el) => el.classList.add('is-visible'))

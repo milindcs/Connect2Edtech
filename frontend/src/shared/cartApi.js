@@ -1,18 +1,37 @@
 export const API_BASE =
   import.meta.env.VITE_API_URL || "https://connect2edtech.onrender.com"
 
+let cachedSessionId
+
 function getSessionId() {
-  // best-effort guest cart id; no local persistence required for cart items
-  // If sessionStorage is not available, fallback to a random per reload.
+  if (cachedSessionId) return cachedSessionId
+
+  // Stable session-id for cart identity across requests.
+  // Prefer sessionStorage; if unavailable, fall back to localStorage.
   try {
     let sid = sessionStorage.getItem('guest-cart-session-id')
     if (!sid) {
       sid = Math.random().toString(36).slice(2) + Date.now().toString(36)
       sessionStorage.setItem('guest-cart-session-id', sid)
     }
+    cachedSessionId = sid
     return sid
   } catch {
-    return 'guest-' + Date.now()
+    // ignore
+  }
+
+  try {
+    let sid = localStorage.getItem('guest-cart-session-id')
+    if (!sid) {
+      sid = Math.random().toString(36).slice(2) + Date.now().toString(36)
+      localStorage.setItem('guest-cart-session-id', sid)
+    }
+    cachedSessionId = sid
+    return sid
+  } catch {
+    // last resort: per-reload random
+    cachedSessionId = 'guest-' + Date.now()
+    return cachedSessionId
   }
 }
 

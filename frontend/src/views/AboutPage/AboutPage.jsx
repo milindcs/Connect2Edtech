@@ -1,7 +1,11 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function AboutPage() {
+  useEffect(() => {
+    document.title = 'About Us - Connect2Edtech'
+  }, [])
+
   return (
     <>
       <section id="about" className="section">

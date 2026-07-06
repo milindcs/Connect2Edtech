@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { cartList, checkoutSubmit, cartClear, API_BASE } from '../../shared/cartApi'
-import { buildWhatsAppUrl, cleanText, WHATSAPP_PHONE } from '../../shared/whatsappUtils'
+import { Link } from 'react-router-dom'
+import { cartList, checkoutSubmit, cartClear } from '../../shared/cartApi'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function EnrollmentPage() {
   const [cart, setCart] = useState([])
@@ -14,7 +14,6 @@ export default function EnrollmentPage() {
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [toasts, setToasts] = useState([])
-  const navigate = useNavigate()
 
   useEffect(() => {
     document.title = 'Enrollment - Connect2Edtech'
@@ -76,15 +75,27 @@ export default function EnrollmentPage() {
       return
     }
 
+    const name = formData.name.trim()
+    const email = formData.email.trim()
+    const phone = formData.phone.trim()
+    const digits = phone.replace(/\D/g, '')
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      showToast('Please enter a valid email address.', 'error')
+      return
+    }
+    if (digits.length < 10 || digits.length > 15) {
+      showToast('Please enter a valid phone number.', 'error')
+      return
+    }
 
     const coursesString = cart.map((item) => `${item.title} (Key: ${item.key}, Price: ₹${item.price})`).join('; ')
     const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
 
     const msgParts = [
       'Hello Connect2Edtech! (New Enrollment Submission)',
-      `Name: ${cleanText(formData.name)}`,
-      `Email: ${cleanText(formData.email)}`,
-      `Phone: ${cleanText(formData.phone)}`,
+      `Name: ${cleanText(name)}`,
+      `Email: ${cleanText(email)}`,
+      `Phone: ${cleanText(phone)}`,
       `Courses: ${cleanText(coursesString)}`,
       `Total Amount: ₹${totalAmount.toFixed(2)}`,
       formData.message ? `Requirements: ${cleanText(formData.message)}` : null
@@ -92,28 +103,30 @@ export default function EnrollmentPage() {
 
     let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
-    // Submit to backend (gets WhatsApp URL)
+    const clientCartSnapshot = cart.map((item) => ({
+      courseKey: item.key,
+      title: item.title,
+      price: item.price,
+      image: item.image || '',
+    }))
+
     try {
-      const res = await fetch(API_BASE + '/api/checkout/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionType: 'enrollment',
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          note: formData.message,
-          courseTitle: cart.map((item) => item.title).join(', '),
-          totalAmount: totalAmount,
-        })
+      const data = await checkoutSubmit({
+        submissionType: 'enrollment',
+        name,
+        email,
+        phone,
+        note: formData.message,
+        courseTitle: cart.map((item) => item.title).join(', '),
+        totalAmount,
+        clientCartSnapshot,
       })
-      const data = await res.json().catch(() => ({}))
-      if (data.whatsappUrl) {
+      if (data?.whatsappUrl) {
         whatsappUrl = data.whatsappUrl
-        try { await cartClear() } catch {}
+        await cartClear()
       }
-    } catch (e2) {
-      console.error(e2)
+    } catch (err) {
+      console.error(err)
     }
 
     setCart([])

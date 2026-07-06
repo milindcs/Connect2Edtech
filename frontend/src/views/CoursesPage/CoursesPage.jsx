@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { coursesData } from '../../shared/coursesData'
+import * as coursesDataModule from '../../shared/coursesData'
+
+const coursesData = coursesDataModule?.coursesData || coursesDataModule?.default || coursesDataModule
+
 import { cartAdd } from '../../shared/cartApi'
 
 
@@ -11,6 +14,24 @@ export default function CoursesPage() {
 
   useEffect(() => {
     document.title = 'Courses - Core Technology Domains'
+    const sections = document.querySelectorAll('.animate-on-scroll')
+    if (!('IntersectionObserver' in window)) {
+      sections.forEach((el) => el.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+    sections.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
   }, [])
 
   const categories = [
@@ -21,10 +42,10 @@ export default function CoursesPage() {
   ]
 
   const getCategoryForCourse = (key) => {
-    if (['webdev', 'datascience', 'security', 'aptitude', 'softskills', 'ai1000', 'mern', 'java', 'bigdata', 'cyber', 'pythonfullstack', 'cpp2000', 'technical'].includes(key)) {
+    if (['webdev', 'datascience', 'security', 'ai1000', 'mern', 'java', 'bigdata', 'cyber', 'pythonfullstack', 'cpp2000', 'technical'].includes(key)) {
       return 'technical';
     }
-    if (['nontechnical', 'nontechplus', 'placement'].includes(key)) {
+    if (['nontechnical', 'nontechplus', 'placement', 'aptitude', 'softskills'].includes(key)) {
       return 'nontechnical';
     }
     return 'special';

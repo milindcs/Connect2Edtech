@@ -13,12 +13,31 @@ export default function CourseDetailsPage() {
     const key = normalizeCourseKey(courseParam)
     const data = coursesData[key]
     setCourse(data || null)
-    
+
     if (data) {
       document.title = `${data.title} - Course Details`
     } else {
       document.title = 'Course Not Found - Connect2Edtech'
     }
+
+    const sections = document.querySelectorAll('.animate-on-scroll')
+    if (!('IntersectionObserver' in window)) {
+      sections.forEach((el) => el.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+    sections.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
   }, [courseParam])
 
   const showToast = (message, type = 'success') => {
@@ -30,7 +49,6 @@ export default function CourseDetailsPage() {
   }
 
   const handleAddToCart = async () => {
-
     if (!course) return
     try {
       await cartAdd({
@@ -61,7 +79,6 @@ export default function CourseDetailsPage() {
           </Link>
         </div>
 
-        {/* Toast Overlay */}
         <div className="toast-container">
           {toasts.map((t) => (
             <div key={t.id} className={`toast show ${t.type}`}>
@@ -103,25 +120,25 @@ export default function CourseDetailsPage() {
                 ))}
               </ul>
 
-<div className="btn-row" style={{ marginTop: 24 }}>
-                 <Link to="/courses" className="btn secondary">
-                   ← Back to Courses
-                 </Link>
-                 <Link to="/" className="btn secondary">
-                   ← Back to Home
-                 </Link>
-               </div>
+              <div className="btn-row" style={{ marginTop: 24 }}>
+                <Link to="/courses" className="btn secondary">
+                  ← Back to Courses
+                </Link>
+                <Link to="/" className="btn secondary">
+                  ← Back to Home
+                </Link>
+              </div>
             </div>
 
             <aside className="card" aria-label="Course Summary" style={{ width: '100%' }}>
               <h3 style={{ fontSize: '1.25rem', marginBottom: 12 }}>Enrollment Info</h3>
               <div className="price-tag" id="detail-price">
-                {course.price === 0 ? 'Free' : `₹${course.price.toFixed(2)}`}
+                {course.price === 0 ? 'Free' : `₹${Number(course.price).toFixed(2)}`}
               </div>
               <p className="hint" id="detail-meta" style={{ marginBottom: 20 }}>
                 Category: {course.meta}{course.hr && ` • ${course.hr}`}
               </p>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <button
                   id="addToCartBtn"
@@ -145,7 +162,6 @@ export default function CourseDetailsPage() {
         </section>
       </div>
 
-      {/* Toast Overlay */}
       <div className="toast-container">
         {toasts.map((t) => (
           <div key={t.id} className={`toast show ${t.type}`}>

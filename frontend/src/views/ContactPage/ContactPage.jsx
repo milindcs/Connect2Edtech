@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { cartList, API_BASE } from '../../shared/cartApi'
-import { buildWhatsAppUrl, cleanText, WHATSAPP_PHONE } from '../../shared/whatsappUtils'
+import { API_BASE } from '../../shared/cartApi'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function ContactPage() {
-
-  const [cart, setCart] = useState([])
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,29 +15,26 @@ export default function ContactPage() {
 
   useEffect(() => {
     document.title = 'Contact Us | Connect2Edtech'
-    loadCart()
-  }, [])
 
-  const loadCart = async () => {
-    try {
-      // Contact page cart is derived from server-backed cart
-      // (keep behavior unchanged: just show selected cart items, not raw localStorage)
-      const { cartList } = await import('../../shared/cartApi.js')
-      const res = await cartList()
-      const items = Array.isArray(res?.items) ? res.items : []
-      setCart(
-        items.map((x) => ({
-          key: x.courseKey,
-          title: x.title,
-          price: x.price,
-          image: x.image,
-          at: x.addedAt,
-        }))
-      )
-    } catch (e) {
-      setCart([])
+    const sections = document.querySelectorAll('.animate-on-scroll')
+    if (!('IntersectionObserver' in window)) {
+      sections.forEach((el) => el.classList.add('is-visible'))
+      return
     }
-  }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+    sections.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   const showToast = (message, type = 'success') => {
     const id = Date.now();
@@ -137,29 +132,7 @@ export default function ContactPage() {
           <div className="card contact-form-card">
             <h2 style={{ fontSize: '1.5rem', marginBottom: 16 }}>Send Us a Message</h2>
 
-            {cart.length > 0 && (
-              <div className="enrollment-box">
-                <h3>Course Inquiry Details</h3>
-                <p>You have the following courses in your cart. We will attach these to your message:</p>
-                <div id="enrollFromCart" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {cart.map((item) => (
-                    <span 
-                      key={item.key} 
-                      style={{ 
-                        background: 'rgba(99, 102, 241, 0.15)', 
-                        border: '1px solid rgba(99, 102, 241, 0.3)', 
-                        padding: '4px 10px', 
-                        borderRadius: 20, 
-                        fontSize: '0.82rem',
-                        color: '#a5b4fc'
-                      }}
-                    >
-                      {item.title}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+
 
             <form id="contactForm" onSubmit={handleSubmit} className="form-grid">
               <label>

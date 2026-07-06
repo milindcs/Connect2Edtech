@@ -169,7 +169,7 @@ export const coursesData = {
       'Job market guidance',
     ],
   },
-nontechplus: {
+   nontechplus: {
     key: 'nontechplus',
     title: 'Non-Technical Training Plus',
     subtitle: 'Advanced business analytics and management skills.',
@@ -283,8 +283,8 @@ nontechplus: {
     subtitle: 'Learn big data processing concepts and scalable analytics.',
     description:
       'Understand big data architecture and work on dataset-based analytics workflows.',
-    price: 2000,
-    hr: '36hr',
+    price: 4500,
+    hr: '80hr',
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
@@ -301,8 +301,8 @@ nontechplus: {
     subtitle: 'Security fundamentals, threat concepts, and ethical hacking basics.',
     description:
       'Learn security essentials with practical modules focused on threats, controls, and ethical hacking concepts.',
-    price: 2000,
-    hr: '36hr',
+    price: 4500,
+    hr: '80hr',
     image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Online • Self-paced',
     features: [
@@ -319,8 +319,8 @@ nontechplus: {
     subtitle: 'Build scalable apps with Python + web development basics.',
     description:
       'Learn Python web development concepts with practical exercises and project-style learning.',
-    price: 2000,
-    hr: '36hr',
+    price: 4500,
+    hr: '80hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [
@@ -337,8 +337,8 @@ nontechplus: {
     subtitle: 'Core C++ programming and problem-solving practice.',
     description:
       'Learn C++ fundamentals including OOP, core language constructs, and problem-solving practice.',
-    price: 2000,
-    hr: '36hr',
+    price: 4500,
+    hr: '80hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [
@@ -407,7 +407,6 @@ export const normalizeCourseKey = (rawKey) => {
     'big data training program': 'bigdata',
 
     cyber: 'cyber',
-    'cyber security': 'cyber',
     'cyber security training program': 'cyber',
 
     pythonfullstack: 'pythonfullstack',

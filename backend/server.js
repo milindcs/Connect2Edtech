@@ -248,12 +248,18 @@ app.delete('/api/cart', async (req, res) => {
 app.post('/api/checkout/submit', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
-    const { submissionType, name, email, phone, note, courseTitle, totalAmount } = req.body || {};
+    const { submissionType, name, email, phone, note, courseTitle, totalAmount, clientCartSnapshot } = req.body || {};
 
     const conn = await connectMongo();
     let existingItems = [];
     if (conn && mongoose.connection.readyState === 1) {
       existingItems = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    }
+
+    const snapshotCourses = Array.isArray(clientCartSnapshot) ? clientCartSnapshot : [];
+    const effectiveItems = existingItems && existingItems.length ? existingItems : snapshotCourses;
+
+    if (conn && mongoose.connection.readyState === 1) {
       await CartCheckout.create({
         sessionId,
         submissionType: submissionType || 'checkout',
@@ -263,12 +269,15 @@ app.post('/api/checkout/submit', async (req, res) => {
         note: note || '',
         courseTitle: courseTitle || '',
         totalAmount: typeof totalAmount === 'number' ? totalAmount : Number(totalAmount || 0),
-        courses: existingItems.map((x) => ({ courseKey: x.courseKey, title: x.title, price: x.price, image: x.image })),
+        courses: effectiveItems.map((x) => ({ courseKey: x.courseKey, title: x.title, price: x.price, image: x.image })),
       });
-      await CartItem.deleteMany({ sessionId });
+
+      if (existingItems && existingItems.length) {
+        await CartItem.deleteMany({ sessionId });
+      }
     }
 
-    const courseList = existingItems.map(i => i.title).join(', ') || courseTitle;
+    const courseList = effectiveItems.map(i => i.title).join(', ') || courseTitle;
     const msg = [`🛒 Checkout Request`, `Type: ${submissionType || 'checkout'}`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, `Courses: ${courseList || '—'}`, totalAmount ? `Total: ₹${totalAmount}` : null, note ? `Note: ${trimmed(note)}` : null].filter(Boolean).join('\n');
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
   } catch (e) {
