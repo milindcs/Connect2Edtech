@@ -235,7 +235,7 @@ export default function HomePage() {
                   </ul>
                 </Link>
                 <div className="card-actions" style={{ marginTop: 'auto' }}>
-                  <a href="/view-details-form.html" className="btn primary" style={{ flexGrow: 1 }}>View Details</a>
+                  <a href={`/view-details-form.html?course=${c.key}`} className="btn primary" style={{ flexGrow: 1 }}>View Details</a>
                 </div>
               </div>
             ))}

@@ -121,7 +121,7 @@ export default function CoursesPage() {
 
                 <div className="card-actions" style={{ marginTop: 'auto' }}>
                   <a
-                    href="/view-details-form.html"
+                    href={`/view-details-form.html?course=${c.key}`}
                     className="btn primary"
                     style={{ flexGrow: 1, textAlign: 'center' }}
                   >
