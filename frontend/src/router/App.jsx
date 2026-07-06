@@ -6,6 +6,7 @@ import HomePage from '../views/HomePage/HomePage'
 import AboutPage from '../views/AboutPage/AboutPage'
 import CoursesPage from '../views/CoursesPage/CoursesPage'
 import CourseDetailsPage from '../views/CourseDetailsPage/CourseDetailsPage'
+import ViewDetailsPage from '../views/CourseDetailsPage/ViewDetailsPage'
 import EnrollmentPage from '../views/EnrollmentPage/EnrollmentPage'
 import CartPage from '../views/CartPage/CartPage'
 import ContactPage from '../views/ContactPage/ContactPage'
@@ -18,7 +19,8 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/courses" element={<CoursesPage />} />
-        <Route path="/course/:course" element={<CourseDetailsPage />} />
+        <Route path="/course/:course" element={<ViewDetailsPage/>} />
+        <Route path="/view/:course" element={<ViewDetailsPage />} />
         <Route path="/enrollment" element={<EnrollmentPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/contact" element={<ContactPage />} />
