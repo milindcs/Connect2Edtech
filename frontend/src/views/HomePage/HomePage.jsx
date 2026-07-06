@@ -372,11 +372,11 @@ export default function HomePage() {
         <div className="container">
           <h2>Launch Careers Through College Partnerships</h2>
           <p>Explore our campus training model with real projects, certification, and placement support.</p>
-<div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link to="/courses" className="btn primary">Explore Programs</Link>
-              <Link to="/enrollment" className="btn secondary">Course Enrollment Form</Link>
-              <Link to="/contact" className="btn secondary">Talk to Us</Link>
-            </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/courses" className="btn primary">Explore Programs</Link>
+            <Link to="/enrollment" className="btn secondary">Course Enrollment Form</Link>
+            <Link to="/contact" className="btn secondary">Talk to Us</Link>
+          </div>
         </div>
       </section>
     </>
