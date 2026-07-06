@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
 
 const app = express();
@@ -118,17 +120,6 @@ function buildWhatsAppUrl(message) {
 
 // Health check
 app.get('/health', (req, res) => res.json({ ok: true }));
-
-// Serve frontend static files and SPA fallback for client-side routing
-const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
-app.use(express.static(FRONTEND_DIST, { index: false }));
-
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
-    return res.status(404).json({ success: false, message: 'API endpoint not found' });
-  }
-  res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
-});
 
 // Signup - store in MongoDB + redirect to WhatsApp
 app.post('/api/signup', async (req, res) => {
@@ -299,17 +290,19 @@ app.post('/api/checkout/submit', async (req, res) => {
 });
 
 
-// Root route
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    application: 'Connect2Edtech Backend',
-    status: 'Running',
-    version: '1.0.0'
-  });
+// Serve frontend static files after API routes
+const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
+app.use(express.static(FRONTEND_DIST));
+
+// SPA fallback for client-side routing
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ success: false, message: 'API endpoint not found' });
+  }
+  res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
 });
 
-// 404 handler for unknown API routes
+// 404 handler for anything else
 app.use((req, res) => {
   res.status(404).json({
     success: false,
