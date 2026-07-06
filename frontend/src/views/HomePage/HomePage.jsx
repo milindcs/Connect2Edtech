@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import * as coursesDataModule from '../../shared/coursesData'
-
-const coursesData = coursesDataModule?.coursesData || coursesDataModule?.default || coursesDataModule
+import { coursesData } from '../../shared/coursesData'
 
 
 export default function HomePage() {

@@ -8,6 +8,7 @@
 - [x] Run frontend build and backend start to verify no runtime/import errors
 
 - [x] Rebuild course pages to remove cart functionality
+- [x] Remove cart from NavBar and all components
+- [x] Commit and push cart removal changes
 - [ ] Implement CORS for all pages/endpoints (backend) 
-- [ ] Commit and push after CORS changes
 
