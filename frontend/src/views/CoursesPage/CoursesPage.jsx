@@ -118,9 +118,9 @@ export default function CoursesPage() {
                 </ul>
 
                 <div className="card-actions" style={{ marginTop: 'auto' }}>
-                  <span className="btn primary" style={{ flexGrow: 1, textAlign: 'center' }}>
+                  <Link to={`/course/${c.key}`} className="btn primary" style={{ flexGrow: 1, textAlign: 'center' }}>
                     View Details
-                  </span>
+                  </Link>
                 </div>
               </Link>
             ))}
