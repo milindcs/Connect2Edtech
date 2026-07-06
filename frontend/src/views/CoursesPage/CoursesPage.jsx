@@ -47,9 +47,8 @@ export default function CoursesPage() {
   }
 
 
-
   const filteredCourses = Object.values(coursesData).filter((c) => {
-    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           c.subtitle.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = activeCategory === 'all' || getCategoryForCourse(c.key) === activeCategory;
