@@ -18,17 +18,14 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/courses" element={<CoursesPage />} />
-    <Route path="/course/:course" element={<CourseDetailsPage />} />
+        <Route path="/course/:course" element={<CourseDetailsPage />} />
         <Route path="/enrollment" element={<EnrollmentPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
-
         <Route path="*" element={<Navigate to="/" replace />} />
-
       </Routes>
-
     </SiteLayout>
   )
 }
