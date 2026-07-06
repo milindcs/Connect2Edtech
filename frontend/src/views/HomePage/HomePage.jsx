@@ -37,7 +37,7 @@ export default function HomePage() {
             <h1>Connect2Edtech</h1>
             <p>College partnerships that turn campus learning into job-ready careers. Practical training, real projects, certification, and placement support.</p>
 <div className="hero-buttons">
-<Link to="/courses" className="btn primary">Explore Programs</Link>
+                <Link to="/courses" className="btn primary">Explore Programs</Link>
                 <Link to="/enrollment" className="btn secondary">Course Enrollment Form</Link>
              </div>
           </div>
