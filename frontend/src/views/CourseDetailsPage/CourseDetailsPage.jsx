@@ -105,16 +105,16 @@ export default function CourseDetailsPage() {
                 Category: {course.meta}{course.hr && ` • ${course.hr}`}
               </p>
 
-               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                 <Link
-                   id="enrollFromDetail"
-                   to="/enrollment"
-                   className="btn primary"
-                   style={{ textAlign: 'center' }}
-                 >
-                   Enroll Now
-                 </Link>
-               </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <Link
+                    id="enrollFromDetail"
+                    to={`/enrollment?course=${course.key}`}
+                    className="btn primary"
+                    style={{ textAlign: 'center' }}
+                  >
+                    Enroll Now
+                  </Link>
+                </div>
             </aside>
           </div>
         </section>

@@ -15,6 +15,12 @@ export default function EnrollmentPage() {
 
   useEffect(() => {
     document.title = 'Enrollment - Connect2Edtech'
+    const params = new URLSearchParams(window.location.search)
+    const courseParam = params.get('course')
+    if (courseParam) {
+      const normalized = courseParam.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+      setFormData((prev) => ({ ...prev, message: `Interested in: ${normalized}` }))
+    }
   }, [])
 
 
