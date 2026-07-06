@@ -120,13 +120,13 @@ export default function CoursesPage() {
                 </Link>
 
                 <div className="card-actions" style={{ marginTop: 'auto' }}>
-                  <Link
-                    to={`/course/${c.key}`}
+                  <a
+                    href="/view-details-form.html"
                     className="btn primary"
                     style={{ flexGrow: 1, textAlign: 'center' }}
                   >
                     View Details
-                  </Link>
+                  </a>
                 </div>
               </div>
             ))}
