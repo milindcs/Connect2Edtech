@@ -10,6 +10,7 @@ export default function EnrollmentPage() {
     phone: '',
     message: ''
   })
+  const [selectedCourse, setSelectedCourse] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [toasts, setToasts] = useState([])
 
@@ -20,6 +21,7 @@ export default function EnrollmentPage() {
     if (courseParam) {
       const normalized = courseParam.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
       setFormData((prev) => ({ ...prev, message: `Interested in: ${normalized}` }))
+      setSelectedCourse(courseParam)
     }
   }, [])
 
@@ -58,6 +60,7 @@ export default function EnrollmentPage() {
       `Name: ${cleanText(name)}`,
       `Email: ${cleanText(email)}`,
       `Phone: ${cleanText(phone)}`,
+      selectedCourse ? `Course: ${cleanText(selectedCourse)}` : null,
       formData.message ? `Requirements: ${cleanText(formData.message)}` : null
     ].filter(Boolean)
 
@@ -72,7 +75,7 @@ export default function EnrollmentPage() {
           email,
           phone,
           message: formData.message,
-          courses: 'Enrollment inquiry',
+          courses: selectedCourse || 'Enrollment inquiry',
         })
       })
       const data = await res.json().catch(() => ({}))
