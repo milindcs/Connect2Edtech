@@ -11,7 +11,7 @@ export default function EnrollmentPage() {
     phone: '',
     message: ''
   })
-  const [selectedCourse, setSelectedCourse] = useState('')
+  const [courseKey, setCourseKey] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [toasts, setToasts] = useState([])
 
@@ -20,9 +20,11 @@ export default function EnrollmentPage() {
     const params = new URLSearchParams(window.location.search)
     const courseParam = params.get('course')
     if (courseParam) {
-      const normalized = courseParam.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-      setFormData((prev) => ({ ...prev, message: `Interested in: ${normalized}` }))
-      setSelectedCourse(courseParam)
+      const key = normalizeCourseKey(courseParam)
+      if (coursesData[key]) {
+        setCourseKey(key)
+        setFormData((prev) => ({ ...prev, message: `Interested in: ${coursesData[key].title}` }))
+      }
     }
   }, [])
 
@@ -61,15 +63,13 @@ export default function EnrollmentPage() {
       `Name: ${cleanText(name)}`,
       `Email: ${cleanText(email)}`,
       `Phone: ${cleanText(phone)}`,
-      selectedCourse ? `Course: ${cleanText(selectedCourse)}` : null,
+      courseKey ? `Course: ${cleanText(coursesData[courseKey]?.title || courseKey)}` : null,
       formData.message ? `Requirements: ${cleanText(formData.message)}` : null
     ].filter(Boolean)
 
     let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
-    const courseTitle = selectedCourse
-      ? (coursesData[normalizeCourseKey(selectedCourse)]?.title || selectedCourse)
-      : ''
+    const courseTitle = courseKey ? (coursesData[courseKey]?.title || courseKey) : ''
 
     try {
       const res = await enrollmentSubmit({
@@ -77,7 +77,7 @@ export default function EnrollmentPage() {
         email,
         phone,
         message: formData.message,
-        courseKey: selectedCourse || '',
+        courseKey: courseKey || '',
         courseTitle,
       })
       const data = res || {}
@@ -158,12 +158,21 @@ export default function EnrollmentPage() {
 
             <section aria-label="Enrollment Form">
               <form id="enrollForm" className="form-grid" onSubmit={handleSubmit}>
-                {selectedCourse && (
-                  <div className="selected-course" aria-live="polite">
-                    <span className="field-label">Selected Course</span>
-                    <p className="selected-course-name">{selectedCourse.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}</p>
-                  </div>
-                )}
+                <label>
+                  <span className="field-label">Course *</span>
+                  <select
+                    id="enrollCourse"
+                    name="course"
+                    required
+                    value={courseKey}
+                    onChange={(e) => setCourseKey(e.target.value)}
+                  >
+                    <option value="" disabled>Select a course</option>
+                    {Object.values(coursesData).map((c) => (
+                      <option key={c.key} value={c.key}>{c.title}</option>
+                    ))}
+                  </select>
+                </label>
 
                 <label>
                   <span className="field-label">Full Name</span>
