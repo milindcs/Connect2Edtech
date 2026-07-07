@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { buildWhatsAppUrl } from '../../shared/whatsappUtils';
 
-const PHONE = '917019436720';
 const HIDDEN_FIELD_NAMES = new Set([
   '_captcha',
   '_subject',
@@ -15,7 +15,7 @@ function clean(value) {
 }
 
 export default function WhatsAppCTA() {
-  const [href, setHref] = useState('https://wa.me/' + PHONE);
+  const [href, setHref] = useState(buildWhatsAppUrl(''));
   const [position, setPosition] = useState({ x: null, y: null });
   const dragState = useRef({ dragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0, moved: false });
   const location = useLocation();
@@ -127,7 +127,7 @@ export default function WhatsAppCTA() {
         message = 'Hello Connect2Edtech!\n' + details.map(d => `${d.label}: ${d.value}`).join('\n');
       }
 
-      setHref('https://wa.me/' + PHONE + '?text=' + encodeURIComponent(message));
+      setHref(buildWhatsAppUrl(message));
     }
 
     updateWhatsAppLinks();
