@@ -156,6 +156,13 @@ export default function EnrollmentPage() {
 
             <section aria-label="Enrollment Form">
               <form id="enrollForm" className="form-grid" onSubmit={handleSubmit}>
+                {selectedCourse && (
+                  <div className="selected-course" aria-live="polite">
+                    <span className="field-label">Selected Course</span>
+                    <p className="selected-course-name">{selectedCourse.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}</p>
+                  </div>
+                )}
+
                 <label>
                   <span className="field-label">Full Name</span>
                   <input

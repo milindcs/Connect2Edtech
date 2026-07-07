@@ -375,6 +375,23 @@ a:hover {
   width: 100%;
 }
 
+.selected-course {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid var(--border-focus);
+  border-radius: 10px;
+}
+
+.selected-course-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .field-label {
   font-size: 0.9rem;
   font-weight: 600;
