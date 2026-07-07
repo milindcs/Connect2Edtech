@@ -10,6 +10,7 @@ import EnrollmentPage from '../views/EnrollmentPage/EnrollmentPage'
 import CartPage from '../views/CartPage/CartPage'
 import ContactPage from '../views/ContactPage/ContactPage'
 import SignupPage from '../views/SignupPage/SignupPage'
+import SigninPage from '../views/SigninPage/SigninPage'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signin" element={<SigninPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -8,6 +8,7 @@ const navItems = [
   { to: '/courses', label: 'Courses' },
   { to: '/enrollment', label: 'Enroll' },
   { to: '/signup', label: 'Sign Up' },
+  { to: '/signin', label: 'Sign In' },
   { to: '/contact', label: 'Contact' },
 ]
 

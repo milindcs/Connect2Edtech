@@ -162,6 +162,38 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
+// Signin - verify credentials against stored SignupSubmission
+app.post('/api/signin', async (req, res) => {
+  try {
+    const { email, password } = req.body || {}
+    if (!email || !password) {
+      return res.status(400).json({ ok: false, error: 'email and password are required' })
+    }
+
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' })
+    }
+
+    const safe = String(email).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const account = await SignupSubmission.findOne({ email: new RegExp('^' + safe + '$', 'i') })
+    if (!account) {
+      return res.status(401).json({ ok: false, error: 'No account found for this email. Please sign up first.' })
+    }
+
+    const matched = await bcrypt.compare(password, account.passwordHash || '')
+    if (!matched) {
+      return res.status(401).json({ ok: false, error: 'Incorrect password.' })
+    }
+
+    const msg = [`🔐 Sign In`, `Name: ${trimmed(account.name) || '—'}`, `Email: ${trimmed(account.email) || '—'}`, `Phone: ${trimmed(account.phone) || '—'}`].join('\n')
+    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Sign in failed' })
+  }
+})
+
 // Contact - store in MongoDB + redirect to WhatsApp
 app.post('/api/contact', async (req, res) => {
   try {
