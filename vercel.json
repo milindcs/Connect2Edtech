@@ -2,5 +2,6 @@
   "buildCommand": "npm run vercel-build",
   "installCommand": "npm install --omit=optional --include=dev",
   "outputDirectory": "frontend/dist",
-  "rootDirectory": "."
+  "rootDirectory": ".",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
