@@ -89,6 +89,7 @@ const EnrollmentSchema = new mongoose.Schema({
   name: { type: String, default: '' },
   email: { type: String, default: '' },
   phone: { type: String, default: '' },
+  college: { type: String, default: '' },
   message: { type: String, default: '' },
   courseKey: { type: String, default: '' },
   courseTitle: { type: String, default: '' },
@@ -188,7 +189,7 @@ app.post('/api/contact', async (req, res) => {
 // Enrollment - store in MongoDB + redirect to WhatsApp
 app.post('/api/enrollment', async (req, res) => {
   try {
-    const { name, email, phone, message, courseKey, courseTitle } = req.body || {};
+    const { name, email, phone, college, message, courseKey, courseTitle } = req.body || {};
     if (!name || !email) {
       return res.status(400).json({ ok: false, error: 'name and email are required' });
     }
@@ -196,7 +197,7 @@ app.post('/api/enrollment', async (req, res) => {
     const conn = await connectMongo();
     if (conn && mongoose.connection.readyState === 1) {
       await Enrollment.create({
-        name, email, phone: phone || '', message: message || '',
+        name, email, phone: phone || '', college: college || '', message: message || '',
         courseKey: courseKey || '', courseTitle: courseTitle || '',
         hostname: req.hostname || '', ip: getClientIp(req),
       });
