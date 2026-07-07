@@ -11,7 +11,7 @@ export default function EnrollmentPage() {
   const queryParams = new URLSearchParams(location.search)
   const courseParam = queryParams.get('course')
 
-  // Component state
+  // Form and layout states
   const [course, setCourse] = useState(null)
   const [formData, setFormData] = useState({
     fullName: '',
@@ -23,7 +23,7 @@ export default function EnrollmentPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
 
-  // Dynamically resolve course data and update document title
+  // Resolve course data dynamically based on the URL query param
   useEffect(() => {
     if (courseParam) {
       const key = normalizeCourseKey(courseParam)
@@ -33,14 +33,34 @@ export default function EnrollmentPage() {
       if (data) {
         document.title = `Enroll in ${data.title} - Connect2Edtech`
       } else {
-        document.title = 'Enrollment - Connect2Edtech'
+        document.title = 'Enrollment Application - Connect2Edtech'
       }
     } else {
-      document.title = 'Enrollment - Connect2Edtech'
+      document.title = 'Enrollment Application - Connect2Edtech'
     }
+
+    // Scroll-animation hook integration mirroring the listings page setup
+    const sections = document.querySelectorAll('.animate-on-scroll')
+    if (!('IntersectionObserver' in window)) {
+      sections.forEach((el) => el.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+    sections.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
   }, [courseParam])
 
-  // Handle input field changes
+  // Handle local form element updates
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((prev) => ({
@@ -49,12 +69,11 @@ export default function EnrollmentPage() {
     }))
   }
 
-  // Handle form submission
+  // Handle registration validation and submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    // Basic validation
     if (!formData.fullName || !formData.email || !formData.phone) {
       setError('Please fill in all mandatory fields.')
       return
@@ -66,7 +85,7 @@ export default function EnrollmentPage() {
     }
 
     if (!formData.agreeToTerms) {
-      setError('You must agree to the terms and conditions to proceed.')
+      setError('You must agree to the training terms and conditions to proceed.')
       return
     }
 
@@ -105,24 +124,24 @@ export default function EnrollmentPage() {
     }, 800)
   }
 
-  // Success view state
+  // Post-submission success panel
   if (isSubmitted) {
     return (
       <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
         <div className="detail-shell" style={{ maxWidth: 600, margin: '0 auto', padding: '40px 24px' }}>
-          <h2 style={{ color: 'var(--border-focus)', marginBottom: 16 }}>Enrollment Successful!</h2>
-          <p style={{ color: 'var(--text-primary)', marginBottom: 12 }}>
-            Thank you for enrolling in <strong>{course ? course.title : 'our program'}</strong>.
+          <h2 style={{ color: 'var(--border-focus)', marginBottom: 16 }}>Enrollment Received!</h2>
+          <p style={{ color: 'var(--text-primary)', marginBottom: 12, fontSize: '1.1rem' }}>
+            Excellent choice! You have successfully initiated enrollment for <strong>{course ? course.title : 'the program'}</strong>.
           </p>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 32 }}>
-            A confirmation email with onboarding instructions has been sent to <strong>{formData.email}</strong>. Our team will contact you shortly.
+          <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: '0.95rem', lineHeight: '1.6' }}>
+            A confirmation roadmap has been dispatched to <strong>{formData.email}</strong>. Our academic coordinates team will review your timeline and reach out directly within one business day.
           </p>
           <div className="btn-row" style={{ justifyContent: 'center' }}>
             <Link to="/courses" className="btn primary">
-              Browse More Courses
+              Browse More Programs
             </Link>
             <Link to="/" className="btn secondary">
-              Back to Home
+              Return Home
             </Link>
           </div>
         </div>
@@ -132,23 +151,22 @@ export default function EnrollmentPage() {
 
   return (
     <div className="container" style={{ padding: '60px 24px' }}>
-      <div className="detail-shell" style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div className="detail-shell" style={{ maxWidth: 960, margin: '0 auto' }}>
 
-        {/* Header Section */}
-        <section className="detail-hero" style={{ marginBottom: 40, textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: 12 }}>Course Enrollment</h1>
+        {/* Page Context Branding */}
+        <section className="detail-hero animate-on-scroll animate-fade-up" style={{ marginBottom: 40, textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: 12 }}>Campus Training Registration</h1>
           <p className="section-subtitle">
-            {course
-              ? `Complete the form below to secure your spot in the ${course.title}.`
-              : 'Complete the form below to initiate your program application.'}
+            Provide your details below to activate your learning track and unlock mentor evaluations.
           </p>
         </section>
 
-        <div className="two-col" style={{ gap: 40 }}>
+        <div className="two-col animate-on-scroll animate-slide stagger-2" style={{ gap: 40 }}>
 
-          {/* Enrollment Form */}
+          {/* Main Enrolment Form Context */}
           <form className="card" onSubmit={handleSubmit} style={{ width: '100%', padding: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: 8 }}>Applicant Information</h3>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: 4 }}>Applicant Background</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>Fields marked with an asterisk (*) are mandatory.</p>
 
             {error && (
               <div style={{ color: 'var(--error)', backgroundColor: '#fff5f5', padding: '12px 16px', borderRadius: 6, fontSize: '0.9rem', border: '1px solid var(--error)' }}>
@@ -164,7 +182,7 @@ export default function EnrollmentPage() {
                 name="fullName"
                 className="search-input"
                 style={{ width: '100%', margin: 0 }}
-                placeholder="Enter your full name"
+                placeholder="Enter your first and last name"
                 value={formData.fullName}
                 onChange={handleInputChange}
                 required
@@ -179,7 +197,7 @@ export default function EnrollmentPage() {
                 name="email"
                 className="search-input"
                 style={{ width: '100%', margin: 0 }}
-                placeholder="you@example.com"
+                placeholder="student@institution.edu"
                 value={formData.email}
                 onChange={handleInputChange}
                 required
@@ -194,7 +212,7 @@ export default function EnrollmentPage() {
                 name="phone"
                 className="search-input"
                 style={{ width: '100%', margin: 0 }}
-                placeholder="Enter 10-digit mobile number"
+                placeholder="Enter your 10-digit mobile number"
                 value={formData.phone}
                 onChange={handleInputChange}
                 required
@@ -202,14 +220,14 @@ export default function EnrollmentPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label htmlFor="college" style={{ fontWeight: '500', fontSize: '0.9rem' }}>College / Institution</label>
+              <label htmlFor="college" style={{ fontWeight: '500', fontSize: '0.9rem' }}>College / University Name</label>
               <input
                 type="text"
                 id="college"
                 name="college"
                 className="search-input"
                 style={{ width: '100%', margin: 0 }}
-                placeholder="Enter your college name"
+                placeholder="Specify your academic campus"
                 value={formData.college}
                 onChange={handleInputChange}
               />
@@ -224,25 +242,21 @@ export default function EnrollmentPage() {
                 checked={formData.agreeToTerms}
                 onChange={handleInputChange}
               />
-              <label htmlFor="agreeToTerms" style={{ fontSize: '0.88rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                I agree to the terms of service, attendance rules, and program guidelines setup by Connect2Edtech.
+              <label htmlFor="agreeToTerms" style={{ fontSize: '0.88rem', color: 'var(--text-primary)', cursor: 'pointer', lineHeight: '1.4' }}>
+                I authorize Connect2Edtech to track my progress modules, schedule evaluation checkpoints, and pass verification metrics onto connected hiring portals.
               </label>
             </div>
 
-            <button type="submit" className="btn primary" style={{ width: '100%', marginTop: 12, justifyContent: 'center' }}>
-              Confirm & Finalize Enrollment
+            <button type="submit" className="btn primary" style={{ width: '100%', marginTop: 12, justifyContent: 'center', textAlign: 'center' }}>
+              Finalize & Secure Spot
             </button>
-
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
-              <Link to="/courses" style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>← Back to Listings</Link>
-            </div>
           </form>
 
-          {/* Program Overview Sidebar */}
+          {/* Dynamic Sidebar Syncing */}
           <aside style={{ width: '100%', maxWidth: 360 }}>
             {course ? (
-              <div className="card" style={{ padding: 24, position: 'sticky', top: 24 }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: 16 }}>Selected Program</h3>
+              <div className="card" style={{ padding: 24, position: 'sticky', top: 24, display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: 16 }}>Selected Track</h3>
 
                 {course.image && (
                   <img
@@ -252,26 +266,30 @@ export default function EnrollmentPage() {
                   />
                 )}
 
-                <h4 style={{ fontSize: '1.2rem', marginBottom: 4 }}>{course.title}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>{course.meta}{course.hr && ` • ${course.hr}`}</p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: 20 }}>{course.subtitle}</p>
+                <h4 style={{ fontSize: '1.3rem', marginBottom: 4 }}>{course.title}</h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                  {course.meta}{course.hr && ` • ${course.hr}`}
+                </p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: 20, lineHeight: '1.5' }}>
+                  {course.subtitle}
+                </p>
 
                 <hr style={{ border: 'none', borderTop: '1px solid var(--border)', marginBottom: 16 }} />
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Program Fee:</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Program Cost:</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                     {course.price === 0 ? 'Free' : `₹${Number(course.price).toFixed(2)}`}
                   </span>
                 </div>
               </div>
             ) : (
               <div className="card" style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
-                <p style={{ margin: 0, fontSize: '0.95rem' }}>
-                  No specific program selected. You can submit a general application, or go back to browse available training structures.
+                <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>
+                  No target training program is currently loaded from your tracking parameter link. You can fill out a generalized institutional request here, or back up to browse active configurations.
                 </p>
-                <Link to="/courses" className="btn secondary" style={{ marginTop: 16, display: 'inline-block' }}>
-                  Select a Course
+                <Link to="/courses" className="btn secondary" style={{ marginTop: 20, display: 'inline-block' }}>
+                  Select a Program
                 </Link>
               </div>
             )}
