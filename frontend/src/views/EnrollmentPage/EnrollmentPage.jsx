@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { API_BASE } from '../../shared/cartApi'
+import { enrollmentSubmit } from '../../shared/cartApi'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
+import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
 
 export default function EnrollmentPage() {
   const [formData, setFormData] = useState({
@@ -66,19 +67,20 @@ export default function EnrollmentPage() {
 
     let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
 
+    const courseTitle = selectedCourse
+      ? (coursesData[normalizeCourseKey(selectedCourse)]?.title || selectedCourse)
+      : ''
+
     try {
-      const res = await fetch(API_BASE + '/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          message: formData.message,
-          courses: selectedCourse || 'Enrollment inquiry',
-        })
+      const res = await enrollmentSubmit({
+        name,
+        email,
+        phone,
+        message: formData.message,
+        courseKey: selectedCourse || '',
+        courseTitle,
       })
-      const data = await res.json().catch(() => ({}))
+      const data = res || {}
       if (data.whatsappUrl) {
         whatsappUrl = data.whatsappUrl
       }

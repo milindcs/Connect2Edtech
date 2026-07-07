@@ -91,3 +91,11 @@ export async function signupSubmit(payload) {
   return res
 }
 
+export async function enrollmentSubmit(payload) {
+  const res = await apiFetch('/api/enrollment', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return res
+}
+

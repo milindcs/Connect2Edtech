@@ -85,6 +85,19 @@ const CartCheckoutSchema = new mongoose.Schema({
 }, { versionKey: false });
 const CartCheckout = mongoose.model('CartCheckout', CartCheckoutSchema);
 
+const EnrollmentSchema = new mongoose.Schema({
+  name: { type: String, default: '' },
+  email: { type: String, default: '' },
+  phone: { type: String, default: '' },
+  message: { type: String, default: '' },
+  courseKey: { type: String, default: '' },
+  courseTitle: { type: String, default: '' },
+  hostname: { type: String, default: '' },
+  ip: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now },
+}, { versionKey: false });
+const Enrollment = mongoose.model('Enrollment', EnrollmentSchema);
+
 
 // MongoDB Connection
 let mongoConnectionPromise = null;
@@ -169,6 +182,32 @@ app.post('/api/contact', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(`📞 Contact Inquiry\nName: ${trimmed(req.body?.name) || '—'}`) });
+  }
+});
+
+// Enrollment - store in MongoDB + redirect to WhatsApp
+app.post('/api/enrollment', async (req, res) => {
+  try {
+    const { name, email, phone, message, courseKey, courseTitle } = req.body || {};
+    if (!name || !email) {
+      return res.status(400).json({ ok: false, error: 'name and email are required' });
+    }
+
+    const conn = await connectMongo();
+    if (conn && mongoose.connection.readyState === 1) {
+      await Enrollment.create({
+        name, email, phone: phone || '', message: message || '',
+        courseKey: courseKey || '', courseTitle: courseTitle || '',
+        hostname: req.hostname || '', ip: getClientIp(req),
+      });
+    }
+
+    const courseLabel = courseTitle || courseKey || 'Unspecified course';
+    const msg = [`🎓 New Enrollment`, `Course: ${trimmed(courseLabel) || '—'}`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, message ? `Requirements: ${trimmed(message)}` : null].filter(Boolean).join('\n');
+    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
+  } catch (e) {
+    console.error(e);
+    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(`🎓 New Enrollment\nName: ${trimmed(req.body?.name) || '—'}`) });
   }
 });
 
