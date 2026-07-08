@@ -5,7 +5,7 @@ const AuthContext = createContext(null)
 
 function getInitialUser() {
   try {
-    const raw = sessionStorage.getItem('connect2edtech-user')
+    const raw = localStorage.getItem('connect2edtech-user')
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (!parsed?.token || !parsed?.user) return null
@@ -24,14 +24,18 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token || !user) {
       if (state) {
-        sessionStorage.removeItem('connect2edtech-user')
+        localStorage.removeItem('connect2edtech-user')
       }
       return
     }
-    sessionStorage.setItem('connect2edtech-user', JSON.stringify({ token, user }))
+    localStorage.setItem('connect2edtech-user', JSON.stringify({ token, user }))
   }, [token, user, state])
 
   const apiFetch = async (path, options = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    }
     const headers = {
       'Content-Type': 'application/json',
       ...(options.headers || {}),
@@ -100,7 +104,7 @@ export function AuthProvider({ children }) {
 
   const signout = () => {
     setState(null)
-    sessionStorage.removeItem('connect2edtech-user')
+    localStorage.removeItem('connect2edtech-user')
   }
 
   const value = useMemo(() => ({

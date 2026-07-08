@@ -18,6 +18,7 @@ export default function AdminDashboard() {
     if (!isAuthenticated) {
       navigate('/signin')
     } else if (!isAdmin) {
+      // keep for now; if admin role is missing server-side, user will be redirected
       navigate('/')
     }
   }, [isAuthenticated, isAdmin, navigate])
