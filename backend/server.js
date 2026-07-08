@@ -70,7 +70,7 @@ function generateOtp() {
 
 function signJwt(user) {
   return jwt.sign(
-    { userId: user._id.toString(), email: user.email, name: user.name, phone: user.phone, verified: user.verified },
+    { userId: user._id.toString(), email: user.email, name: user.name, phone: user.phone, verified: user.verified, role: user.role || 'user' },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );
@@ -89,6 +89,22 @@ function authMiddleware(req, res, next) {
   }
 }
 
+function adminAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return res.status(401).json({ ok: false, error: 'Access denied' });
+  try {
+    const decoded = jwt.verify(match[1], JWT_SECRET);
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Admin access only' });
+    }
+    req.admin = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ ok: false, error: 'Invalid token' });
+  }
+}
+
 // MongoDB Models
 const SignupSubmissionSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -96,6 +112,7 @@ const SignupSubmissionSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   passwordHash: { type: String, required: true },
   verified: { type: Boolean, default: false },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   otp: { type: String, default: '' },
   otpExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
@@ -283,7 +300,7 @@ app.post('/api/signin', async (req, res) => {
     }
 
     const token = signJwt(account)
-    res.json({ ok: true, token, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified } })
+    res.json({ ok: true, token, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Sign in failed' })
@@ -322,7 +339,7 @@ app.post('/api/verify-otp', async (req, res) => {
 
     await SignupSubmission.updateOne({ _id: account._id }, { $set: { verified: true, otp: '', otpExpiry: null } })
     const token = signJwt({ ...account.toObject(), verified: true })
-    res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, verified: true } })
+    res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, verified: true, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Verification failed.' })
@@ -381,10 +398,26 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
 
-    res.json({ ok: true, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified } })
+    res.json({ ok: true, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Failed to fetch user.' })
+  }
+})
+
+// Admin dashboard - list all users
+app.get('/api/admin/users', adminAuth, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+
+    const users = await SignupSubmission.find({}, { name: 1, email: 1, phone: 1, verified: 1, role: 1, createdAt: 1 }).sort({ createdAt: -1 })
+    res.json({ ok: true, users })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch users.' })
   }
 })
 
