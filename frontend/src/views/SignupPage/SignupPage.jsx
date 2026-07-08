@@ -8,22 +8,34 @@ export default function SignupPage() {
   const { signup, verifyOtp, resendOtp, isAuthenticated } = useAuth()
   const [toasts, setToasts] = useState([])
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    whatsapp: '',
-    password: '',
-    confirmPassword: ''
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('signup_form_data')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        return { ...parsed, password: '', confirmPassword: '' }
+      } catch (e) {}
+    }
+    return { name: '', email: '', phone: '', whatsapp: '', password: '', confirmPassword: '' }
   })
-  const [connectWhatsapp, setConnectWhatsapp] = useState(true)
+
+  const [connectWhatsapp, setConnectWhatsapp] = useState(() => {
+    const saved = localStorage.getItem('signup_connect_whatsapp')
+    return saved !== null ? JSON.parse(saved) : true
+  })
+
+  const [requiresVerification, setRequiresVerification] = useState(() => {
+    return JSON.parse(localStorage.getItem('signup_requires_verification')) || false
+  })
+
+  const [registeredEmail, setRegisteredEmail] = useState(() => {
+    return localStorage.getItem('signup_registered_email') || ''
+  })
 
   const [otp, setOtp] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
-  const [requiresVerification, setRequiresVerification] = useState(false)
-  const [registeredEmail, setRegisteredEmail] = useState('')
 
   useEffect(() => {
     document.title = 'Sign Up - Connect2Edtech'
@@ -31,9 +43,34 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      clearSignupStorage()
       navigate('/')
     }
   }, [isAuthenticated, navigate])
+
+  useEffect(() => {
+    const { password, confirmPassword, ...serializableData } = formData
+    localStorage.setItem('signup_form_data', JSON.stringify(serializableData))
+  }, [formData])
+
+  useEffect(() => {
+    localStorage.setItem('signup_connect_whatsapp', JSON.stringify(connectWhatsapp))
+  }, [connectWhatsapp])
+
+  useEffect(() => {
+    localStorage.setItem('signup_requires_verification', JSON.stringify(requiresVerification))
+  }, [requiresVerification])
+
+  useEffect(() => {
+    localStorage.setItem('signup_registered_email', registeredEmail)
+  }, [registeredEmail])
+
+  const clearSignupStorage = () => {
+    localStorage.removeItem('signup_form_data')
+    localStorage.removeItem('signup_connect_whatsapp')
+    localStorage.removeItem('signup_requires_verification')
+    localStorage.removeItem('signup_registered_email')
+  }
 
   const showToast = (message, type = 'success') => {
     const id = Date.now()
@@ -135,6 +172,7 @@ export default function SignupPage() {
     try {
       await verifyOtp(registeredEmail, otp)
       showToast('Email verified! Redirecting...', 'success')
+      clearSignupStorage()
       setTimeout(() => navigate('/'), 800)
     } catch (err) {
       showToast(err.message || 'Verification failed.', 'error')
@@ -285,7 +323,7 @@ export default function SignupPage() {
               </div>
 
               <div className="hint" style={{ marginTop: 10 }}>
-                Wrong email? <button type="button" onClick={() => { setRequiresVerification(false); setRegisteredEmail(''); setOtp(''); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Change email</button>
+                Wrong email? <button type="button" onClick={() => { setRequiresVerification(false); setRegisteredEmail(''); setOtp(''); clearSignupStorage(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Change email</button>
               </div>
             </form>
           )}
