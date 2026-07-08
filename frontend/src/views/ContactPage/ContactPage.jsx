@@ -4,11 +4,14 @@ import { API_BASE } from '../../shared/cartApi'
 import { buildWhatsAppUrl } from '../../shared/whatsappUtils'
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('contact_form_data')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {}
+    }
+    return { name: '', email: '', phone: '', message: '' }
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [toasts, setToasts] = useState([])
@@ -35,6 +38,10 @@ export default function ContactPage() {
     sections.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    localStorage.setItem('contact_form_data', JSON.stringify(formData))
+  }, [formData])
 
   const showToast = (message, type = 'success') => {
     const id = Date.now();
@@ -70,6 +77,7 @@ export default function ContactPage() {
       showToast('Could not submit inquiry. Please try again.', 'error')
     }
 
+    localStorage.removeItem('contact_form_data')
     setIsSubmitted(true)
   }
 
@@ -90,9 +98,9 @@ export default function ContactPage() {
             We've recorded your inquiry. Redirecting to WhatsApp so you can chat directly with our advisor.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-<Link to="/courses" className="btn secondary">
-               Browse Courses
-             </Link>
+            <Link to="/courses" className="btn secondary">
+                Browse Courses
+              </Link>
             <a
               href={buildWhatsAppUrl('Hi, I just submitted my contact inquiry on Connect2Edtech!')}
               target="_blank"
@@ -107,8 +115,6 @@ export default function ContactPage() {
         <div className="contact-wrapper animate-on-scroll animate-fade-left stagger-2">
           <div className="card contact-form-card">
             <h2 style={{ fontSize: '1.5rem', marginBottom: 16 }}>Send Us a Message</h2>
-
-
 
             <form id="contactForm" onSubmit={handleSubmit} className="form-grid">
               <label>

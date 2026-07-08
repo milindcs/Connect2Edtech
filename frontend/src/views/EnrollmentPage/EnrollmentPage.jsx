@@ -12,12 +12,20 @@ export default function EnrollmentPage() {
 
   // Component local states
   const [course, setCourse] = useState(null)
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    college: '',
-    agreeToTerms: false
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('enrollment_form_data')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {}
+    }
+    return {
+      fullName: '',
+      email: '',
+      phone: '',
+      college: '',
+      agreeToTerms: false
+    }
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -58,6 +66,10 @@ export default function EnrollmentPage() {
     sections.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
   }, [courseParam])
+
+  useEffect(() => {
+    localStorage.setItem('enrollment_form_data', JSON.stringify(formData))
+  }, [formData])
 
   // Sync typed inputs into form state
   const handleInputChange = (e) => {
@@ -102,6 +114,7 @@ export default function EnrollmentPage() {
       console.error(err)
     }
 
+    localStorage.removeItem('enrollment_form_data')
     setIsSubmitted(true)
   }
 
