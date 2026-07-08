@@ -100,7 +100,7 @@ const handleSubmit = async (e) => {
       `Phone: ${cleanText(payload.phone)}`
     ].filter(Boolean).join('\n')
 
-    let whatsappUrl = buildWhatsAppUrl(fallbackMsg)
+    const fallbackWhatsappUrl = buildWhatsAppUrl(fallbackMsg)
 
     try {
       const res = await fetch(API_BASE + '/api/signup', {
@@ -115,19 +115,26 @@ const handleSubmit = async (e) => {
       })
 
       const data = await res.json().catch(() => ({}))
-      if (data.whatsappUrl) {
-        whatsappUrl = data.whatsappUrl
-      } else if (!data.ok) {
+      if (!data.ok) {
         throw new Error(data.error || 'Signup submission failed')
       }
 
+      const whatsappUrl = data.whatsappUrl || fallbackWhatsappUrl
       showToast('Details captured! Redirecting to WhatsApp...', 'success')
       setTimeout(() => {
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
         navigate('/')
       }, 800)
-    } catch {
-      showToast('Could not save signup details. Please try again.', 'error')
+    } catch (err) {
+      // A network/connection failure means the server is unreachable, so fall
+      // back to opening WhatsApp directly instead of losing the lead.
+      const isNetworkError = err instanceof TypeError || /Failed to fetch|NetworkError|network/i.test(err.message || '')
+      if (isNetworkError) {
+        window.open(fallbackWhatsappUrl, '_blank', 'noopener,noreferrer')
+        showToast('Could not reach the server. We opened WhatsApp so you can still register.', 'error')
+      } else {
+        showToast(err.message || 'Could not save signup details. Please try again.', 'error')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -259,9 +266,9 @@ const handleSubmit = async (e) => {
               By signing up, you agree to be contacted about your learning journey.
             </div>
 
-<div className="hint" style={{ marginTop: 10 }}>
-               Already have an account? <Link to="/contact">Contact support</Link> (login not implemented).
-             </div>
+             <div className="hint" style={{ marginTop: 10 }}>
+                Already have an account? <Link to="/signin">Sign in</Link>.
+              </div>
 
              <div style={{ marginTop: 24, textAlign: 'center' }}>
                <Link to="/" className="btn secondary">← Back to Home</Link>

@@ -129,7 +129,7 @@ function getSessionId(req) {
 const trimmed = (v) => (typeof v === 'string' ? v.trim() : '');
 
 function buildWhatsAppUrl(message) {
-  return `https://web.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
 }
 
 // Health check
@@ -145,20 +145,31 @@ app.post('/api/signup', async (req, res) => {
     if (!password || typeof password !== 'string' || password.length < 8) {
       return res.status(400).json({ ok: false, error: 'password is required (min 8 chars)' });
     }
+    if (!/^\S+@\S+\.\S+$/.test(String(email).trim())) {
+      return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
+    }
 
     const conn = await connectMongo();
-    if (conn && mongoose.connection.readyState === 1) {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password, salt);
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+    try {
       await SignupSubmission.create({ name, email, phone, passwordHash });
+    } catch (createErr) {
+      if (createErr && createErr.code === 11000) {
+        return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
+      }
+      throw createErr;
     }
 
     const msg = [`📋 New Signup Request`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`].join('\n');
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
   } catch (e) {
     console.error(e);
-    const msg = [`📋 New Signup Request`, `Name: ${trimmed(req.body?.name) || '—'}`].join('\n');
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
+    res.status(500).json({ ok: false, error: 'Signup failed. Please try again.' });
   }
 });
 

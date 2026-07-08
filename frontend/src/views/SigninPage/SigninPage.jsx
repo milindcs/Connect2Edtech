@@ -40,6 +40,7 @@ export default function SigninPage() {
     }
 
     setIsSubmitting(true)
+    let whatsappUrl = ''
     try {
       const res = await fetch(API_BASE + '/api/signin', {
         method: 'POST',
@@ -50,8 +51,16 @@ export default function SigninPage() {
       if (!data.ok) {
         throw new Error(data.error || 'Sign in failed')
       }
+      if (data.whatsappUrl) {
+        whatsappUrl = data.whatsappUrl
+      }
       showToast('Signed in! Redirecting...', 'success')
-      setTimeout(() => navigate('/'), 800)
+      setTimeout(() => {
+        if (whatsappUrl) {
+          window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+        }
+        navigate('/')
+      }, 800)
     } catch (err) {
       showToast(err.message || 'Could not sign in. Please try again.', 'error')
     } finally {
