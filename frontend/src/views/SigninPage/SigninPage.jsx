@@ -6,17 +6,39 @@ export default function SigninPage() {
   const navigate = useNavigate()
   const { signin, isAuthenticated, isAdmin } = useAuth()
   const [toasts, setToasts] = useState([])
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  
+  // Initialize state from local storage or fallback to empty values
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('signin_form_data')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        // Secure choice: Don't persist passwords across browser sessions
+        return { email: parsed.email || '', password: '' }
+      } catch (e) {
+        // Fallback if parsing fails
+      }
+    }
+    return { email: '', password: '' }
+  })
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     document.title = 'Sign In - Connect2Edtech'
   }, [])
 
+  // Sync form modifications to localStorage
+  useEffect(() => {
+    localStorage.setItem('signin_form_data', JSON.stringify({ email: formData.email }))
+  }, [formData.email])
+
   useEffect(() => {
     if (isAuthenticated && isAdmin) {
+      localStorage.removeItem('signin_form_data') // Clear on successful login
       navigate('/admin')
     } else if (isAuthenticated) {
+      localStorage.removeItem('signin_form_data') // Clear on successful login
       navigate('/')
     }
   }, [isAuthenticated, isAdmin, navigate])
