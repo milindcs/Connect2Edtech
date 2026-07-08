@@ -36,10 +36,6 @@ export function AuthProvider({ children }) {
       'Content-Type': 'application/json',
       ...(options.headers || {}),
     }
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
@@ -53,6 +49,30 @@ export function AuthProvider({ children }) {
     }
     return res.json().catch(() => ({}))
   }
+
+  // If token exists but user/role might be stale (e.g. refresh), fetch authoritative user.
+  useEffect(() => {
+    if (!token) return
+    const shouldRefresh = !user?.role || !user?.verified
+    if (!shouldRefresh) return
+
+    let cancelled = false
+    const run = async () => {
+      try {
+        const me = await apiFetch('/api/auth/me')
+        if (cancelled) return
+        if (me?.user) setState({ token, user: me.user })
+      } catch {
+        // ignore; keep existing session state
+      }
+    }
+    run()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user?.role, user?.verified])
 
   const signup = async (payload) => {
     const data = await apiFetch('/api/signup', {
