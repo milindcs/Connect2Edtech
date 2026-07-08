@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE } from '../../shared/cartApi'
-import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
+import { buildWhatsAppUrl } from '../../shared/whatsappUtils'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -52,42 +52,23 @@ export default function ContactPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const msgParts = [
-      'Hello Connect2Edtech! (General Contact Inquiry)',
-      `Name: ${cleanText(formData.name)}`,
-      `Email: ${cleanText(formData.email)}`,
-      `Phone: ${cleanText(formData.phone)}`,
-      `Message: ${cleanText(formData.message)}`
-    ].filter(Boolean)
-
-    let whatsappUrl = buildWhatsAppUrl(msgParts.join('\n'))
-
-    // Persist contact submission to backend (gets WhatsApp URL)
     try {
-      const res = await fetch(API_BASE + '/api/contact', {
+      await fetch(API_BASE + '/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        message: formData.message,
-        courses: '',
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          courses: '',
+        })
       })
-      })
-      const data = await res.json().catch(() => ({}))
-      if (data.whatsappUrl) {
-        whatsappUrl = data.whatsappUrl
-      }
-      showToast('Inquiry captured! Opening WhatsApp...', 'success')
+      showToast('Inquiry captured! We will get back to you soon.', 'success')
     } catch (err) {
       console.error(err)
-      showToast('Opening WhatsApp directly...', 'success')
+      showToast('Could not submit inquiry. Please try again.', 'error')
     }
-
-    setTimeout(() => {
-      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-    }, 800)
 
     setIsSubmitted(true)
   }
