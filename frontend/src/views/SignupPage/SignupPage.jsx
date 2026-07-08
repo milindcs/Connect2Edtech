@@ -11,9 +11,11 @@ export default function SignupPage() {
     name: '',
     email: '',
     phone: '',
+    whatsapp: '',
     password: '',
     confirmPassword: ''
   })
+  const [connectWhatsapp, setConnectWhatsapp] = useState(true)
 
   const [otp, setOtp] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -67,6 +69,7 @@ export default function SignupPage() {
     const name = formData.name.trim()
     const email = formData.email.trim()
     const phone = formData.phone.trim()
+    const whatsapp = formData.whatsapp.trim()
     const password = formData.password
     const confirmPassword = formData.confirmPassword
 
@@ -74,6 +77,10 @@ export default function SignupPage() {
     if (!/^\S+@\S+\.\S+$/.test(email)) return 'Please enter a valid email address.'
     const digits = phone.replace(/\D/g, '')
     if (digits.length < 10 || digits.length > 15) return 'Please enter a valid phone number.'
+    if (connectWhatsapp) {
+      const waDigits = (whatsapp || phone).replace(/\D/g, '')
+      if (waDigits.length < 10 || waDigits.length > 15) return 'Please enter a valid WhatsApp number.'
+    }
     if (password.length < 8) return 'Password must be at least 8 characters.'
     if (password !== confirmPassword) return 'Passwords do not match.'
     return null
@@ -93,6 +100,8 @@ export default function SignupPage() {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
+        whatsapp: connectWhatsapp ? (formData.whatsapp.trim() || formData.phone.trim()) : '',
+        connectWhatsapp,
         password: formData.password,
       })
       if (data.requiresVerification) {
@@ -159,6 +168,38 @@ export default function SignupPage() {
                   <span className="field-label">Phone Number</span>
                   <input name="phone" required placeholder="+91 7019436720" value={formData.phone} onChange={setField} autoComplete="tel" />
                 </label>
+              </div>
+
+              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <label>
+                  <span className="field-label">WhatsApp Number</span>
+                  <input
+                    name="whatsapp"
+                    placeholder={connectWhatsapp ? 'Same as phone (or enter another)' : '+91 7019436720'}
+                    value={formData.whatsapp}
+                    onChange={setField}
+                    autoComplete="tel"
+                  />
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span className="field-label">Connect WhatsApp</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                    <input
+                      type="checkbox"
+                      checked={connectWhatsapp}
+                      onChange={(e) => setConnectWhatsapp(e.target.checked)}
+                      style={{ width: 'auto' }}
+                    />
+                    Link my WhatsApp number to this email
+                  </label>
+                </div>
+              </div>
+
+              <div className="hint" style={{ marginTop: 4 }}>
+                Your WhatsApp number is linked to your email so we can reach you with course updates.
+              </div>
+
+              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
               </div>
 
               <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>

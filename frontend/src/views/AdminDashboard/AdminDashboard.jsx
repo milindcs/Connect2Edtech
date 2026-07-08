@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
+import { API_BASE } from '../../shared/cartApi'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, signout } = useAuth()
+  const { isAdmin, isAuthenticated, token, signout } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -26,9 +27,9 @@ export default function AdminDashboard() {
     let cancelled = false
     const fetchUsers = async () => {
       try {
-        const res = await fetch('/api/admin/users', {
+        const res = await fetch(API_BASE + '/api/admin/users', {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('connect2edtech-user') ? JSON.parse(sessionStorage.getItem('connect2edtech-user')).token : ''}`,
+            Authorization: `Bearer ${token || ''}`,
           },
         })
         const data = await res.json()
@@ -42,7 +43,7 @@ export default function AdminDashboard() {
     }
     fetchUsers()
     return () => { cancelled = true }
-  }, [isAdmin])
+  }, [isAdmin, token])
 
   if (!isAuthenticated || !isAdmin) return null
 

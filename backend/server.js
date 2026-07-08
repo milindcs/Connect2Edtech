@@ -110,6 +110,7 @@ const SignupSubmissionSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
+  whatsappNumber: { type: String, default: '' },
   passwordHash: { type: String, required: true },
   verified: { type: Boolean, default: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
@@ -216,7 +217,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 // Signup - create account, send OTP email
 app.post('/api/signup', async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body || {};
+    const { name, email, phone, password, whatsappNumber, connectWhatsapp } = req.body || {};
     if (!name || !email || !phone) {
       return res.status(400).json({ ok: false, error: 'name, email, phone are required' });
     }
@@ -237,6 +238,8 @@ app.post('/api/signup', async (req, res) => {
     const otp = generateOtp();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
+    const linkedWhatsapp = connectWhatsapp ? trimmed(whatsappNumber) || trimmed(phone) : '';
+
     let existing = null;
     try {
       existing = await SignupSubmission.findOne({ email: String(email).trim() });
@@ -250,13 +253,14 @@ app.post('/api/signup', async (req, res) => {
       }
       await SignupSubmission.updateOne(
         { _id: existing._id },
-        { $set: { name: trimmed(name), phone: trimmed(phone), passwordHash, otp, otpExpiry } }
+        { $set: { name: trimmed(name), phone: trimmed(phone), whatsappNumber: linkedWhatsapp, passwordHash, otp, otpExpiry } }
       );
     } else {
       await SignupSubmission.create({
         name: trimmed(name),
         email: String(email).trim(),
         phone: trimmed(phone),
+        whatsappNumber: linkedWhatsapp,
         passwordHash,
         otp,
         otpExpiry,
@@ -305,7 +309,7 @@ app.post('/api/signin', async (req, res) => {
     }
 
     const token = signJwt(account)
-    res.json({ ok: true, token, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified, role: account.role || 'user' } })
+    res.json({ ok: true, token, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: account.verified, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Sign in failed' })
@@ -344,7 +348,7 @@ app.post('/api/verify-otp', async (req, res) => {
 
     await SignupSubmission.updateOne({ _id: account._id }, { $set: { verified: true, otp: '', otpExpiry: null } })
     const token = signJwt({ ...account.toObject(), verified: true })
-    res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, verified: true, role: account.role || 'user' } })
+    res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: true, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Verification failed.' })
@@ -403,7 +407,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
 
-    res.json({ ok: true, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified, role: account.role || 'user' } })
+    res.json({ ok: true, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: account.verified, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Failed to fetch user.' })
