@@ -211,9 +211,6 @@ export default function SignupPage() {
               </div>
 
               <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-              </div>
-
-              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                 <label>
                   <span className="field-label">Email Address</span>
                   <input name="email" required type="email" placeholder="you@example.com" value={formData.email} onChange={setField} autoComplete="email" />
