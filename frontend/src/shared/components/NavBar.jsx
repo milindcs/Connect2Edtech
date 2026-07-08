@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
 
 export default function NavBar({ pathname }) {
-  const { user, isAuthenticated, signout } = useAuth()
+  const { user, isAuthenticated, isAdmin, signout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -39,6 +39,9 @@ export default function NavBar({ pathname }) {
             ))}
             {isAuthenticated ? (
               <>
+                {isAdmin && (
+                  <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin</Link>
+                )}
                 <span style={{ fontSize: '0.9rem', color: '#333' }}>{user?.name}</span>
                 <button onClick={signout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Sign Out</button>
               </>

@@ -106,7 +106,9 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     user,
     token,
+    role: user?.role || 'user',
     isAuthenticated: Boolean(token && user),
+    isAdmin: user?.role === 'admin',
     signup,
     verifyOtp,
     resendOtp,

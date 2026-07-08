@@ -4,7 +4,7 @@ import { useAuth } from '../../shared/AuthContext'
 
 export default function SigninPage() {
   const navigate = useNavigate()
-  const { signin, isAuthenticated } = useAuth()
+  const { signin, isAuthenticated, isAdmin } = useAuth()
   const [toasts, setToasts] = useState([])
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -14,10 +14,12 @@ export default function SigninPage() {
   }, [])
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isAdmin) {
+      navigate('/admin')
+    } else if (isAuthenticated) {
       navigate('/')
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, isAdmin, navigate])
 
   const showToast = (message, type = 'success') => {
     const id = Date.now()
