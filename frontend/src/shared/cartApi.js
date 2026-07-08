@@ -1,5 +1,7 @@
-export const API_BASE =
-  import.meta.env.VITE_API_URL || "https://connect2edtech.onrender.com"
+// Defaults to a relative URL so the app works on any origin the backend is
+// served from (e.g. renaming the Render service won't break API calls).
+// Set VITE_API_URL to point at a different backend (e.g. http://localhost:10000 in dev).
+export const API_BASE = import.meta.env.VITE_API_URL || ""
 
 let cachedSessionId
 

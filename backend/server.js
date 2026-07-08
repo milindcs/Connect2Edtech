@@ -9,16 +9,18 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
 
 const app = express();
-const CORS_ORIGINS = [
-  "https://connect2edtech.onrender.com",
-  "http://localhost:5173",
-];
+const CORS_ORIGINS = (process.env.CORS_ORIGINS ||
+  "https://connect2edtech.onrender.com,http://localhost:5173,http://localhost:10000")
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
     origin(origin, cb) {
       // allow requests with no origin (e.g. curl, mobile apps)
       if (!origin) return cb(null, true);
+      if (CORS_ORIGINS.includes('*')) return cb(null, true);
       if (CORS_ORIGINS.includes(origin)) return cb(null, true);
       return cb(null, false);
     },
