@@ -5,7 +5,8 @@ export const coursesData = {
     subtitle: 'Creating applications and websites for the internet.',
     description:
       'Complete training in both front-end and back-end web development with modern frameworks and tools.',
-    price: 499,
+    price: 2000,
+    price: 4500,
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
     features: [
@@ -22,7 +23,8 @@ export const coursesData = {
     subtitle: 'Extracting insights from data using statistical and ML methods.',
     description:
       'Learn to analyze and interpret complex data with industry-standard tools and techniques.',
-    price: 549,
+    price: 1000,
+    price: 2000,
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
@@ -39,7 +41,8 @@ export const coursesData = {
     subtitle: 'Protecting digital systems and data from threats.',
     description:
       'Comprehensive security training covering network security, cryptography, and ethical hacking.',
-    price: 599,
+    price: 1000,
+    price: 2000,
     image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Online • Self-paced',
     features: [
@@ -56,7 +59,8 @@ export const coursesData = {
     subtitle: 'Hands-on training designed to build job-ready technical skills.',
     description:
       'Learn practical concepts through guided modules, real-world exercises, and structured assessments.',
-    price: 499,
+    price: 1000,
+    price: 2000,
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
     features: [
@@ -73,7 +77,8 @@ export const coursesData = {
     subtitle: 'End-to-end educational technology implementation and support.',
     description:
       'Get help with LMS setup, digital classroom tooling, student engagement, and academic tech support.',
-    price: 699,
+    price: 2000,
+    price: 4,500,
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Implementation • Support',
     features: [
@@ -90,7 +95,8 @@ export const coursesData = {
     subtitle: 'Industry-focused training for practical skills and certifications.',
     description:
       'Build competence with training modules, certification preparation, and real-world learning experiences.',
-    price: 599,
+    price: 2000,
+    price: 4500,
     image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Blended • Industry aligned',
     features: [
@@ -124,7 +130,8 @@ export const coursesData = {
     subtitle: 'Programs focused on communication, analytics, and workplace readiness.',
     description:
       'Improve business and communication foundations with practical modules and guided practice.',
-    price: 399,
+    price: 2000,
+    price: 4500,
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
     features: [
@@ -141,7 +148,8 @@ export const coursesData = {
     subtitle: 'Explore IoT, AR/VR, Industry 4.0, and automation concepts.',
     description:
       'Learn emerging technology concepts with hands-on activities and curated learning paths.',
-    price: 599,
+    price: 2000,
+    price: 4,500
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
     features: [
@@ -158,7 +166,8 @@ export const coursesData = {
     subtitle: 'Career guidance and placement assistance for students.',
     description:
       'Get comprehensive career counseling, interview preparation, and placement assistance to launch your professional career.',
-    price: 199,
+    price: 2000,
+    price: 4500,
     image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
     meta: 'Online • Support',
     features: [
@@ -175,7 +184,8 @@ export const coursesData = {
     subtitle: 'Advanced business analytics and management skills.',
     description:
       'Comprehensive non-technical training covering advanced analytics, finance, change management, and more.',
-    price: 499,
+    price: 2000,
+    price: 4500,
     hr: '36hr',
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
@@ -194,6 +204,7 @@ export const coursesData = {
     description:
       'Build strong aptitude foundations with timed practice sets, shortcuts, and step-by-step problem-solving techniques.',
     price: 2000,
+    price: 4500,
     hr: '36hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
@@ -212,6 +223,7 @@ export const coursesData = {
     description:
       'Develop real-world communication skills with guided activities, role-plays, and practical feedback.',
     price: 2000,
+    price: 4,500
     hr: '36hr',
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
@@ -230,6 +242,7 @@ export const coursesData = {
     description:
       'Learn AI fundamentals and build practical AI/ML project workflows with curated modules and exercises.',
     price: 2000,
+    price: 4500,
     hr: '36hr',
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
@@ -248,6 +261,7 @@ export const coursesData = {
     description:
       'Learn the MERN stack end-to-end through hands-on web app development and real-world style projects.',
     price: 2000,
+    price: 4,500,
     hr: '36hr',
     image: '/assets/Gemini_Generated_Image_lu6gizlu6gizlu6g.png',
     meta: 'Online • Self-paced',
@@ -266,6 +280,7 @@ export const coursesData = {
     description:
       'Strengthen Java fundamentals with OOP concepts, coding practice, and mini-projects.',
     price: 2000,
+    price: 4500,
     hr: '36hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
@@ -283,7 +298,8 @@ export const coursesData = {
     subtitle: 'Learn big data processing concepts and scalable analytics.',
     description:
       'Understand big data architecture and work on dataset-based analytics workflows.',
-    price: 4500,
+    price: 2000,
+    price: 4,500,
     hr: '80hr',
     image: '/assets/f3ca92ae-1a4e-4d16-8a8e-a9a5b47dd196.jpg',
     meta: 'Online • Self-paced',
@@ -301,6 +317,7 @@ export const coursesData = {
     subtitle: 'Security fundamentals, threat concepts, and ethical hacking basics.',
     description:
       'Learn security essentials with practical modules focused on threats, controls, and ethical hacking concepts.',
+    price: 2000,
     price: 4500,
     hr: '80hr',
     image: '/assets/Gemini_Generated_Image_sy80b6sy80b6sy80.png',
@@ -320,6 +337,7 @@ export const coursesData = {
     description:
       'Learn Python web development concepts with practical exercises and project-style learning.',
     price: 4500,
+    price: 2000,
     hr: '80hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
@@ -338,6 +356,7 @@ export const coursesData = {
     description:
       'Learn C++ fundamentals including OOP, core language constructs, and problem-solving practice.',
     price: 4500,
+    price: 2000,
     hr: '80hr',
     image: '/assets/Gemini_Generated_Image_exv5gwexv5gwexv5.png',
     meta: 'Online • Self-paced',
