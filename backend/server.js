@@ -208,7 +208,7 @@ function getSessionId(req) {
 const trimmed = (v) => (typeof v === 'string' ? v.trim() : '');
 
 function buildWhatsAppUrl(message) {
-  return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+  return `https://web.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(message)}`;
 }
 
 // Health check
