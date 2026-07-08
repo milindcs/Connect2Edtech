@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
+import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function SignupPage() {
   const navigate = useNavigate()
@@ -108,6 +109,18 @@ export default function SignupPage() {
         setRequiresVerification(true)
         setRegisteredEmail(formData.email.trim())
         showToast('Account created. Verification code sent to your email.', 'success')
+        if (connectWhatsapp) {
+          const wa = (formData.whatsapp.trim() || formData.phone.trim())
+          const msg = [
+            'Hello Connect2Edtech! I just signed up and want to connect my WhatsApp.',
+            `Name: ${cleanText(formData.name)}`,
+            `Email: ${cleanText(formData.email)}`,
+            `WhatsApp: ${cleanText(wa)}`,
+          ].join('\n')
+          setTimeout(() => {
+            window.open(buildWhatsAppUrl(msg), '_blank', 'noopener,noreferrer')
+          }, 800)
+        }
       }
     } catch (err) {
       showToast(err.message || 'Signup failed. Please try again.', 'error')

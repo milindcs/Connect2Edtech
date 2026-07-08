@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
+import { buildWhatsAppUrl } from '../../shared/whatsappUtils'
 
 export default function NavBar({ pathname }) {
   const { user, isAuthenticated, isAdmin, signout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
+
+  const openWhatsAppSignup = () => {
+    window.open(
+      buildWhatsAppUrl('Hello Connect2Edtech! I would like to sign up / get enrolled. Please help me register.'),
+      '_blank',
+      'noopener,noreferrer'
+    )
+  }
 
   useEffect(() => {
     setIsOpen(false)
@@ -47,7 +56,7 @@ export default function NavBar({ pathname }) {
               </>
             ) : (
               <>
-                <Link to="/signup" className={pathname === '/signup' ? 'active' : ''}>Sign Up</Link>
+                <Link to="/signup" className={pathname === '/signup' ? 'active' : ''} onClick={openWhatsAppSignup}>Sign Up</Link>
                 <Link to="/signin" className={pathname === '/signin' ? 'active' : ''}>Sign In</Link>
               </>
             )}
