@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { API_BASE } from '../../shared/cartApi'
+import { useAuth } from '../../shared/AuthContext'
 
 export default function SigninPage() {
   const navigate = useNavigate()
+  const { signin, isAuthenticated } = useAuth()
   const [toasts, setToasts] = useState([])
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -11,6 +12,12 @@ export default function SigninPage() {
   useEffect(() => {
     document.title = 'Sign In - Connect2Edtech'
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/')
+    }
+  }, [isAuthenticated, navigate])
 
   const showToast = (message, type = 'success') => {
     const id = Date.now()
@@ -40,27 +47,9 @@ export default function SigninPage() {
     }
 
     setIsSubmitting(true)
-    let whatsappUrl = ''
     try {
-      const res = await fetch(API_BASE + '/api/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!data.ok) {
-        throw new Error(data.error || 'Sign in failed')
-      }
-      if (data.whatsappUrl) {
-        whatsappUrl = data.whatsappUrl
-      }
+      await signin(email, password)
       showToast('Signed in! Redirecting...', 'success')
-      setTimeout(() => {
-        if (whatsappUrl) {
-          window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-        }
-        navigate('/')
-      }, 800)
     } catch (err) {
       showToast(err.message || 'Could not sign in. Please try again.', 'error')
     } finally {
@@ -82,28 +71,12 @@ export default function SigninPage() {
           <form className="form-grid" onSubmit={handleSubmit} aria-label="Sign in form">
             <label>
               <span className="field-label">Email Address</span>
-              <input
-                name="email"
-                required
-                type="email"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={setField}
-                autoComplete="email"
-              />
+              <input name="email" required type="email" placeholder="you@example.com" value={formData.email} onChange={setField} autoComplete="email" />
             </label>
 
             <label>
               <span className="field-label">Password</span>
-              <input
-                name="password"
-                required
-                type="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={setField}
-                autoComplete="current-password"
-              />
+              <input name="password" required type="password" placeholder="Enter your password" value={formData.password} onChange={setField} autoComplete="current-password" />
             </label>
 
             <div className="form-actions" style={{ marginTop: 6 }}>

@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from 'url';
+import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
 
@@ -38,12 +40,64 @@ app.use(express.json());
 
 const WHATSAPP_PHONE = '917019436720';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'connect2edtech-jwt-secret-change-in-production';
+const JWT_EXPIRY = '7d';
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+  },
+});
+
+async function sendOtpEmail(toEmail, otp) {
+  const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com';
+  await transporter.sendMail({
+    from,
+    to: toEmail,
+    subject: 'Verify your email - Connect2Edtech',
+    text: `Your verification code is ${otp}. It expires in 10 minutes.`,
+    html: `<p>Your verification code is <strong>${otp}</strong>.</p><p>It expires in 10 minutes.</p>`,
+  });
+}
+
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function signJwt(user) {
+  return jwt.sign(
+    { userId: user._id.toString(), email: user.email, name: user.name, phone: user.phone, verified: user.verified },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRY }
+  );
+}
+
+function authMiddleware(req, res, next) {
+  const header = req.headers.authorization || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return res.status(401).json({ ok: false, error: 'Missing token' });
+  try {
+    const decoded = jwt.verify(match[1], JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ ok: false, error: 'Invalid or expired token' });
+  }
+}
+
 // MongoDB Models
 const SignupSubmissionSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
   passwordHash: { type: String, required: true },
+  verified: { type: Boolean, default: false },
+  otp: { type: String, default: '' },
+  otpExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 }, { versionKey: false });
 SignupSubmissionSchema.index({ email: 1 }, { unique: true });
@@ -137,7 +191,7 @@ function buildWhatsAppUrl(message) {
 // Health check
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// Signup - store in MongoDB + redirect to WhatsApp
+// Signup - create account, send OTP email
 app.post('/api/signup', async (req, res) => {
   try {
     const { name, email, phone, password } = req.body || {};
@@ -158,24 +212,49 @@ app.post('/api/signup', async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
+    const otp = generateOtp();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    let existing = null;
     try {
-      await SignupSubmission.create({ name, email, phone, passwordHash });
-    } catch (createErr) {
-      if (createErr && createErr.code === 11000) {
-        return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
-      }
-      throw createErr;
+      existing = await SignupSubmission.findOne({ email: String(email).trim() });
+    } catch {
+      existing = null;
     }
 
-    const msg = [`📋 New Signup Request`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`].join('\n');
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
+    if (existing) {
+      if (existing.verified) {
+        return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
+      }
+      await SignupSubmission.updateOne(
+        { _id: existing._id },
+        { $set: { name: trimmed(name), phone: trimmed(phone), passwordHash, otp, otpExpiry } }
+      );
+    } else {
+      await SignupSubmission.create({
+        name: trimmed(name),
+        email: String(email).trim(),
+        phone: trimmed(phone),
+        passwordHash,
+        otp,
+        otpExpiry,
+      });
+    }
+
+    try {
+      await sendOtpEmail(String(email).trim(), otp);
+    } catch (mailErr) {
+      console.error('[Mail] OTP send failed:', mailErr.message);
+    }
+
+    res.json({ ok: true, message: 'Account created. Verification code sent to your email.', requiresVerification: true });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: 'Signup failed. Please try again.' });
   }
 });
 
-// Signin - verify credentials against stored SignupSubmission
+// Signin - verify credentials and return JWT
 app.post('/api/signin', async (req, res) => {
   try {
     const { email, password } = req.body || {}
@@ -199,11 +278,113 @@ app.post('/api/signin', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'Incorrect password.' })
     }
 
-    const msg = [`🔐 Sign In`, `Name: ${trimmed(account.name) || '—'}`, `Email: ${trimmed(account.email) || '—'}`, `Phone: ${trimmed(account.phone) || '—'}`].join('\n')
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) })
+    if (!account.verified) {
+      return res.status(403).json({ ok: false, error: 'Please verify your email before signing in.', requiresVerification: true })
+    }
+
+    const token = signJwt(account)
+    res.json({ ok: true, token, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified } })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Sign in failed' })
+  }
+})
+
+// Verify OTP
+app.post('/api/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body || {}
+    if (!email || !otp) {
+      return res.status(400).json({ ok: false, error: 'email and otp are required' })
+    }
+
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' })
+    }
+
+    const account = await SignupSubmission.findOne({ email: String(email).trim() })
+    if (!account) {
+      return res.status(404).json({ ok: false, error: 'Account not found.' })
+    }
+
+    if (account.verified) {
+      return res.json({ ok: true, message: 'Email already verified.', verified: true })
+    }
+
+    if (!account.otp || !account.otpExpiry || new Date() > new Date(account.otpExpiry)) {
+      return res.status(400).json({ ok: false, error: 'OTP expired. Please request a new one.' })
+    }
+
+    if (account.otp !== String(otp).trim()) {
+      return res.status(400).json({ ok: false, error: 'Invalid OTP.' })
+    }
+
+    await SignupSubmission.updateOne({ _id: account._id }, { $set: { verified: true, otp: '', otpExpiry: null } })
+    const token = signJwt({ ...account.toObject(), verified: true })
+    res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, verified: true } })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Verification failed.' })
+  }
+})
+
+// Resend OTP
+app.post('/api/resend-otp', async (req, res) => {
+  try {
+    const { email } = req.body || {}
+    if (!email) {
+      return res.status(400).json({ ok: false, error: 'email is required' })
+    }
+
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' })
+    }
+
+    const account = await SignupSubmission.findOne({ email: String(email).trim() })
+    if (!account) {
+      return res.status(404).json({ ok: false, error: 'Account not found.' })
+    }
+
+    if (account.verified) {
+      return res.json({ ok: true, message: 'Email already verified.' })
+    }
+
+    const otp = generateOtp()
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
+    await SignupSubmission.updateOne({ _id: account._id }, { $set: { otp, otpExpiry } })
+
+    try {
+      await sendOtpEmail(String(email).trim(), otp)
+    } catch (mailErr) {
+      console.error('[Mail] OTP resend failed:', mailErr.message)
+    }
+
+    res.json({ ok: true, message: 'New verification code sent to your email.' })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Resend failed.' })
+  }
+})
+
+// Get current user from token
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+
+    const account = await SignupSubmission.findById(req.user.userId)
+    if (!account) {
+      return res.status(404).json({ ok: false, error: 'User not found.' })
+    }
+
+    res.json({ ok: true, user: { name: account.name, email: account.email, phone: account.phone, verified: account.verified } })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch user.' })
   }
 })
 

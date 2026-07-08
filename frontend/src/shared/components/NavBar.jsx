@@ -1,25 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-
-
-const navItems = [
-  { to: '/', label: 'Home' },
-  { to: '/about', label: 'About' },
-  { to: '/courses', label: 'Courses' },
-  { to: '/enrollment', label: 'Enroll' },
-  { to: '/signup', label: 'Sign Up' },
-  { to: '/signin', label: 'Sign In' },
-  { to: '/contact', label: 'Contact' },
-]
-
+import { useAuth } from '../../shared/AuthContext'
 
 export default function NavBar({ pathname }) {
-
+  const { user, isAuthenticated, signout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
+
+  const navItems = [
+    { to: '/', label: 'Home' },
+    { to: '/about', label: 'About' },
+    { to: '/courses', label: 'Courses' },
+    { to: '/enrollment', label: 'Enroll' },
+  ]
 
   return (
     <header className="site-header">
@@ -29,13 +25,7 @@ export default function NavBar({ pathname }) {
             <img src="/assets/logo.PNG" alt="Connect2Edtech Logo" className="logo" />
           </Link>
 
-
-          <button
-            className="nav-toggle"
-            aria-label="Toggle navigation"
-            aria-expanded={isOpen}
-            onClick={() => setIsOpen((v) => !v)}
-          >
+          <button className="nav-toggle" aria-label="Toggle navigation" aria-expanded={isOpen} onClick={() => setIsOpen((v) => !v)}>
             <span className="nav-toggle-bar"></span>
             <span className="nav-toggle-bar"></span>
             <span className="nav-toggle-bar"></span>
@@ -43,14 +33,21 @@ export default function NavBar({ pathname }) {
 
           <nav className={`nav-links ${isOpen ? 'is-open' : ''}`}>
             {navItems.map((it) => (
-              <Link
-                key={it.to}
-                to={it.to}
-                className={pathname === it.to ? 'active' : ''}
-              >
+              <Link key={it.to} to={it.to} className={pathname === it.to ? 'active' : ''}>
                 {it.label}
               </Link>
             ))}
+            {isAuthenticated ? (
+              <>
+                <span style={{ fontSize: '0.9rem', color: '#333' }}>{user?.name}</span>
+                <button onClick={signout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Sign Out</button>
+              </>
+            ) : (
+              <>
+                <Link to="/signup" className={pathname === '/signup' ? 'active' : ''}>Sign Up</Link>
+                <Link to="/signin" className={pathname === '/signin' ? 'active' : ''}>Sign In</Link>
+              </>
+            )}
           </nav>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import SiteLayout from '../shared/SiteLayout'
+import { AuthProvider } from '../shared/AuthContext'
 
 import HomePage from '../views/HomePage/HomePage'
 import AboutPage from '../views/AboutPage/AboutPage'
@@ -14,21 +15,23 @@ import SigninPage from '../views/SigninPage/SigninPage'
 
 export default function App() {
   return (
-    <SiteLayout>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/courses" element={<CoursesPage />} />
-        <Route path="/course/:course" element={<CourseDetailsPage />} />
-        <Route path="/enrollment" element={<EnrollmentPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/signin" element={<SigninPage />} />
+    <AuthProvider>
+      <SiteLayout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/course/:course" element={<CourseDetailsPage />} />
+          <Route path="/enrollment" element={<EnrollmentPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signin" element={<SigninPage />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </SiteLayout>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </SiteLayout>
+    </AuthProvider>
   )
 }
 
