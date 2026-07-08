@@ -201,7 +201,7 @@ export default function ContactPage() {
               <span style={{ fontSize: '1.4rem' }}>✉️</span>
               <div>
                 <p style={{ fontWeight: 600 }}>Email Address</p>
-                <a href="mailto:connect2future.main@gmail.com" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>connect2future.main@gmail.com</a>
+                <a href="mailto:hr@connect2future.com" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>hr@connect2future.com</a>
               </div>
             </div>
 

@@ -11,7 +11,7 @@ export default function Footer() {
           <ul className="contact-info">
             <li>📞 +91 7019436720</li>
             <li>
-              <a href="mailto:connect2future.main@gmail.com">✉️ connect2future.main@gmail.com</a>
+              <a href="mailto:hr@connect2future.com">✉️ hr@connect2future.com</a>
             </li>
           </ul>
         </div>
@@ -39,7 +39,7 @@ export default function Footer() {
           <p>Subscribe to our newsletter for the latest course updates.</p>
           <form
             className="newsletter-form"
-            action="https://formsubmit.co/connect2future.main@gmail.com"
+            action="https://formsubmit.co/hr@connect2future.com"
             method="POST"
           >
             <input type="email" name="email" placeholder="Your email address" required />

@@ -335,7 +335,7 @@ export default function HomePage() {
                   📍 Location: Mysuru, Karnataka, India
                 </p>
                 <p style={{ color: '#000000' }}>
-                  📧 Email: <a href="mailto:connect2future.main@gmail.com" style={{ color: '#000000' }}>connect2future.main@gmail.com</a>
+                  📧 Email: <a href="mailto:hr@connect2future.com" style={{ color: '#000000' }}>hr@connect2future.com</a>
                 </p>
                 <p style={{ color: '#000000' }}>
                   📞 Phone: <a href="tel:+917019436720" style={{ color: '#000000' }}>+91 7019436720</a>
