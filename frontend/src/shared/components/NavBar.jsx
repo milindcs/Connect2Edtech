@@ -7,7 +7,8 @@ export default function NavBar({ pathname }) {
   const { user, isAuthenticated, isAdmin, signout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
 
-  const openWhatsAppSignup = () => {
+  const openWhatsAppSignup = (e) => {
+    if (e) e.preventDefault()
     window.open(
       buildWhatsAppUrl('Hello Connect2Edtech! I would like to sign up / get enrolled. Please help me register.'),
       '_blank',
