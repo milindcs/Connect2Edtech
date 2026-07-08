@@ -185,7 +185,12 @@ async function connectMongo() {
 
   mongoConnectionPromise = mongoose.connect(uri, { serverSelectionTimeoutMS: 5000, socketTimeoutMS: 5000 })
     .then((m) => { console.log('[MongoDB] connected'); return m; })
-    .catch((err) => { console.log('[MongoDB] connection failed:', err.message); mongoConnectionPromise = null; return null; });
+    .catch((err) => {
+      console.log('[MongoDB] connection failed:', err.message);
+      console.log('[MongoDB] hint: check Atlas IP whitelist, user/password, and cluster address.');
+      mongoConnectionPromise = null;
+      return null;
+    });
 
   return mongoConnectionPromise;
 }
