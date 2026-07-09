@@ -72,8 +72,8 @@ export default function StudentPage() {
   if (!isAuthenticated) return null
 
   const stats = [
-    { label: 'Enrolled Courses', value: enrollments.length },
-    { label: 'Orders', value: checkouts.length },
+    { label: 'My Courses', value: enrollments.length },
+    { label: 'My Purchases', value: checkouts.length },
     { label: 'Messages', value: contacts.length },
     { label: 'Cart Items', value: cart.length },
   ]
@@ -104,6 +104,11 @@ export default function StudentPage() {
                 <div style={{ color: '#6b2a4a', fontWeight: 600, marginTop: 4 }}>{s.label}</div>
               </div>
             ))}
+            <Link to="/courses" className="card" style={{ padding: 24, textDecoration: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, minHeight: 120 }}>
+              <div style={{ fontSize: '2.5rem' }}>📚</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#6b2a4a' }}>Browse Courses</div>
+              <div style={{ fontSize: '0.85rem', color: '#9d174d' }}>Explore programs →</div>
+            </Link>
           </div>
 
           {/* Profile */}
@@ -118,9 +123,9 @@ export default function StudentPage() {
           </div>
 
           {/* Enrollments */}
-          <h3 style={{ margin: '8px 0 12px' }}>My Enrollments</h3>
+          <h3 style={{ margin: '8px 0 12px' }}>My Learning</h3>
           {loading ? <p>Loading…</p> : enrollments.length === 0 ? (
-            <p style={{ color: '#6b2a4a' }}>You haven't enrolled in any courses yet. <Link to="/courses">Browse courses</Link>.</p>
+            <p style={{ color: '#6b2a4a' }}>You haven't enrolled in any courses yet. <Link to="/courses">Browse courses</Link> to get started.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {enrollments.map((e) => (
@@ -137,15 +142,15 @@ export default function StudentPage() {
           )}
 
           {/* Orders */}
-          <h3 style={{ margin: '32px 0 12px' }}>My Orders</h3>
+          <h3 style={{ margin: '32px 0 12px' }}>My Purchases</h3>
           {loading ? <p>Loading…</p> : checkouts.length === 0 ? (
-            <p style={{ color: '#6b2a4a' }}>No orders yet. <Link to="/courses">Start shopping</Link>.</p>
+            <p style={{ color: '#6b2a4a' }}>No purchases yet. <Link to="/courses">Start shopping</Link> for courses.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {checkouts.map((o) => (
                 <div key={o._id} className="card" style={{ padding: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                    <strong style={{ textTransform: 'capitalize' }}>{o.submissionType || 'order'}</strong>
+                    <strong style={{ textTransform: 'capitalize' }}>{o.submissionType || 'purchase'}</strong>
                     <span style={{ color: '#9d174d', fontWeight: 700 }}>₹{o.totalAmount || 0}</span>
                   </div>
                   <div style={{ color: '#6b2a4a', fontSize: '0.9rem', marginTop: 4 }}>
@@ -160,7 +165,7 @@ export default function StudentPage() {
           {/* Messages */}
           <h3 style={{ margin: '32px 0 12px' }}>My Messages</h3>
           {loading ? <p>Loading…</p> : contacts.length === 0 ? (
-            <p style={{ color: '#6b2a4a' }}>No messages sent yet. <Link to="/contact">Contact us</Link>.</p>
+            <p style={{ color: '#6b2a4a' }}>No messages sent yet. <Link to="/contact">Contact us</Link> for any queries.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {contacts.map((c) => (
@@ -176,9 +181,9 @@ export default function StudentPage() {
           )}
 
           {/* Current cart */}
-          <h3 style={{ margin: '32px 0 12px' }}>Current Cart</h3>
+          <h3 style={{ margin: '32px 0 12px' }}>My Cart</h3>
           {cart.length === 0 ? (
-            <p style={{ color: '#6b2a4a' }}>Your cart is empty. <Link to="/courses">Add courses</Link>.</p>
+            <p style={{ color: '#6b2a4a' }}>Your cart is empty. <Link to="/courses">Add courses</Link> to start learning.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {cart.map((it) => (
