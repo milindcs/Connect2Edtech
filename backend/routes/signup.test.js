@@ -1,41 +1,32 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import bcrypt from 'bcryptjs';
 import express from 'express';
 import { createSignupRouter } from './signup.js';
+import { createDocument, findOne, clearCollection, find } from '../store.js';
 
-let mongoServer;
 let sentOtps = [];
 
-const SignupSubmissionSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  whatsappNumber: { type: String, default: '' },
-  passwordHash: { type: String, required: true },
-  verified: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'hr', 'admin'], default: 'user' },
-  otp: { type: String, default: '' },
-  otpExpiry: { type: Date, default: null },
-  createdAt: { type: Date, default: Date.now },
-});
-const SignupSubmission =
-  mongoose.models.SignupSubmission || mongoose.model('SignupSubmission', SignupSubmissionSchema);
-
-async function connectMongo() {
-  return mongoose.connection;
-}
+const ALLOWED_ROLES = ['user', 'hr', 'admin'];
 
 async function sendOtpEmail(email, otp) {
   sentOtps.push({ email, otp });
 }
 
+function updateByIdSignup(collectionName, id, update) {
+  const storeRow = findOne('signups', { _id: id });
+  if (!storeRow) return null;
+  const updated = { ...storeRow, ...(update.$set || update) };
+  const idx = (find('signups') || []).findIndex((d) => d._id === id);
+  if (idx !== -1) find('signups')[idx] = updated;
+  return updated;
+}
+
 function makeServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/signup', createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmail }));
+  app.use('/api/signup', createSignupRouter({ connectStore: find, createDocument, updateById: updateByIdSignup, sendOtpEmail }));
   return http.createServer(app);
 }
 
@@ -48,19 +39,17 @@ function postSignup(server, body) {
   });
 }
 
-before(async () => {
-  mongoServer = await MongoMemoryServer.create({ instance: { launchTimeout: 180000 } });
-  await mongoose.connect(mongoServer.getUri());
+before(() => {
+  clearCollection('signups');
 });
 
-after(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+after(() => {
+  clearCollection('signups');
 });
 
-beforeEach(async () => {
+beforeEach(() => {
   sentOtps = [];
-  await SignupSubmission.deleteMany({});
+  clearCollection('signups');
 });
 
 test('rejects missing required fields', async () => {
@@ -108,7 +97,7 @@ test('creates account and sends OTP', async () => {
     assert.equal(body.ok, true);
     assert.equal(body.requiresVerification, true);
 
-    const saved = await SignupSubmission.findOne({ email: 'jane@test.com' });
+    const saved = find('signups', { email: 'jane@test.com' })[0];
     assert.ok(saved);
     assert.notEqual(saved.passwordHash, 'longenough');
     assert.ok(saved.otp.length === 6);
@@ -125,14 +114,13 @@ test('updates unverified existing account instead of duplicate', async () => {
   try {
     const payload = { name: 'Jane', email: 'jane@test.com', phone: '999', password: 'longenough' };
     await postSignup(server, payload);
-    const first = await SignupSubmission.findOne({ email: 'jane@test.com' });
+    const first = find('signups', { email: 'jane@test.com' })[0];
 
     const res = await postSignup(server, { ...payload, name: 'Jane Doe', password: 'newerpass1' });
     assert.equal(res.status, 200);
 
-    const count = await SignupSubmission.countDocuments({ email: 'jane@test.com' });
-    assert.equal(count, 1);
-    const updated = await SignupSubmission.findOne({ email: 'jane@test.com' });
+    assert.equal(find('signups', { email: 'jane@test.com' }).length, 1);
+    const updated = find('signups', { email: 'jane@test.com' })[0];
     assert.equal(updated.name, 'Jane Doe');
     assert.notEqual(updated.passwordHash, first.passwordHash);
   } finally {
@@ -146,7 +134,10 @@ test('rejects verified duplicate with 409', async () => {
   try {
     const payload = { name: 'Jane', email: 'jane@test.com', phone: '999', password: 'longenough' };
     await postSignup(server, payload);
-    await SignupSubmission.updateOne({ email: 'jane@test.com' }, { $set: { verified: true } });
+    const first = find('signups', { email: 'jane@test.com' })[0];
+    first.verified = true
+    const idx = (find('signups') || []).findIndex((d) => d._id === first._id);
+    if (idx !== -1) find('signups')[idx] = { ...first };
 
     const res = await postSignup(server, payload);
     assert.equal(res.status, 409);
@@ -164,7 +155,7 @@ test('links whatsapp number when requested', async () => {
       connectWhatsapp: true, whatsappNumber: '888',
     });
     assert.equal(res.status, 200);
-    const saved = await SignupSubmission.findOne({ email: 'jane@test.com' });
+    const saved = find('signups', { email: 'jane@test.com' })[0];
     assert.equal(saved.whatsappNumber, '888');
   } finally {
     server.close();
@@ -179,14 +170,14 @@ test('stores a provided role and defaults to user', async () => {
       name: 'Jane', email: 'jane@test.com', phone: '999', password: 'longenough', role: 'hr',
     });
     assert.equal(res.status, 200);
-    const saved = await SignupSubmission.findOne({ email: 'jane@test.com' });
+    const saved = find('signups', { email: 'jane@test.com' })[0];
     assert.equal(saved.role, 'hr');
 
     const res2 = await postSignup(server, {
       name: 'Bob', email: 'bob@test.com', phone: '111', password: 'longenough',
     });
     assert.equal(res2.status, 200);
-    const saved2 = await SignupSubmission.findOne({ email: 'bob@test.com' });
+    const saved2 = find('signups', { email: 'bob@test.com' })[0];
     assert.equal(saved2.role, 'user');
   } finally {
     server.close();
@@ -201,7 +192,7 @@ test('ignores an invalid role and defaults to user', async () => {
       name: 'Jane', email: 'jane@test.com', phone: '999', password: 'longenough', role: 'superuser',
     });
     assert.equal(res.status, 200);
-    const saved = await SignupSubmission.findOne({ email: 'jane@test.com' });
+    const saved = find('signups', { email: 'jane@test.com' })[0];
     assert.equal(saved.role, 'user');
   } finally {
     server.close();

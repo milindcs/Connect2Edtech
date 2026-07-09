@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
-import { enrollmentSubmit } from '../../shared/cartApi'
+import { enrollmentSubmit, checkoutSubmit, cartList } from '../../shared/cartApi'
 
 export default function EnrollmentPage() {
   const location = useLocation()
-  
-  // Extract the course query parameter from the URL string
   const queryParams = new URLSearchParams(location.search)
-  const courseParam = queryParams.get('course')
+  const courseParam = queryParams.get('course') || ''
 
-  // Component local states
   const [course, setCourse] = useState(null)
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('enrollment_form_data')
@@ -29,24 +26,20 @@ export default function EnrollmentPage() {
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [cart, setCart] = useState([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Resolve course details dynamically based on URL parameter string
+  useEffect(() => {
+    document.title = course ? `Enroll in ${course.title} - Connect2Edtech` : 'Program Enrollment - Connect2Edtech'
+  }, [course])
+
   useEffect(() => {
     if (courseParam) {
       const key = normalizeCourseKey(courseParam)
       const data = coursesData[key]
       setCourse(data || null)
-      
-      if (data) {
-        document.title = `Enroll in ${data.title} - Connect2Edtech`
-      } else {
-        document.title = 'Program Enrollment - Connect2Edtech'
-      }
-    } else {
-      document.title = 'Program Enrollment - Connect2Edtech'
     }
 
-    // Scroll animation lifecycle hooks matching your application pattern
     const sections = document.querySelectorAll('.animate-on-scroll')
     if (!('IntersectionObserver' in window)) {
       sections.forEach((el) => el.classList.add('is-visible'))
@@ -71,7 +64,22 @@ export default function EnrollmentPage() {
     localStorage.setItem('enrollment_form_data', JSON.stringify(formData))
   }, [formData])
 
-  // Sync typed inputs into form state
+  useEffect(() => {
+    const updateCart = async () => {
+      try {
+        const data = await cartList()
+        setCart(Array.isArray(data.items) ? data.items : [])
+      } catch {
+        setCart([])
+      }
+    }
+    updateCart()
+
+    const onUpdated = () => updateCart()
+    window.addEventListener('cart-updated', onUpdated)
+    return () => window.removeEventListener('cart-updated', onUpdated)
+  }, [])
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((prev) => ({
@@ -80,7 +88,6 @@ export default function EnrollmentPage() {
     }))
   }
 
-  // Handle registration validation and submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -100,32 +107,50 @@ export default function EnrollmentPage() {
       return
     }
 
+    setIsSubmitting(true)
     try {
-      await enrollmentSubmit({
-        name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        college: formData.college,
-        courseKey: course ? course.key : '',
-        courseTitle: course ? course.title : '',
-        message: formData.college ? `College: ${formData.college}` : ''
-      })
+      if (cart.length > 0) {
+        await checkoutSubmit({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          note: formData.college ? `College: ${formData.college}` : '',
+        })
+      } else if (course) {
+        await enrollmentSubmit({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          college: formData.college,
+          courseKey: course.key,
+          courseTitle: course.title,
+          message: formData.college ? `College: ${formData.college}` : ''
+        })
+      } else {
+        setError('No course selected and your cart is empty.')
+        setIsSubmitting(false)
+        return
+      }
+
       localStorage.removeItem('enrollment_form_data')
       setIsSubmitted(true)
     } catch (err) {
       console.error(err)
       setError(err.message || 'Could not submit enrollment. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  // Post-submission success panel layout
   if (isSubmitted) {
     return (
       <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
         <div className="detail-shell" style={{ maxWidth: 600, margin: '0 auto', padding: '40px 24px' }}>
           <h2 style={{ color: 'var(--border-focus)', marginBottom: 16 }}>Enrollment Received!</h2>
           <p style={{ color: 'var(--text-primary)', marginBottom: 12, fontSize: '1.1rem' }}>
-            You have successfully initiated enrollment for <strong>{course ? course.title : 'the program'}</strong>.
+            {cart.length > 0
+              ? <>Your checkout for <strong>{cart.length} program{pl(cart.length)}</strong> has been received.</>
+              : <>You have successfully initiated enrollment for <strong>{course ? course.title : 'the program'}</strong>.</>}
           </p>
           <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: '0.95rem', lineHeight: '1.6' }}>
             An onboarding confirmation overview has been sent to <strong>{formData.email}</strong>. Our training coordinator team will review your profile credentials and follow up with you shortly.
@@ -143,11 +168,12 @@ export default function EnrollmentPage() {
     )
   }
 
+  const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
+
   return (
     <div className="container" style={{ padding: '60px 24px' }}>
       <div className="detail-shell" style={{ maxWidth: 960, margin: '0 auto' }}>
         
-        {/* Dynamic Header Information */}
         <section className="detail-hero animate-on-scroll animate-fade-up" style={{ marginBottom: 40, textAlign: 'center' }}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: 12 }}>Training Track Enrollment</h1>
           <p className="section-subtitle">
@@ -157,13 +183,37 @@ export default function EnrollmentPage() {
 
         <div className="two-col animate-on-scroll animate-slide stagger-2" style={{ gap: 40 }}>
           
-          {/* User Registration Form */}
           <form className="card" onSubmit={handleSubmit} style={{ width: '100%', padding: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
             <h3 style={{ fontSize: '1.4rem', marginBottom: 4 }}>Applicant Context</h3>
             
             {error && (
               <div style={{ color: 'var(--error)', backgroundColor: 'rgba(236, 72, 153, 0.08)', padding: '12px 16px', borderRadius: 6, fontSize: '0.9rem', border: '1px solid var(--error)' }}>
                 {error}
+              </div>
+            )}
+
+            {cart.length > 0 && (
+              <div style={{ background: 'rgba(219, 39, 119, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, marginBottom: 8 }}>
+                <h4 style={{ margin: '0 0 8px', fontSize: '1rem' }}>Your Cart ({cart.length} item{pl(cart.length)})</h4>
+                {cart.map((item) => (
+                  <div key={item.courseKey} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: 4 }}>
+                    <span>{item.title || item.courseKey}</span>
+                    <span style={{ color: '#9d174d', fontWeight: 700 }}>{item.price === 0 ? 'Free' : `₹${Number(item.price).toFixed(2)}`}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700, marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                  <span>Total</span>
+                  <span style={{ color: '#9d174d' }}>{total === 0 ? 'Free' : `₹${total.toFixed(2)}`}</span>
+                </div>
+              </div>
+            )}
+
+            {!cart.length && course && (
+              <div style={{ background: 'rgba(219, 39, 119, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, marginBottom: 8 }}>
+                <h4 style={{ margin: '0 0 8px', fontSize: '1rem' }}>Selected Track</h4>
+                <div style={{ fontSize: '0.9rem' }}>
+                  <strong>{course.title}</strong> — {course.price === 0 ? 'Free' : `₹${Number(course.price).toFixed(2)}`}
+                </div>
               </div>
             )}
 
@@ -240,14 +290,38 @@ export default function EnrollmentPage() {
               </label>
             </div>
 
-            <button type="submit" className="btn primary" style={{ width: '100%', marginTop: 12, justifyContent: 'center' }}>
-              Confirm & Lock Registration
+            <button type="submit" className="btn primary" style={{ width: '100%', marginTop: 12, justifyContent: 'center' }} disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting…' : cart.length > 0 ? 'Confirm Checkout' : 'Confirm & Lock Registration'}
             </button>
+
+            {cart.length > 0 && (
+              <Link to="/cart" className="btn secondary" style={{ width: '100%', marginTop: 4, justifyContent: 'center', textAlign: 'center' }}>
+                ← Back to Cart
+              </Link>
+            )}
           </form>
 
-          {/* Sticky Target Summary Sidebar */}
           <aside style={{ width: '100%', maxWidth: 360 }}>
-            {course ? (
+            {cart.length > 0 ? (
+              <div className="card" style={{ padding: 24, position: 'sticky', top: 24 }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: 16 }}>Cart Summary</h3>
+                {cart.map((item) => (
+                  <div key={item.courseKey} style={{ marginBottom: 12 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{item.title || item.courseKey}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {item.price === 0 ? 'Free' : `₹${Number(item.price).toFixed(2)}`}
+                    </div>
+                  </div>
+                ))}
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border)', marginBottom: 16 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Total:</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    {total === 0 ? 'Free' : `₹${total.toFixed(2)}`}
+                  </span>
+                </div>
+              </div>
+            ) : course ? (
               <div className="card" style={{ padding: 24, position: 'sticky', top: 24 }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: 16 }}>Selected Track</h3>
                 
@@ -292,4 +366,8 @@ export default function EnrollmentPage() {
       </div>
     </div>
   )
+}
+
+function pl(n) {
+  return n === 1 ? '' : 's'
 }

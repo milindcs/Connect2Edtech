@@ -3,17 +3,12 @@ import express from 'express';
 // Builds the /api/mail router (mail inbox + reply). Mount it with staffAuth so
 // only admins and HR can read inquiries and reply. Dependencies are injected so
 // the route can be unit-tested without loading the whole server.
-export function createMailRouter({ ContactSubmission, connectMongo, sendEmail }) {
+export function createMailRouter({ findOne, updateById, find, sendEmail }) {
   const router = express.Router();
 
-  // Inbox: all contact inquiries, newest first.
   router.get('/', async (req, res) => {
     try {
-      const conn = await connectMongo();
-      if (!conn || conn.readyState !== 1) {
-        return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' });
-      }
-      const items = await ContactSubmission.find({}).sort({ createdAt: -1 }).limit(200);
+      const items = find('contacts', {}, { sort: { createdAt: -1 } }).slice(0, 200);
       res.json({ ok: true, messages: items });
     } catch (e) {
       console.error(e);
@@ -21,7 +16,6 @@ export function createMailRouter({ ContactSubmission, connectMongo, sendEmail })
     }
   });
 
-  // Reply to a single inquiry by email.
   router.post('/:id/reply', async (req, res) => {
     try {
       const { id } = req.params;
@@ -29,16 +23,11 @@ export function createMailRouter({ ContactSubmission, connectMongo, sendEmail })
       if (!subject || !message) {
         return res.status(400).json({ ok: false, error: 'subject and message are required' });
       }
-      if (!mongooseTypesObjectId(id)) {
+      if (!isValidId(id)) {
         return res.status(400).json({ ok: false, error: 'Invalid message id.' });
       }
 
-      const conn = await connectMongo();
-      if (!conn || conn.readyState !== 1) {
-        return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' });
-      }
-
-      const contact = await ContactSubmission.findById(id);
+      const contact = findOne('contacts', { _id: id });
       if (!contact) {
         return res.status(404).json({ ok: false, error: 'Message not found.' });
       }
@@ -58,11 +47,12 @@ export function createMailRouter({ ContactSubmission, connectMongo, sendEmail })
         return res.status(502).json({ ok: false, error: 'Failed to send reply email.' });
       }
 
-      contact.replies.push({ from: fromName, body, at: new Date() });
-      contact.replied = true;
-      await contact.save();
+      const updated = updateById('contacts', id, {
+        replies: [...(contact.replies || []), { from: fromName, body, at: new Date() }],
+        replied: true,
+      })
 
-      res.json({ ok: true, message: 'Reply sent.', contact });
+      res.json({ ok: true, message: 'Reply sent.', contact: updated });
     } catch (e) {
       console.error(e);
       res.status(500).json({ ok: false, error: 'Failed to send reply.' });
@@ -72,7 +62,6 @@ export function createMailRouter({ ContactSubmission, connectMongo, sendEmail })
   return router;
 }
 
-// Lightweight ObjectId check without importing mongoose here.
-function mongooseTypesObjectId(id) {
-  return typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id);
+function isValidId(id) {
+  return typeof id === 'string' && /^[a-fA-F0-9-]{8,}$/.test(id);
 }

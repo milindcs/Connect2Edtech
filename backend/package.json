@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "USE_MEMORY_DB=true node server.js"
+    "dev": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -13,10 +13,7 @@
     "dotenv": "^17.2.2",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^8.0.0",
     "nodemailer": "^6.9.4"
   },
-  "devDependencies": {
-    "mongodb-memory-server": "^11.2.0"
-  }
+  "devDependencies": {}
 }

@@ -3,13 +3,53 @@
 // Set VITE_API_URL to point at a different backend (e.g. http://localhost:10000 in dev).
 export const API_BASE = import.meta.env.VITE_API_URL || ""
 
+const CART_KEY = 'cart_items'
+
+function getCart() {
+  try {
+    const cart = localStorage.getItem(CART_KEY)
+    return cart ? JSON.parse(cart) : []
+  } catch {
+    return []
+  }
+}
+
+function setCart(items) {
+  localStorage.setItem(CART_KEY, JSON.stringify(items))
+  window.dispatchEvent(new Event('cart-updated'))
+}
+
+export function cartList() {
+  return Promise.resolve({ ok: true, items: getCart() })
+}
+
+export function cartAdd({ courseKey, title, price, image }) {
+  const cart = getCart()
+  const existing = cart.find((item) => item.courseKey === courseKey)
+  if (existing) {
+    Object.assign(existing, { title, price, image, addedAt: new Date().toISOString() })
+  } else {
+    cart.push({ courseKey, title, price, image, addedAt: new Date().toISOString() })
+  }
+  setCart(cart)
+  return Promise.resolve({ ok: true, items: cart })
+}
+
+export function cartRemove(courseKey) {
+  const cart = getCart().filter((item) => item.courseKey !== courseKey)
+  setCart(cart)
+  return Promise.resolve({ ok: true, items: cart })
+}
+
+export function cartClear() {
+  setCart([])
+  return Promise.resolve({ ok: true })
+}
+
 let cachedSessionId
 
 function getSessionId() {
   if (cachedSessionId) return cachedSessionId
-
-  // Stable session-id for cart identity across requests.
-  // Prefer sessionStorage; if unavailable, fall back to localStorage.
   try {
     let sid = sessionStorage.getItem('guest-cart-session-id')
     if (!sid) {
@@ -21,7 +61,6 @@ function getSessionId() {
   } catch {
     // ignore
   }
-
   try {
     let sid = localStorage.getItem('guest-cart-session-id')
     if (!sid) {
@@ -31,7 +70,6 @@ function getSessionId() {
     cachedSessionId = sid
     return sid
   } catch {
-    // last resort: per-reload random
     cachedSessionId = 'guest-' + Date.now()
     return cachedSessionId
   }
@@ -58,46 +96,31 @@ async function apiFetch(path, options = {}) {
   return res.json().catch(() => ({}))
 }
 
-export async function cartList() {
-  return apiFetch('/api/cart')
-}
-
-export async function cartAdd({ courseKey, title, price, image }) {
-  return apiFetch('/api/cart/add', {
-    method: 'POST',
-    body: JSON.stringify({ courseKey, title, price, image }),
-  })
-}
-
-export async function cartRemove(courseKey) {
-  return apiFetch(`/api/cart/${encodeURIComponent(courseKey)}`, { method: 'DELETE' })
-}
-
-export async function cartClear() {
-  return apiFetch('/api/cart', { method: 'DELETE' })
-}
-
 export async function checkoutSubmit(payload) {
-  const res = await apiFetch('/api/checkout/submit', {
+  const cart = getCart()
+  const result = await apiFetch('/api/checkout/submit', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      clientCartSnapshot: cart,
+    }),
   })
-  return res
-}
-
-export async function signupSubmit(payload) {
-  const res = await apiFetch('/api/signup', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-  return res
+  setCart([])
+  return result
 }
 
 export async function enrollmentSubmit(payload) {
-  const res = await apiFetch('/api/enrollment', {
+  const result = await apiFetch('/api/enrollment', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
-  return res
+  return result
 }
 
+export async function signupSubmit(payload) {
+  const result = await apiFetch('/api/signup', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return result
+}

@@ -1,41 +1,29 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import express from 'express';
 import { createMailRouter } from './mail.js';
+import { createDocument, findOne, clearCollection, find } from '../store.js';
 
-let mongoServer;
 const sent = [];
-
-const ContactSubmissionSchema = new mongoose.Schema({
-  name: { type: String, default: '' },
-  email: { type: String, default: '' },
-  phone: { type: String, default: '' },
-  message: { type: String, default: '' },
-  courses: { type: String, default: '' },
-  hostname: { type: String, default: '' },
-  ip: { type: String, default: '' },
-  replied: { type: Boolean, default: false },
-  replies: { type: [{ from: String, body: String, at: { type: Date, default: Date.now } }], default: [] },
-  createdAt: { type: Date, default: Date.now },
-});
-const ContactSubmission =
-  mongoose.models.ContactSubmission || mongoose.model('ContactSubmission', ContactSubmissionSchema);
-
-async function connectMongo() {
-  return mongoose.connection;
-}
 
 async function sendEmail({ to, subject, text }) {
   sent.push({ to, subject, text });
 }
 
+function updateByIdMail(collectionName, id, update) {
+  const storeRow = findOne('contacts', { _id: id });
+  if (!storeRow) return null;
+  const updated = { ...storeRow, ...(update.$set || update) };
+  const idx = (find('contacts') || []).findIndex((d) => d._id === id);
+  if (idx !== -1) find('contacts')[idx] = updated;
+  return updated;
+}
+
 function makeServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/mail', createMailRouter({ ContactSubmission, connectMongo, sendEmail }));
+  app.use('/api/mail', createMailRouter({ findOne, updateById: updateByIdMail, find, sendEmail }));
   return http.createServer(app);
 }
 
@@ -53,28 +41,30 @@ function post(server, path, body) {
   });
 }
 
-before(async () => {
-  mongoServer = await MongoMemoryServer.create({ instance: { launchTimeout: 180000 } });
-  await mongoose.connect(mongoServer.getUri());
+function createContact(data) {
+  return createDocument('contacts', data);
+}
+
+before(() => {
+  clearCollection('contacts');
 });
 
-after(async () => {
-  await mongoose.disconnect();
-  if (mongoServer) await mongoServer.stop();
+after(() => {
+  clearCollection('contacts');
 });
 
-beforeEach(async () => {
+beforeEach(() => {
   sent.length = 0;
-  await ContactSubmission.deleteMany({});
+  clearCollection('contacts');
 });
 
 test('lists all inquiries newest first', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
-    await ContactSubmission.create({ name: 'Old', email: 'old@t.com', message: 'hi' });
+    createContact({ name: 'Old', email: 'old@t.com', message: 'hi' });
     await new Promise((r) => setTimeout(r, 10));
-    await ContactSubmission.create({ name: 'New', email: 'new@t.com', message: 'yo' });
+    createContact({ name: 'New', email: 'new@t.com', message: 'yo' });
     const res = await get(server, '/api/mail/');
     assert.equal(res.status, 200);
     const data = await res.json();
@@ -89,7 +79,7 @@ test('reply requires subject and message', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
-    const c = await ContactSubmission.create({ name: 'A', email: 'a@t.com', message: 'hi' });
+    const c = createContact({ name: 'A', email: 'a@t.com', message: 'hi' });
     assert.equal((await post(server, `/api/mail/${c._id}/reply`, { subject: '' })).status, 400);
     assert.equal((await post(server, `/api/mail/${c._id}/reply`, { subject: 's' })).status, 400);
   } finally {
@@ -123,7 +113,7 @@ test('sends reply email and records it', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
-    const c = await ContactSubmission.create({ name: 'Ada', email: 'ada@t.com', message: 'question' });
+    const c = createContact({ name: 'Ada', email: 'ada@t.com', message: 'question' });
     const res = await post(server, `/api/mail/${c._id}/reply`, { subject: 'Re: question', message: 'We can help!' });
     assert.equal(res.status, 200);
     const data = await res.json();
@@ -133,7 +123,7 @@ test('sends reply email and records it', async () => {
     assert.equal(sent[0].to, 'ada@t.com');
     assert.equal(sent[0].subject, 'Re: question');
 
-    const persisted = await ContactSubmission.findById(c._id);
+    const persisted = findOne('contacts', { _id: c._id });
     assert.equal(persisted.replied, true);
     assert.equal(persisted.replies.length, 1);
   } finally {

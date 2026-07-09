@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 // Builds the /api/signin router. Dependencies are injected so the route can be
 // unit-tested against an in-memory MongoDB without loading the whole server.
-export function createSigninRouter({ SignupSubmission, connectMongo, signJwt }) {
+export function createSigninRouter({ findOne, signJwt }) {
   const router = express.Router();
 
   router.post('/', async (req, res) => {
@@ -13,13 +13,8 @@ export function createSigninRouter({ SignupSubmission, connectMongo, signJwt }) 
         return res.status(400).json({ ok: false, error: 'email and password are required' });
       }
 
-      const conn = await connectMongo();
-      if (!conn || conn.readyState !== 1) {
-        return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-      }
-
       const safe = String(email).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const account = await SignupSubmission.findOne({ email: new RegExp('^' + safe + '$', 'i') });
+      const account = findOne('signups', { email: new RegExp('^' + safe + '$', 'i') });
       if (!account) {
         return res.status(401).json({ ok: false, error: 'No account found for this email. Please sign up first.' });
       }

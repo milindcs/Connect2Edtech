@@ -2,50 +2,31 @@ import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import express from 'express';
 import { createSigninRouter } from './signin.js';
+import { createDocument, findOne, clearCollection } from '../store.js';
 
-let mongoServer;
 const accounts = [];
 
-const SignupSubmissionSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  whatsappNumber: { type: String, default: '' },
-  passwordHash: { type: String, required: true },
-  verified: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  otp: { type: String, default: '' },
-  otpExpiry: { type: Date, default: null },
-  createdAt: { type: Date, default: Date.now },
-});
-const SignupSubmission =
-  mongoose.models.SignupSubmission || mongoose.model('SignupSubmission', SignupSubmissionSchema);
-
-async function connectMongo() {
-  return mongoose.connection;
+function signJwt(user) {
+  return `jwt:${user.email}`;
 }
 
-function signJwt(account) {
-  return `jwt:${account.email}`;
-}
-
-async function seedAccount({ email, password, verified = true, name = 'Jane', phone = '999' } = {}) {
-  const passwordHash = await bcrypt.hash(password, 10);
-  const doc = await SignupSubmission.create({
-    name, email, phone, passwordHash, verified,
+async function seedAccount({ email, password, verified = true, name = 'Test', phone = '555', role = 'user' }) {
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(password, salt);
+  const account = createDocument('signups', {
+    name, email, phone, passwordHash, verified, role,
+    whatsappNumber: '', otp: '', otpExpiry: null,
   });
-  accounts.push(doc);
-  return doc;
+  accounts.push(account);
+  return account;
 }
 
 function makeServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/signin', createSigninRouter({ SignupSubmission, connectMongo, signJwt }));
+  app.use('/api/signin', createSigninRouter({ findOne, signJwt }));
   return http.createServer(app);
 }
 
@@ -58,19 +39,17 @@ function postSignin(server, body) {
   });
 }
 
-before(async () => {
-  mongoServer = await MongoMemoryServer.create({ instance: { launchTimeout: 180000 } });
-  await mongoose.connect(mongoServer.getUri());
+before(() => {
+  clearCollection('signups');
 });
 
-after(async () => {
-  await mongoose.disconnect();
-  if (mongoServer) await mongoServer.stop();
+after(() => {
+  clearCollection('signups');
 });
 
-beforeEach(async () => {
-  await SignupSubmission.deleteMany({});
+beforeEach(() => {
   accounts.length = 0;
+  clearCollection('signups');
 });
 
 test('rejects missing fields', async () => {

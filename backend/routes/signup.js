@@ -11,7 +11,7 @@ function generateOtp() {
 // unit-tested against an in-memory MongoDB without loading the whole server.
 const ALLOWED_ROLES = ['user', 'hr', 'admin'];
 
-export function createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmail }) {
+export function createSignupRouter({ connectStore, createDocument, updateById, sendOtpEmail }) {
   const router = express.Router();
 
   router.post('/', async (req, res) => {
@@ -29,11 +29,6 @@ export function createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmai
 
       const accountRole = ALLOWED_ROLES.includes(role) ? role : 'user';
 
-      const conn = await connectMongo();
-      if (!conn || conn.readyState !== 1) {
-        return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-      }
-
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(password, salt);
       const otp = generateOtp();
@@ -43,7 +38,8 @@ export function createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmai
 
       let existing = null;
       try {
-        existing = await SignupSubmission.findOne({ email: String(email).trim() });
+        const results = connectStore('signups', { email: String(email).trim() });
+        existing = results.length > 0 ? results[0] : null;
       } catch {
         existing = null;
       }
@@ -52,12 +48,11 @@ export function createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmai
         if (existing.verified) {
           return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
         }
-        await SignupSubmission.updateOne(
-          { _id: existing._id },
-          { $set: { name: trimmed(name), phone: trimmed(phone), whatsappNumber: linkedWhatsapp, passwordHash, role: accountRole, otp, otpExpiry } }
-        );
+        updateById('signups', existing._id, {
+          $set: { name: trimmed(name), phone: trimmed(phone), whatsappNumber: linkedWhatsapp, passwordHash, role: accountRole, otp, otpExpiry }
+        });
       } else {
-        await SignupSubmission.create({
+        createDocument('signups', {
           name: trimmed(name),
           email: String(email).trim(),
           phone: trimmed(phone),

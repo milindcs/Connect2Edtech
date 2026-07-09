@@ -57,11 +57,10 @@ export default function StudentPage() {
 
       // Then fetch fresh data
       try {
-        const [enrRes, conRes, chkRes, cartData] = await Promise.all([
+        const [enrRes, conRes, chkRes] = await Promise.all([
           fetch(API_BASE + '/api/me/enrollments', { headers: authHeaders }),
           fetch(API_BASE + '/api/me/contacts', { headers: authHeaders }),
           fetch(API_BASE + '/api/me/checkouts', { headers: authHeaders }),
-          cartList().catch(() => ({ ok: true, items: [] })),
         ])
         const [enr, con, chk] = await Promise.all([
           enrRes.json(),
@@ -73,11 +72,13 @@ export default function StudentPage() {
           if (!conRes.ok) throw new Error(con.error || 'Failed to load messages')
           if (!chkRes.ok) throw new Error(chk.error || 'Failed to load orders')
 
+          const cartData = (await cartList()).items || []
+
           const portalData = {
             enrollments: enr.enrollments || [],
             contacts: con.contacts || [],
             checkouts: chk.checkouts || [],
-            cart: cartData.items || []
+            cart: cartData,
           }
 
           setEnrollments(portalData.enrollments)

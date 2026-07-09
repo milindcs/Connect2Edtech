@@ -1,5 +1,4 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import dotenv from "dotenv";
@@ -10,6 +9,8 @@ import nodemailer from 'nodemailer';
 import { createSignupRouter } from './routes/signup.js';
 import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
+import { createDocument, findOne, updateById, find, countDocuments, clearCollection } from './store.js';
+
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
 
@@ -23,7 +24,6 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS ||
 app.use(
   cors({
     origin(origin, cb) {
-      // allow requests with no origin (e.g. curl, mobile apps)
       if (!origin) return cb(null, true);
       if (CORS_ORIGINS.includes('*')) return cb(null, true);
       if (CORS_ORIGINS.includes(origin)) return cb(null, true);
@@ -35,7 +35,6 @@ app.use(
   })
 );
 
-// Explicitly respond to preflight requests
 app.options('*', cors());
 
 app.use(express.urlencoded({ extended: true }));
@@ -67,7 +66,6 @@ async function sendOtpEmail(toEmail, otp) {
   });
 }
 
-// Generic outbound email used by the Mail inbox reply feature.
 async function sendEmail({ to, subject, text, html, replyTo }) {
   const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com';
   await transporter.sendMail({
@@ -121,8 +119,6 @@ function adminAuth(req, res, next) {
   }
 }
 
-// Staff auth: allows admins AND hr users. Used by the read-only data
-// endpoints that power the HR dashboard (stats, contacts, enrollments, orders).
 function staffAuth(req, res, next) {
   const header = req.headers.authorization || '';
   const match = header.match(/^Bearer\s+(.+)$/i);
@@ -139,8 +135,6 @@ function staffAuth(req, res, next) {
   }
 }
 
-// One-time bootstrap: promote (or create) an admin account.
-// Guarded by ADMIN_BOOTSTRAP_SECRET env var. Disabled when the secret is unset.
 app.post('/api/admin/bootstrap', async (req, res) => {
   try {
     const secret = process.env.ADMIN_BOOTSTRAP_SECRET
@@ -155,18 +149,10 @@ app.post('/api/admin/bootstrap', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'email is required.' })
     }
 
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-
     const cleanEmail = String(email).trim()
-    const existing = await SignupSubmission.findOne({ email: cleanEmail })
+    const existing = findOne('signups', { email: cleanEmail })
     if (existing) {
-      await SignupSubmission.updateOne(
-        { _id: existing._id },
-        { $set: { role: 'admin', verified: true } }
-      )
+      updateById('signups', existing._id, { $set: { role: 'admin', verified: true } })
       return res.json({ ok: true, message: `Promoted ${cleanEmail} to admin.`, created: false })
     }
 
@@ -175,7 +161,7 @@ app.post('/api/admin/bootstrap', async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(password, salt)
-    await SignupSubmission.create({
+    createDocument('signups', {
       name: name ? String(name).trim() : 'Admin',
       email: cleanEmail,
       phone: phone ? String(phone).trim() : '0000000000',
@@ -189,101 +175,6 @@ app.post('/api/admin/bootstrap', async (req, res) => {
     res.status(500).json({ ok: false, error: 'Bootstrap failed.' })
   }
 })
-
-// MongoDB Models
-const SignupSubmissionSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  whatsappNumber: { type: String, default: '' },
-  passwordHash: { type: String, required: true },
-  verified: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'hr', 'admin'], default: 'user' },
-  otp: { type: String, default: '' },
-  otpExpiry: { type: Date, default: null },
-  createdAt: { type: Date, default: Date.now },
-}, { versionKey: false });
-SignupSubmissionSchema.index({ email: 1 }, { unique: true });
-const SignupSubmission = mongoose.model('SignupSubmission', SignupSubmissionSchema);
-
-const ContactSubmissionSchema = new mongoose.Schema({
-  name: { type: String, default: '' },
-  email: { type: String, default: '' },
-  phone: { type: String, default: '' },
-  message: { type: String, default: '' },
-  courses: { type: String, default: '' },
-  hostname: { type: String, default: '' },
-  ip: { type: String, default: '' },
-  replied: { type: Boolean, default: false },
-  replies: { type: [{ from: String, body: String, at: { type: Date, default: Date.now } }], default: [] },
-  createdAt: { type: Date, default: Date.now },
-}, { versionKey: false });
-const ContactSubmission = mongoose.model('ContactSubmission', ContactSubmissionSchema);
-
-const CartItemSchema = new mongoose.Schema({
-  sessionId: { type: String, index: true, required: true },
-  courseKey: { type: String, required: true },
-  title: { type: String, default: '' },
-  price: { type: Number, default: 0 },
-  image: { type: String, default: '' },
-  addedAt: { type: Date, default: Date.now },
-}, { versionKey: false });
-CartItemSchema.index({ sessionId: 1, courseKey: 1 }, { unique: true });
-const CartItem = mongoose.model('CartItem', CartItemSchema);
-
-const CartCheckoutSchema = new mongoose.Schema({
-  sessionId: { type: String, index: true, required: true },
-  submissionType: { type: String, enum: ['checkout', 'enrollment', 'course-enquiry'], default: 'checkout' },
-  name: { type: String, default: '' },
-  email: { type: String, default: '' },
-  phone: { type: String, default: '' },
-  note: { type: String, default: '' },
-  courseTitle: { type: String, default: '' },
-  courses: { type: [{ courseKey: String, title: String, price: Number, image: String }], default: [] },
-  totalAmount: { type: Number, default: 0 },
-  whatsappOpenedAt: { type: Date, default: null },
-  createdAt: { type: Date, default: Date.now },
-}, { versionKey: false });
-const CartCheckout = mongoose.model('CartCheckout', CartCheckoutSchema);
-
-const EnrollmentSchema = new mongoose.Schema({
-  name: { type: String, default: '' },
-  email: { type: String, default: '' },
-  phone: { type: String, default: '' },
-  college: { type: String, default: '' },
-  message: { type: String, default: '' },
-  courseKey: { type: String, default: '' },
-  courseTitle: { type: String, default: '' },
-  hostname: { type: String, default: '' },
-  ip: { type: String, default: '' },
-  createdAt: { type: Date, default: Date.now },
-}, { versionKey: false });
-const Enrollment = mongoose.model('Enrollment', EnrollmentSchema);
-
-
-// MongoDB Connection
-import { getMongoUri, stopMemoryServer } from './config/mongo.js';
-
-let mongoConnectionPromise = null;
-
-async function connectMongo() {
-  if (mongoose.connection.readyState === 1) return mongoose.connection;
-  if (mongoConnectionPromise) return mongoConnectionPromise;
-
-  const uri = await getMongoUri();
-  mongoose.set('strictQuery', true);
-
-  mongoConnectionPromise = mongoose.connect(uri, { serverSelectionTimeoutMS: 5000, socketTimeoutMS: 5000 })
-    .then((m) => { console.log('[MongoDB] connected'); return m; })
-    .catch((err) => {
-      console.log('[MongoDB] connection failed:', err.message);
-      console.log('[MongoDB] hint: check Atlas IP whitelist, user/password, and cluster address. Set USE_MEMORY_DB=true for local dev.');
-      mongoConnectionPromise = null;
-      return null;
-    });
-
-  return mongoConnectionPromise;
-}
 
 function getClientIp(req) {
   return req.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() || req.ip || '';
@@ -300,42 +191,12 @@ function buildWhatsAppUrl(message) {
   return `https://web.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(message)}`;
 }
 
-// Health check
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// MongoDB health check
-app.get('/api/health/mongo', async (req, res) => {
-  try {
-    const conn = await connectMongo()
-    const ready = mongoose.connection.readyState
-    const connected = Boolean(conn && ready === 1)
+app.use('/api/signup', createSignupRouter({ connectStore: find, createDocument, updateById, sendOtpEmail }))
 
-    return res.status(connected ? 200 : 503).json({
-      ok: connected,
-      mongo: {
-        connected,
-        readyState: ready,
-      },
-      hint: connected
-        ? undefined
-        : 'MongoDB connection failed. Check MONGODB_URI/MONGODB_LOCAL, Atlas IP whitelist, credentials. For local dev you can set USE_MEMORY_DB=true.',
-    })
-  } catch (e) {
-    return res.status(503).json({
-      ok: false,
-      mongo: { connected: false, error: e?.message || String(e) },
-    })
-  }
-});
+app.use('/api/signin', createSigninRouter({ findOne, signJwt }))
 
-
-// Signup - create account, send OTP email
-app.use('/api/signup', createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmail }));
-
-// Signin - verify credentials and return JWT
-app.use('/api/signin', createSigninRouter({ SignupSubmission, connectMongo, signJwt }));
-
-// Verify OTP
 app.post('/api/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body || {}
@@ -343,12 +204,7 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'email and otp are required' })
     }
 
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' })
-    }
-
-    const account = await SignupSubmission.findOne({ email: String(email).trim() })
+    const account = findOne('signups', { email: String(email).trim() })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'Account not found.' })
     }
@@ -365,8 +221,8 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid OTP.' })
     }
 
-    await SignupSubmission.updateOne({ _id: account._id }, { $set: { verified: true, otp: '', otpExpiry: null } })
-    const token = signJwt({ ...account.toObject(), verified: true })
+    updateById('signups', account._id, { verified: true, otp: '', otpExpiry: null })
+    const token = signJwt({ ...account, verified: true })
     res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: true, role: account.role || 'user' } })
   } catch (e) {
     console.error(e)
@@ -374,7 +230,6 @@ app.post('/api/verify-otp', async (req, res) => {
   }
 })
 
-// Resend OTP
 app.post('/api/resend-otp', async (req, res) => {
   try {
     const { email } = req.body || {}
@@ -382,12 +237,7 @@ app.post('/api/resend-otp', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'email is required' })
     }
 
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' })
-    }
-
-    const account = await SignupSubmission.findOne({ email: String(email).trim() })
+    const account = findOne('signups', { email: String(email).trim() })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'Account not found.' })
     }
@@ -398,7 +248,7 @@ app.post('/api/resend-otp', async (req, res) => {
 
     const otp = generateOtp()
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
-    await SignupSubmission.updateOne({ _id: account._id }, { $set: { otp, otpExpiry } })
+    updateById('signups', account._id, { otp, otpExpiry })
 
     try {
       await sendOtpEmail(String(email).trim(), otp)
@@ -413,15 +263,9 @@ app.post('/api/resend-otp', async (req, res) => {
   }
 })
 
-// Get current user from token
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-
-    const account = await SignupSubmission.findById(req.user.userId)
+    const account = findOne('signups', { _id: req.user.userId })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
@@ -433,14 +277,9 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   }
 })
 
-// User dashboard - my enrollments
 app.get('/api/me/enrollments', authMiddleware, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-    const items = await Enrollment.find({ email: req.user.email }).sort({ createdAt: -1 })
+    const items = find('enrollments', { email: req.user.email }, { sort: { createdAt: -1 } })
     res.json({ ok: true, enrollments: items })
   } catch (e) {
     console.error(e)
@@ -448,14 +287,9 @@ app.get('/api/me/enrollments', authMiddleware, async (req, res) => {
   }
 })
 
-// User dashboard - my contact messages
 app.get('/api/me/contacts', authMiddleware, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-    const items = await ContactSubmission.find({ email: req.user.email }).sort({ createdAt: -1 })
+    const items = find('contacts', { email: req.user.email }, { sort: { createdAt: -1 } })
     res.json({ ok: true, contacts: items })
   } catch (e) {
     console.error(e)
@@ -463,14 +297,9 @@ app.get('/api/me/contacts', authMiddleware, async (req, res) => {
   }
 })
 
-// User dashboard - my orders/checkouts
 app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-    const items = await CartCheckout.find({ email: req.user.email }).sort({ createdAt: -1 })
+    const items = find('checkouts', { email: req.user.email }, { sort: { createdAt: -1 } })
     res.json({ ok: true, checkouts: items })
   } catch (e) {
     console.error(e)
@@ -478,25 +307,16 @@ app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
   }
 })
 
-// Admin dashboard - list all users
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-
-    const users = await SignupSubmission.find({}, { name: 1, email: 1, phone: 1, verified: 1, role: 1, createdAt: 1 })
-      .sort({ createdAt: -1 })
-
-    res.json({ ok: true, users })
+    const users = find('signups', {}, { sort: { createdAt: -1 } })
+    res.json({ ok: true, users: users.map(({ passwordHash, otp, otpExpiry, ...u }) => u) })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Failed to fetch users.' })
   }
 })
 
-// Admin - update a user's role (user <-> admin)
 app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
   try {
     const { id } = req.params
@@ -505,27 +325,16 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid role. Use "user" or "admin".' })
     }
 
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ ok: false, error: 'Invalid user id.' })
-    }
-
-    const account = await SignupSubmission.findById(id)
+    const account = findOne('signups', { _id: id })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
 
-    // Prevent an admin from removing their own admin access (lockout guard)
     if (account._id.toString() === req.admin.userId && role !== 'admin') {
       return res.status(400).json({ ok: false, error: 'You cannot remove your own admin role.' })
     }
 
-    await SignupSubmission.updateOne({ _id: account._id }, { $set: { role } })
-
+    updateById('signups', id, { role })
     res.json({ ok: true, message: `Role updated to ${role}.`, user: { id: account._id.toString(), role } })
   } catch (e) {
     console.error(e)
@@ -533,27 +342,18 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
   }
 })
 
-// Admin/HR dashboard - aggregate stats
 app.get('/api/admin/stats', staffAuth, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
+    const totalUsers = countDocuments('signups')
+    const verifiedUsers = countDocuments('signups', { verified: true })
+    const admins = countDocuments('signups', { role: 'admin' })
+    const enrollments = countDocuments('enrollments')
+    const contacts = countDocuments('contacts')
+    const checkouts = countDocuments('checkouts')
+    const recentEnroll = find('enrollments', {}, { sort: { createdAt: -1 } }).slice(0, 5)
+    const recentCheckout = find('checkouts', {}, { sort: { createdAt: -1 } }).slice(0, 5)
 
-    const [totalUsers, verifiedUsers, admins, enrollments, contacts, checkouts, recentEnroll, recentCheckout] = await Promise.all([
-      SignupSubmission.countDocuments({}),
-      SignupSubmission.countDocuments({ verified: true }),
-      SignupSubmission.countDocuments({ role: 'admin' }),
-      Enrollment.countDocuments({}),
-      ContactSubmission.countDocuments({}),
-      CartCheckout.countDocuments({}),
-      Enrollment.find({}).sort({ createdAt: -1 }).limit(5),
-      CartCheckout.find({}).sort({ createdAt: -1 }).limit(5),
-    ])
-
-    const revenueAgg = await CartCheckout.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }])
-    const revenue = revenueAgg[0]?.total || 0
+    const revenue = find('checkouts').reduce((sum, c) => sum + (typeof c.totalAmount === 'number' ? c.totalAmount : 0), 0)
 
     res.json({
       ok: true,
@@ -567,14 +367,9 @@ app.get('/api/admin/stats', staffAuth, async (req, res) => {
   }
 })
 
-// HR - list all contact submissions
 app.get('/api/admin/contacts', staffAuth, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-    const items = await ContactSubmission.find({}).sort({ createdAt: -1 }).limit(100)
+    const items = find('contacts', {}, { sort: { createdAt: -1 } }).slice(0, 100)
     res.json({ ok: true, contacts: items })
   } catch (e) {
     console.error(e)
@@ -582,14 +377,9 @@ app.get('/api/admin/contacts', staffAuth, async (req, res) => {
   }
 })
 
-// HR - list all enrollments
 app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-    const items = await Enrollment.find({}).sort({ createdAt: -1 }).limit(100)
+    const items = find('enrollments', {}, { sort: { createdAt: -1 } }).slice(0, 100)
     res.json({ ok: true, enrollments: items })
   } catch (e) {
     console.error(e)
@@ -597,14 +387,9 @@ app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
   }
 })
 
-// HR - list all checkouts/orders
 app.get('/api/admin/checkouts', staffAuth, async (req, res) => {
   try {
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
-    }
-    const items = await CartCheckout.find({}).sort({ createdAt: -1 }).limit(100)
+    const items = find('checkouts', {}, { sort: { createdAt: -1 } }).slice(0, 100)
     res.json({ ok: true, checkouts: items })
   } catch (e) {
     console.error(e)
@@ -612,10 +397,8 @@ app.get('/api/admin/checkouts', staffAuth, async (req, res) => {
   }
 })
 
-// Mail inbox + reply (admin/HR only)
-app.use('/api/mail', staffAuth, createMailRouter({ ContactSubmission, connectMongo, sendEmail }))
+app.use('/api/mail', staffAuth, createMailRouter({ findOne, updateById, sendEmail }))
 
-// Contact - store in MongoDB + redirect to WhatsApp
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, phone, message, courses } = req.body || {};
@@ -623,12 +406,7 @@ app.post('/api/contact', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'name and email are required' });
     }
 
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
-
-    await ContactSubmission.create({
+    createDocument('contacts', {
       name, email, phone: phone || '', message: message || '', courses: courses || '',
       hostname: req.hostname || '', ip: getClientIp(req),
     });
@@ -641,7 +419,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// Enrollment - store in MongoDB + redirect to WhatsApp
 app.post('/api/enrollment', async (req, res) => {
   try {
     const { name, email, phone, college, message, courseKey, courseTitle } = req.body || {};
@@ -649,12 +426,7 @@ app.post('/api/enrollment', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'name and email are required' });
     }
 
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
-
-    await Enrollment.create({
+    createDocument('enrollments', {
       name, email, phone: phone || '', college: college || '', message: message || '',
       courseKey: courseKey || '', courseTitle: courseTitle || '',
       hostname: req.hostname || '', ip: getClientIp(req),
@@ -669,25 +441,26 @@ app.post('/api/enrollment', async (req, res) => {
   }
 });
 
-// Cart endpoints
 app.post('/api/cart/add', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
     const { courseKey, title, price, image } = req.body || {};
     if (!courseKey) return res.status(400).json({ ok: false, error: 'courseKey required' });
 
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
+    const existing = find('cart', { sessionId, courseKey })
     const priceNum = typeof price === 'number' ? price : Number(price || 0);
 
-    await CartItem.updateOne(
-      { sessionId, courseKey },
-      { $set: { title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date() } },
-      { upsert: true }
-    );
-    const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    if (existing.length > 0) {
+      updateById('cart', existing[0]._id, {
+        title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date()
+      })
+    } else {
+      createDocument('cart', {
+        sessionId, courseKey, title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date()
+      })
+    }
+
+    const items = find('cart', { sessionId }, { sort: { addedAt: -1 } })
     res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
@@ -698,11 +471,7 @@ app.post('/api/cart/add', async (req, res) => {
 app.get('/api/cart', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
-    const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    const items = find('cart', { sessionId }, { sort: { addedAt: -1 } })
     res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
@@ -714,12 +483,12 @@ app.delete('/api/cart/:courseKey', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
     const { courseKey } = req.params;
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
+    const existing = find('cart', { sessionId, courseKey })
+    if (existing.length > 0) {
+      const idx = find('cart').findIndex((doc) => doc._id === existing[0]._id)
+      if (idx !== -1) find('cart').splice(idx, 1)
     }
-    await CartItem.deleteOne({ sessionId, courseKey });
-    const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    const items = find('cart', { sessionId }, { sort: { addedAt: -1 } })
     res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
@@ -730,11 +499,11 @@ app.delete('/api/cart/:courseKey', async (req, res) => {
 app.delete('/api/cart', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
-    await CartItem.deleteMany({ sessionId });
+    const existing = find('cart', { sessionId })
+    existing.forEach((doc) => {
+      const idx = find('cart').findIndex((d) => d._id === doc._id)
+      if (idx !== -1) find('cart').splice(idx, 1)
+    })
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -742,22 +511,16 @@ app.delete('/api/cart', async (req, res) => {
   }
 });
 
-// Checkout - store in MongoDB + redirect to WhatsApp
 app.post('/api/checkout/submit', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
     const { submissionType, name, email, phone, note, courseTitle, totalAmount, clientCartSnapshot } = req.body || {};
 
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
-
-    const existingItems = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    const existingItems = find('cart', { sessionId }, { sort: { addedAt: -1 } })
     const snapshotCourses = Array.isArray(clientCartSnapshot) ? clientCartSnapshot : [];
     const effectiveItems = existingItems && existingItems.length ? existingItems : snapshotCourses;
 
-    await CartCheckout.create({
+    createDocument('checkouts', {
       sessionId,
       submissionType: submissionType || 'checkout',
       name: name || '',
@@ -770,7 +533,10 @@ app.post('/api/checkout/submit', async (req, res) => {
     });
 
     if (existingItems && existingItems.length) {
-      await CartItem.deleteMany({ sessionId });
+      existingItems.forEach((doc) => {
+        const idx = find('cart').findIndex((d) => d._id === doc._id)
+        if (idx !== -1) find('cart').splice(idx, 1)
+      })
     }
 
     const courseList = effectiveItems.map(i => i.title).join(', ') || courseTitle;
@@ -782,24 +548,19 @@ app.post('/api/checkout/submit', async (req, res) => {
   }
 });
 
-
-// Serve frontend static files after API routes
 const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
 app.use(express.static(FRONTEND_DIST));
 
-// SPA fallback for client-side routing
 app.get('/*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ success: false, message: 'API endpoint not found' });
   }
-  // Don't mask missing static assets with index.html — return 404 instead.
   if (path.extname(req.path)) {
     return res.status(404).send('Not found');
   }
   res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
 });
 
-// 404 handler for anything else
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -809,25 +570,10 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 10000;
 
-// Connect to MongoDB once
-connectMongo().catch((err) => {
-  console.error('[MongoDB]', err.message);
-});
-
-// Start Express server except on Vercel (serverless), where the platform handles listening.
-// Vercel sets VERCEL="1"; Render sets VERCEL="0" (or leaves it unset) — both should listen.
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
   });
-
-  const shutdown = async () => {
-    console.log('\n[Server] shutting down...');
-    await stopMemoryServer();
-    process.exit(0);
-  };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
 }
 
 export default app;
