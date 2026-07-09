@@ -88,6 +88,7 @@ export default function StudentPage() {
                 Student Portal
               </h2>
               <p style={{ color: '#6b2a4a' }}>Welcome back, {user?.name || 'student'}!</p>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>{user?.role === 'admin' ? 'Admin' : 'Student'}</span>
             </div>
             <button onClick={signout} className="btn secondary">Sign Out</button>
           </div>

@@ -36,10 +36,10 @@ export default function SigninPage() {
   useEffect(() => {
     if (isAuthenticated && isAdmin) {
       localStorage.removeItem('signin_form_data') // Clear on successful login
-      navigate('/admin')
+      navigate('/hr')
     } else if (isAuthenticated) {
       localStorage.removeItem('signin_form_data') // Clear on successful login
-      navigate('/dashboard')
+      navigate('/student')
     }
   }, [isAuthenticated, isAdmin, navigate])
 
