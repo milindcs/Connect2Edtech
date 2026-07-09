@@ -610,18 +610,20 @@ app.post('/api/contact', async (req, res) => {
     }
 
     const conn = await connectMongo();
-    if (conn && mongoose.connection.readyState === 1) {
-      await ContactSubmission.create({
-        name, email, phone: phone || '', message: message || '', courses: courses || '',
-        hostname: req.hostname || '', ip: getClientIp(req),
-      });
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
     }
+
+    await ContactSubmission.create({
+      name, email, phone: phone || '', message: message || '', courses: courses || '',
+      hostname: req.hostname || '', ip: getClientIp(req),
+    });
 
     const msg = [`📞 Contact Inquiry`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, `Message: ${trimmed(message) || '—'}`, courses ? `Courses: ${trimmed(courses)}` : null].filter(Boolean).join('\n');
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
   } catch (e) {
     console.error(e);
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(`📞 Contact Inquiry\nName: ${trimmed(req.body?.name) || '—'}`) });
+    res.status(500).json({ ok: false, error: 'Failed to submit contact form.' });
   }
 });
 
@@ -634,20 +636,22 @@ app.post('/api/enrollment', async (req, res) => {
     }
 
     const conn = await connectMongo();
-    if (conn && mongoose.connection.readyState === 1) {
-      await Enrollment.create({
-        name, email, phone: phone || '', college: college || '', message: message || '',
-        courseKey: courseKey || '', courseTitle: courseTitle || '',
-        hostname: req.hostname || '', ip: getClientIp(req),
-      });
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
     }
+
+    await Enrollment.create({
+      name, email, phone: phone || '', college: college || '', message: message || '',
+      courseKey: courseKey || '', courseTitle: courseTitle || '',
+      hostname: req.hostname || '', ip: getClientIp(req),
+    });
 
     const courseLabel = courseTitle || courseKey || 'Unspecified course';
     const msg = [`🎓 New Enrollment`, `Course: ${trimmed(courseLabel) || '—'}`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, message ? `Requirements: ${trimmed(message)}` : null].filter(Boolean).join('\n');
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
   } catch (e) {
     console.error(e);
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(`🎓 New Enrollment\nName: ${trimmed(req.body?.name) || '—'}`) });
+    res.status(500).json({ ok: false, error: 'Failed to submit enrollment.' });
   }
 });
 
@@ -733,30 +737,28 @@ app.post('/api/checkout/submit', async (req, res) => {
     const { submissionType, name, email, phone, note, courseTitle, totalAmount, clientCartSnapshot } = req.body || {};
 
     const conn = await connectMongo();
-    let existingItems = [];
-    if (conn && mongoose.connection.readyState === 1) {
-      existingItems = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
     }
 
+    const existingItems = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
     const snapshotCourses = Array.isArray(clientCartSnapshot) ? clientCartSnapshot : [];
     const effectiveItems = existingItems && existingItems.length ? existingItems : snapshotCourses;
 
-    if (conn && mongoose.connection.readyState === 1) {
-      await CartCheckout.create({
-        sessionId,
-        submissionType: submissionType || 'checkout',
-        name: name || '',
-        email: email || '',
-        phone: phone || '',
-        note: note || '',
-        courseTitle: courseTitle || '',
-        totalAmount: typeof totalAmount === 'number' ? totalAmount : Number(totalAmount || 0),
-        courses: effectiveItems.map((x) => ({ courseKey: x.courseKey, title: x.title, price: x.price, image: x.image })),
-      });
+    await CartCheckout.create({
+      sessionId,
+      submissionType: submissionType || 'checkout',
+      name: name || '',
+      email: email || '',
+      phone: phone || '',
+      note: note || '',
+      courseTitle: courseTitle || '',
+      totalAmount: typeof totalAmount === 'number' ? totalAmount : Number(totalAmount || 0),
+      courses: effectiveItems.map((x) => ({ courseKey: x.courseKey, title: x.title, price: x.price, image: x.image })),
+    });
 
-      if (existingItems && existingItems.length) {
-        await CartItem.deleteMany({ sessionId });
-      }
+    if (existingItems && existingItems.length) {
+      await CartItem.deleteMany({ sessionId });
     }
 
     const courseList = effectiveItems.map(i => i.title).join(', ') || courseTitle;
@@ -764,7 +766,7 @@ app.post('/api/checkout/submit', async (req, res) => {
     res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
   } catch (e) {
     console.error(e);
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(`🛒 Checkout Request\nName: ${trimmed(req.body?.name) || '—'}`) });
+    res.status(500).json({ ok: false, error: 'Failed to submit checkout.' });
   }
 });
 

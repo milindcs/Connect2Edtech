@@ -110,12 +110,12 @@ export default function EnrollmentPage() {
         courseTitle: course ? course.title : '',
         message: formData.college ? `College: ${formData.college}` : ''
       })
+      localStorage.removeItem('enrollment_form_data')
+      setIsSubmitted(true)
     } catch (err) {
       console.error(err)
+      setError(err.message || 'Could not submit enrollment. Please try again.')
     }
-
-    localStorage.removeItem('enrollment_form_data')
-    setIsSubmitted(true)
   }
 
   // Post-submission success panel layout

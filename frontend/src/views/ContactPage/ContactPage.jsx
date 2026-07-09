@@ -60,7 +60,7 @@ export default function ContactPage() {
     e.preventDefault()
 
     try {
-      await fetch(API_BASE + '/api/contact', {
+      const res = await fetch(API_BASE + '/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,14 +71,17 @@ export default function ContactPage() {
           courses: '',
         })
       })
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(text || `Request failed: ${res.status}`)
+      }
       showToast('Inquiry captured! We will get back to you soon.', 'success')
+      localStorage.removeItem('contact_form_data')
+      setIsSubmitted(true)
     } catch (err) {
       console.error(err)
-      showToast('Could not submit inquiry. Please try again.', 'error')
+      showToast(err.message || 'Could not submit inquiry. Please try again.', 'error')
     }
-
-    localStorage.removeItem('contact_form_data')
-    setIsSubmitted(true)
   }
 
   return (

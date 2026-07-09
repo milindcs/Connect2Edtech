@@ -39,7 +39,7 @@ export default function SigninPage() {
       navigate('/admin')
     } else if (isAuthenticated) {
       localStorage.removeItem('signin_form_data') // Clear on successful login
-      navigate('/')
+      navigate('/dashboard')
     }
   }, [isAuthenticated, isAdmin, navigate])
 

@@ -39,13 +39,21 @@ export default function UserDashboard() {
     const load = async () => {
       setLoading(true)
       try {
-        const [enr, con, chk, cartData] = await Promise.all([
-          fetch(API_BASE + '/api/me/enrollments', { headers: authHeaders }).then((r) => r.json()),
-          fetch(API_BASE + '/api/me/contacts', { headers: authHeaders }).then((r) => r.json()),
-          fetch(API_BASE + '/api/me/checkouts', { headers: authHeaders }).then((r) => r.json()),
+        const [enrRes, conRes, chkRes, cartData] = await Promise.all([
+          fetch(API_BASE + '/api/me/enrollments', { headers: authHeaders }),
+          fetch(API_BASE + '/api/me/contacts', { headers: authHeaders }),
+          fetch(API_BASE + '/api/me/checkouts', { headers: authHeaders }),
           cartList().catch(() => ({ ok: true, items: [] })),
         ])
+        const [enr, con, chk] = await Promise.all([
+          enrRes.json(),
+          conRes.json(),
+          chkRes.json(),
+        ])
         if (!cancelled) {
+          if (!enrRes.ok) throw new Error(enr.error || 'Failed to load enrollments')
+          if (!conRes.ok) throw new Error(con.error || 'Failed to load messages')
+          if (!chkRes.ok) throw new Error(chk.error || 'Failed to load orders')
           setEnrollments(enr.enrollments || [])
           setContacts(con.contacts || [])
           setCheckouts(chk.checkouts || [])

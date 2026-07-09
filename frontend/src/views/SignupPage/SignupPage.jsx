@@ -44,7 +44,7 @@ export default function SignupPage() {
   useEffect(() => {
     if (isAuthenticated) {
       clearSignupStorage()
-      navigate('/')
+      navigate('/dashboard')
     }
   }, [isAuthenticated, navigate])
 
@@ -173,7 +173,7 @@ export default function SignupPage() {
       await verifyOtp(registeredEmail, otp)
       showToast('Email verified! Redirecting...', 'success')
       clearSignupStorage()
-      setTimeout(() => navigate('/'), 800)
+      setTimeout(() => navigate('/dashboard'), 800)
     } catch (err) {
       showToast(err.message || 'Verification failed.', 'error')
     } finally {
