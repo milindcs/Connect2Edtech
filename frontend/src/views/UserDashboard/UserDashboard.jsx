@@ -103,6 +103,11 @@ export default function UserDashboard() {
                 <div style={{ color: '#6b2a4a', fontWeight: 600, marginTop: 4 }}>{s.label}</div>
               </div>
             ))}
+            <Link to="/student" className="card" style={{ padding: 24, textDecoration: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, minHeight: 120 }}>
+              <div style={{ fontSize: '2.5rem' }}>🎓</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#6b2a4a' }}>Student Portal</div>
+              <div style={{ fontSize: '0.85rem', color: '#9d174d' }}>Open student page →</div>
+            </Link>
           </div>
 
           {/* Profile */}

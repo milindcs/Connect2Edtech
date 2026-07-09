@@ -121,6 +121,11 @@ export default function AdminDashboard() {
                   <div style={{ color: '#6b2a4a', fontWeight: 600, marginTop: 4 }}>{s.label}</div>
                 </div>
               ))}
+              <Link to="/hr" className="card" style={{ padding: 20, textDecoration: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, minHeight: 120 }}>
+                <div style={{ fontSize: '2rem' }}>💼</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#6b2a4a' }}>HR Dashboard</div>
+                <div style={{ fontSize: '0.85rem', color: '#9d174d' }}>Open HR page →</div>
+              </Link>
             </div>
           )}
 
