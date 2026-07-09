@@ -1,7 +1,16 @@
 import React from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import SiteLayout from '../shared/SiteLayout'
-import { AuthProvider } from '../shared/AuthContext'
+import { AuthProvider, useAuth } from '../shared/AuthContext'
+
+// Redirect the generic "Dashboard" link to the user's actual dashboard by role.
+function DashboardRedirect() {
+  const { user, isAuthenticated } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/signin" replace />
+  const role = user?.role
+  const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+  return <Navigate to={target} replace />
+}
 
 import HomePage from '../views/HomePage/HomePage'
 import AboutPage from '../views/AboutPage/AboutPage'
@@ -36,7 +45,7 @@ export default function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/hr" element={<HrDashboard />} />
           <Route path="/mail" element={<MailPage />} />
-          <Route path="/dashboard" element={<Navigate to="/student" replace />} />
+          <Route path="/dashboard" element={<DashboardRedirect />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
