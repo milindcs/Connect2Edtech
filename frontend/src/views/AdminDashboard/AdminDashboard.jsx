@@ -10,6 +10,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState('')
+  const [stats, setStats] = useState(null)
 
   useEffect(() => {
     document.title = 'Admin Dashboard | Connect2Edtech'
@@ -44,6 +45,25 @@ export default function AdminDashboard() {
     run()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, token])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    let cancelled = false
+    const loadStats = async () => {
+      try {
+        const res = await fetch(API_BASE + '/api/admin/stats', {
+          headers: { Authorization: `Bearer ${token || ''}` },
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to load stats')
+        if (!cancelled) setStats(data.stats)
+      } catch {
+        // stats are non-critical; ignore
+      }
+    }
+    loadStats()
+    return () => { cancelled = true }
   }, [isAdmin, token])
 
   const changeRole = async (id, role) => {
@@ -82,6 +102,27 @@ export default function AdminDashboard() {
           </div>
 
           {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
+
+          {stats && (
+            <div className="card-grid" style={{ margin: '8px 0 32px' }}>
+              {[
+                { label: 'Users', value: stats.totalUsers },
+                { label: 'Verified', value: stats.verifiedUsers },
+                { label: 'Admins', value: stats.admins },
+                { label: 'Enrollments', value: stats.enrollments },
+                { label: 'Messages', value: stats.contacts },
+                { label: 'Orders', value: stats.checkouts },
+                { label: 'Revenue', value: `₹${stats.revenue || 0}` },
+              ].map((s) => (
+                <div key={s.label} className="card" style={{ padding: 20 }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, fontFamily: 'var(--font-title)', background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    {s.value}
+                  </div>
+                  <div style={{ color: '#6b2a4a', fontWeight: 600, marginTop: 4 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {loading ? (
             <p>Loading users...</p>

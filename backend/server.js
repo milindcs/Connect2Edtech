@@ -467,6 +467,51 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   }
 })
 
+// User dashboard - my enrollments
+app.get('/api/me/enrollments', authMiddleware, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+    const items = await Enrollment.find({ email: req.user.email }).sort({ createdAt: -1 })
+    res.json({ ok: true, enrollments: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch enrollments.' })
+  }
+})
+
+// User dashboard - my contact messages
+app.get('/api/me/contacts', authMiddleware, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+    const items = await ContactSubmission.find({ email: req.user.email }).sort({ createdAt: -1 })
+    res.json({ ok: true, contacts: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch messages.' })
+  }
+})
+
+// User dashboard - my orders/checkouts
+app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+    const items = await CartCheckout.find({ email: req.user.email }).sort({ createdAt: -1 })
+    res.json({ ok: true, checkouts: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch orders.' })
+  }
+})
+
 // Admin dashboard - list all users
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
@@ -519,6 +564,40 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Failed to update role.' })
+  }
+})
+
+// Admin dashboard - aggregate stats
+app.get('/api/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+
+    const [totalUsers, verifiedUsers, admins, enrollments, contacts, checkouts, recentEnroll, recentCheckout] = await Promise.all([
+      SignupSubmission.countDocuments({}),
+      SignupSubmission.countDocuments({ verified: true }),
+      SignupSubmission.countDocuments({ role: 'admin' }),
+      Enrollment.countDocuments({}),
+      ContactSubmission.countDocuments({}),
+      CartCheckout.countDocuments({}),
+      Enrollment.find({}).sort({ createdAt: -1 }).limit(5),
+      CartCheckout.find({}).sort({ createdAt: -1 }).limit(5),
+    ])
+
+    const revenueAgg = await CartCheckout.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }])
+    const revenue = revenueAgg[0]?.total || 0
+
+    res.json({
+      ok: true,
+      stats: { totalUsers, verifiedUsers, admins, enrollments, contacts, checkouts, revenue },
+      recentEnrollments: recentEnroll,
+      recentCheckouts: recentCheckout,
+    })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to load stats.' })
   }
 })
 

@@ -39,10 +39,11 @@ export default function NavBar({ pathname }) {
             ))}
             {isAuthenticated ? (
               <>
+                <Link to="/dashboard" className={pathname === '/dashboard' ? 'active' : ''}>Dashboard</Link>
                 {isAdmin && (
                   <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin</Link>
                 )}
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{user?.name}</span>
+                <span style={{ fontSize: '0.9rem', color: '#831843' }}>{user?.name}</span>
                 <button onClick={signout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Sign Out</button>
               </>
             ) : (
