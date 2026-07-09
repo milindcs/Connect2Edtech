@@ -810,8 +810,9 @@ connectMongo().catch((err) => {
   console.error('[MongoDB]', err.message);
 });
 
-// Start Express server only in local development mode
-if (!process.env.VERCEL) {
+// Start Express server except on Vercel (serverless), where the platform handles listening.
+// Vercel sets VERCEL="1"; Render sets VERCEL="0" (or leaves it unset) — both should listen.
+if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
   });
