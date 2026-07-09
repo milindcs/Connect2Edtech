@@ -49,7 +49,7 @@ function postSignup(server, body) {
 }
 
 before(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryServer.create({ instance: { launchTimeout: 180000 } });
   await mongoose.connect(mongoServer.getUri());
 });
 
