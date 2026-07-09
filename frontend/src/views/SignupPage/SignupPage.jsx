@@ -5,19 +5,21 @@ import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function SignupPage() {
   const navigate = useNavigate()
-  const { signin, signup, verifyOtp, resendOtp, isAuthenticated } = useAuth()
+  const { signin, signup, verifyOtp, resendOtp, isAuthenticated, user } = useAuth()
   const [toasts, setToasts] = useState([])
   const [mode, setMode] = useState('signup')
+
+  const dashboardForRole = (r) => (r === 'admin' ? '/admin' : r === 'hr' ? '/hr' : '/student')
 
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('signup_form_data')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        return { ...parsed, password: '', confirmPassword: '' }
+        return { ...parsed, password: '', confirmPassword: '', role: parsed.role || 'user' }
       } catch (e) {}
     }
-    return { name: '', email: '', phone: '', whatsapp: '', password: '', confirmPassword: '' }
+    return { name: '', email: '', phone: '', whatsapp: '', password: '', confirmPassword: '', role: 'user' }
   })
 
   const [connectWhatsapp, setConnectWhatsapp] = useState(() => {
@@ -45,9 +47,9 @@ export default function SignupPage() {
   useEffect(() => {
     if (isAuthenticated) {
       clearSignupStorage()
-      navigate('/student')
+      navigate(dashboardForRole(user?.role))
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, user?.role])
 
   useEffect(() => {
     const { password, confirmPassword, ...serializableData } = formData
@@ -141,6 +143,7 @@ export default function SignupPage() {
         phone: formData.phone.trim(),
         whatsapp: connectWhatsapp ? (formData.whatsapp.trim() || formData.phone.trim()) : '',
         connectWhatsapp,
+        role: formData.role,
         password: formData.password,
       })
       if (data.requiresVerification) {
@@ -174,7 +177,7 @@ export default function SignupPage() {
       await verifyOtp(registeredEmail, otp)
       showToast('Email verified! Welcome to Connect2Edtech.', 'success')
       clearSignupStorage()
-      setTimeout(() => navigate('/student'), 800)
+      setTimeout(() => navigate(dashboardForRole(user?.role)), 800)
     } catch (err) {
       showToast(err.message || 'Verification failed.', 'error')
     } finally {
@@ -269,6 +272,17 @@ export default function SignupPage() {
                 <label>
                   <span className="field-label">Phone Number</span>
                   <input name="phone" required placeholder="+91 7019436720" value={formData.phone} onChange={setField} autoComplete="tel" />
+                </label>
+              </div>
+
+              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <label>
+                  <span className="field-label">I am a</span>
+                  <select name="role" value={formData.role} onChange={setField}>
+                    <option value="user">Student / Learner</option>
+                    <option value="hr">HR / Recruiter</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </label>
               </div>
 

@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/AuthContext'
 
 export default function NavBar({ pathname }) {
   const { user, isAuthenticated, isAdmin, signout } = useAuth()
+  const isStaff = isAdmin || user?.role === 'hr'
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -41,10 +42,11 @@ export default function NavBar({ pathname }) {
             ))}
             {isAuthenticated ? (
               <>
-                {isAdmin && (
+                {isStaff && (
                   <>
                     <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin Dashboard</Link>
                     <Link to="/hr" className={pathname === '/hr' ? 'active' : ''}>HR Dashboard</Link>
+                    <Link to="/mail" className={pathname === '/mail' ? 'active' : ''}>Mail</Link>
                   </>
                 )}
                 <span style={{ fontSize: '0.9rem', color: '#831843' }}>{user?.name}</span>

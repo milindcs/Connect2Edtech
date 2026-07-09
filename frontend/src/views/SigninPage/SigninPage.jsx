@@ -4,7 +4,7 @@ import { useAuth } from '../../shared/AuthContext'
 
 export default function SigninPage() {
   const navigate = useNavigate()
-  const { signin, isAuthenticated, isAdmin, resendOtp } = useAuth()
+  const { signin, isAuthenticated, isAdmin, user, resendOtp } = useAuth()
   const [toasts, setToasts] = useState([])
   const [showResend, setShowResend] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
@@ -37,14 +37,12 @@ export default function SigninPage() {
   }, [formData.email])
 
   useEffect(() => {
-    if (isAuthenticated && isAdmin) {
-      localStorage.removeItem('signin_form_data') // Clear on successful login
-      navigate('/hr')
-    } else if (isAuthenticated) {
-      localStorage.removeItem('signin_form_data') // Clear on successful login
-      navigate('/student')
-    }
-  }, [isAuthenticated, isAdmin, navigate])
+    if (!isAuthenticated) return
+    const role = user?.role
+    const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+    localStorage.removeItem('signin_form_data') // Clear on successful login
+    navigate(target)
+  }, [isAuthenticated, user?.role, navigate])
 
   const showToast = (message, type = 'success') => {
     const id = Date.now()

@@ -11,9 +11,12 @@ let memoryServer = null
 // When no external URI is configured at all, an in-memory server is started
 // so the app is runnable out of the box for development.
 export async function getMongoUri() {
+  // If an external Mongo URI is provided, prefer it over the in-memory DB.
+  // This avoids unexpected in-memory startup failures in production-like environments.
   const wantMemory =
-    process.env.USE_MEMORY_DB === 'true' ||
+    process.env.USE_MEMORY_DB === 'true' &&
     (!process.env.MONGODB_URI && !process.env.MONGODB_LOCAL);
+
 
   if (wantMemory) {
     if (!memoryServer) {

@@ -7,6 +7,9 @@ import path from "path";
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import { createSignupRouter } from './routes/signup.js';
+import { createSigninRouter } from './routes/signin.js';
+import { createMailRouter } from './routes/mail.js';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
 
@@ -64,6 +67,19 @@ async function sendOtpEmail(toEmail, otp) {
   });
 }
 
+// Generic outbound email used by the Mail inbox reply feature.
+async function sendEmail({ to, subject, text, html, replyTo }) {
+  const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com';
+  await transporter.sendMail({
+    from,
+    to,
+    subject,
+    text,
+    html,
+    ...(replyTo ? { replyTo } : {}),
+  });
+}
+
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -97,6 +113,24 @@ function adminAuth(req, res, next) {
     const decoded = jwt.verify(match[1], JWT_SECRET);
     if (decoded.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Admin access only' });
+    }
+    req.admin = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ ok: false, error: 'Invalid token' });
+  }
+}
+
+// Staff auth: allows admins AND hr users. Used by the read-only data
+// endpoints that power the HR dashboard (stats, contacts, enrollments, orders).
+function staffAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return res.status(401).json({ ok: false, error: 'Access denied' });
+  try {
+    const decoded = jwt.verify(match[1], JWT_SECRET);
+    if (decoded.role !== 'admin' && decoded.role !== 'hr') {
+      return res.status(403).json({ ok: false, error: 'Staff access only' });
     }
     req.admin = decoded;
     next();
@@ -164,7 +198,7 @@ const SignupSubmissionSchema = new mongoose.Schema({
   whatsappNumber: { type: String, default: '' },
   passwordHash: { type: String, required: true },
   verified: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ['user', 'hr', 'admin'], default: 'user' },
   otp: { type: String, default: '' },
   otpExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
@@ -180,6 +214,8 @@ const ContactSubmissionSchema = new mongoose.Schema({
   courses: { type: String, default: '' },
   hostname: { type: String, default: '' },
   ip: { type: String, default: '' },
+  replied: { type: Boolean, default: false },
+  replies: { type: [{ from: String, body: String, at: { type: Date, default: Date.now } }], default: [] },
   createdAt: { type: Date, default: Date.now },
 }, { versionKey: false });
 const ContactSubmission = mongoose.model('ContactSubmission', ContactSubmissionSchema);
@@ -267,107 +303,37 @@ function buildWhatsAppUrl(message) {
 // Health check
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// Signup - create account, send OTP email
-app.post('/api/signup', async (req, res) => {
+// MongoDB health check
+app.get('/api/health/mongo', async (req, res) => {
   try {
-    const { name, email, phone, password, whatsappNumber, connectWhatsapp } = req.body || {};
-    if (!name || !email || !phone) {
-      return res.status(400).json({ ok: false, error: 'name, email, phone are required' });
-    }
-    if (!password || typeof password !== 'string' || password.length < 8) {
-      return res.status(400).json({ ok: false, error: 'password is required (min 8 chars)' });
-    }
-    if (!/^\S+@\S+\.\S+$/.test(String(email).trim())) {
-      return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
-    }
+    const conn = await connectMongo()
+    const ready = mongoose.connection.readyState
+    const connected = Boolean(conn && ready === 1)
 
-    const conn = await connectMongo();
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-    const otp = generateOtp();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-    const linkedWhatsapp = connectWhatsapp ? trimmed(whatsappNumber) || trimmed(phone) : '';
-
-    let existing = null;
-    try {
-      existing = await SignupSubmission.findOne({ email: String(email).trim() });
-    } catch {
-      existing = null;
-    }
-
-    if (existing) {
-      if (existing.verified) {
-        return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
-      }
-      await SignupSubmission.updateOne(
-        { _id: existing._id },
-        { $set: { name: trimmed(name), phone: trimmed(phone), whatsappNumber: linkedWhatsapp, passwordHash, otp, otpExpiry } }
-      );
-    } else {
-      await SignupSubmission.create({
-        name: trimmed(name),
-        email: String(email).trim(),
-        phone: trimmed(phone),
-        whatsappNumber: linkedWhatsapp,
-        passwordHash,
-        otp,
-        otpExpiry,
-      });
-    }
-
-    try {
-      await sendOtpEmail(String(email).trim(), otp);
-    } catch (mailErr) {
-      console.error('[Mail] OTP send failed:', mailErr.message);
-    }
-
-    res.json({ ok: true, message: 'Account created. Verification code sent to your email.', requiresVerification: true });
+    return res.status(connected ? 200 : 503).json({
+      ok: connected,
+      mongo: {
+        connected,
+        readyState: ready,
+      },
+      hint: connected
+        ? undefined
+        : 'MongoDB connection failed. Check MONGODB_URI/MONGODB_LOCAL, Atlas IP whitelist, credentials. For local dev you can set USE_MEMORY_DB=true.',
+    })
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'Signup failed. Please try again.' });
+    return res.status(503).json({
+      ok: false,
+      mongo: { connected: false, error: e?.message || String(e) },
+    })
   }
 });
 
+
+// Signup - create account, send OTP email
+app.use('/api/signup', createSignupRouter({ SignupSubmission, connectMongo, sendOtpEmail }));
+
 // Signin - verify credentials and return JWT
-app.post('/api/signin', async (req, res) => {
-  try {
-    const { email, password } = req.body || {}
-    if (!email || !password) {
-      return res.status(400).json({ ok: false, error: 'email and password are required' })
-    }
-
-    const conn = await connectMongo()
-    if (!conn || mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' })
-    }
-
-    const safe = String(email).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const account = await SignupSubmission.findOne({ email: new RegExp('^' + safe + '$', 'i') })
-    if (!account) {
-      return res.status(401).json({ ok: false, error: 'No account found for this email. Please sign up first.' })
-    }
-
-    const matched = await bcrypt.compare(password, account.passwordHash || '')
-    if (!matched) {
-      return res.status(401).json({ ok: false, error: 'Incorrect password.' })
-    }
-
-    if (!account.verified) {
-      return res.status(403).json({ ok: false, error: 'Please verify your email before signing in.', requiresVerification: true })
-    }
-
-    const token = signJwt(account)
-    res.json({ ok: true, token, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: account.verified, role: account.role || 'user' } })
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Sign in failed' })
-  }
-})
+app.use('/api/signin', createSigninRouter({ SignupSubmission, connectMongo, signJwt }));
 
 // Verify OTP
 app.post('/api/verify-otp', async (req, res) => {
@@ -567,8 +533,8 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
   }
 })
 
-// Admin dashboard - aggregate stats
-app.get('/api/admin/stats', adminAuth, async (req, res) => {
+// Admin/HR dashboard - aggregate stats
+app.get('/api/admin/stats', staffAuth, async (req, res) => {
   try {
     const conn = await connectMongo()
     if (!conn || mongoose.connection.readyState !== 1) {
@@ -602,7 +568,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 })
 
 // HR - list all contact submissions
-app.get('/api/admin/contacts', adminAuth, async (req, res) => {
+app.get('/api/admin/contacts', staffAuth, async (req, res) => {
   try {
     const conn = await connectMongo()
     if (!conn || mongoose.connection.readyState !== 1) {
@@ -617,7 +583,7 @@ app.get('/api/admin/contacts', adminAuth, async (req, res) => {
 })
 
 // HR - list all enrollments
-app.get('/api/admin/enrollments', adminAuth, async (req, res) => {
+app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
   try {
     const conn = await connectMongo()
     if (!conn || mongoose.connection.readyState !== 1) {
@@ -632,7 +598,7 @@ app.get('/api/admin/enrollments', adminAuth, async (req, res) => {
 })
 
 // HR - list all checkouts/orders
-app.get('/api/admin/checkouts', adminAuth, async (req, res) => {
+app.get('/api/admin/checkouts', staffAuth, async (req, res) => {
   try {
     const conn = await connectMongo()
     if (!conn || mongoose.connection.readyState !== 1) {
@@ -645,6 +611,9 @@ app.get('/api/admin/checkouts', adminAuth, async (req, res) => {
     res.status(500).json({ ok: false, error: 'Failed to fetch checkouts.' })
   }
 })
+
+// Mail inbox + reply (admin/HR only)
+app.use('/api/mail', staffAuth, createMailRouter({ ContactSubmission, connectMongo, sendEmail }))
 
 // Contact - store in MongoDB + redirect to WhatsApp
 app.post('/api/contact', async (req, res) => {

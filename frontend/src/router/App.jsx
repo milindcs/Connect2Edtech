@@ -16,6 +16,7 @@ import AdminDashboard from '../views/AdminDashboard/AdminDashboard'
 import UserDashboard from '../views/UserDashboard/UserDashboard'
 import StudentPage from '../views/StudentPage/StudentPage'
 import HrDashboard from '../views/HrDashboard/HrDashboard'
+import MailPage from '../views/MailPage/MailPage'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/hr" element={<HrDashboard />} />
+          <Route path="/mail" element={<MailPage />} />
           <Route path="/dashboard" element={<Navigate to="/student" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -14,7 +14,8 @@ function formatDate(value) {
 
 export default function HrDashboard() {
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, token, signout } = useAuth()
+  const { isAdmin, isAuthenticated, token, user, signout } = useAuth()
+  const isStaff = isAdmin || user?.role === 'hr'
   const [contacts, setContacts] = useState([])
   const [enrollments, setEnrollments] = useState([])
   const [checkouts, setCheckouts] = useState([])
@@ -29,13 +30,13 @@ export default function HrDashboard() {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/signin')
-    } else if (!isAdmin) {
+    } else if (!isStaff) {
       navigate('/')
     }
-  }, [isAuthenticated, isAdmin, navigate])
+  }, [isAuthenticated, isStaff, navigate])
 
   useEffect(() => {
-    if (!isAdmin || !token) return
+    if (!isStaff || !token) return
     let cancelled = false
     const headers = { Authorization: `Bearer ${token}` }
 
@@ -74,7 +75,7 @@ export default function HrDashboard() {
     return () => { cancelled = true }
   }, [isAdmin, token])
 
-  if (!isAuthenticated || !isAdmin) return null
+  if (!isAuthenticated || !isStaff) return null
 
   const hrStats = stats ? [
     { label: 'Total Contacts', value: stats.contacts },
