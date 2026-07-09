@@ -1,7 +1,5 @@
-# TODO
-- [ ] Implement pink theme → blur theme
-  - [ ] Identify all pink-themed styles/classes (likely in `frontend/src/styles/global.css`).
-  - [ ] Replace pink gradients/backgrounds with blur (glassmorphism) theme.
-  - [ ] Update navbar/footer mobile styles that reference pink.
-  - [ ] Run frontend build/lint (if available) to ensure no CSS syntax issues.
-
+- [x] Add/verify NavBar links for user dashboard (/dashboard) and admin dashboard (/admin)
+- [x] Ensure dashboards are accessible via existing routes in router
+- [x] Run quick build/lint to confirm no React/router errors
+- [x] Validate backend admin endpoints protected by JWT role middleware
+- [x] Final verification: login as user shows Dashboard; login as admin shows Admin link and /admin works

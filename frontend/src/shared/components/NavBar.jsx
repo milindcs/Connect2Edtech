@@ -15,6 +15,7 @@ export default function NavBar({ pathname }) {
     { to: '/about', label: 'About' },
     { to: '/courses', label: 'Courses' },
     { to: '/enrollment', label: 'Enroll' },
+    { to: '/dashboard', label: 'Dashboard' },
   ]
 
   return (
@@ -39,9 +40,8 @@ export default function NavBar({ pathname }) {
             ))}
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" className={pathname === '/dashboard' ? 'active' : ''}>Dashboard</Link>
                 {isAdmin && (
-                  <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin</Link>
+                  <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin Dashboard</Link>
                 )}
                 <span style={{ fontSize: '0.9rem', color: '#831843' }}>{user?.name}</span>
                 <button onClick={signout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Sign Out</button>
