@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
 import { API_BASE } from '../../shared/cartApi'
+import { getCachedData, setCachedData, useOnlineStatus } from '../../shared/storageUtils'
 
 function formatDate(value) {
   if (!value) return '—'
@@ -11,6 +12,8 @@ function formatDate(value) {
     return '—'
   }
 }
+
+const CACHE_KEY = 'hr_dashboard_cache'
 
 export default function HrDashboard() {
   const navigate = useNavigate()
@@ -22,6 +25,7 @@ export default function HrDashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const isOffline = useOnlineStatus()
 
   useEffect(() => {
     document.title = 'HR Dashboard | Connect2Edtech'
@@ -42,6 +46,20 @@ export default function HrDashboard() {
 
     const load = async () => {
       setLoading(true)
+
+      // Try to load from cache first
+      const cached = getCachedData()
+      if (cached) {
+        if (!cancelled) {
+          setStats(cached.stats || null)
+          setContacts(cached.contacts || [])
+          setEnrollments(cached.enrollments || [])
+          setCheckouts(cached.checkouts || [])
+          setLoading(false)
+        }
+      }
+
+      // Then fetch fresh data
       try {
         const [statsRes, contactsRes, enrollmentsRes, checkoutsRes] = await Promise.all([
           fetch(API_BASE + '/api/admin/stats', { headers }),
@@ -60,13 +78,29 @@ export default function HrDashboard() {
           if (!contactsRes.ok) throw new Error(contactsData.error || 'Failed to load contacts')
           if (!enrollmentsRes.ok) throw new Error(enrollmentsData.error || 'Failed to load enrollments')
           if (!checkoutsRes.ok) throw new Error(checkoutsData.error || 'Failed to load checkouts')
-          setStats(statsData.stats || null)
-          setContacts(contactsData.contacts || [])
-          setEnrollments(enrollmentsData.enrollments || [])
-          setCheckouts(checkoutsData.checkouts || [])
+
+          const dashboardData = {
+            stats: statsData.stats || null,
+            contacts: contactsData.contacts || [],
+            enrollments: enrollmentsData.enrollments || [],
+            checkouts: checkoutsData.checkouts || []
+          }
+
+          setStats(dashboardData.stats)
+          setContacts(dashboardData.contacts)
+          setEnrollments(dashboardData.enrollments)
+          setCheckouts(dashboardData.checkouts)
+
+          // Cache the data
+          setCachedData(dashboardData)
         }
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Failed to load HR dashboard.')
+        if (!cancelled) {
+          // If fetch fails and we have no cache, show error
+          if (!cached) setError(err.message || 'Failed to load HR dashboard.')
+          // If we have cache, use it silently (offline mode)
+          else setError('You are viewing cached data (offline)')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -74,6 +108,7 @@ export default function HrDashboard() {
     load()
     return () => { cancelled = true }
   }, [isAdmin, token])
+
 
   if (!isAuthenticated || !isStaff) return null
 
@@ -96,6 +131,11 @@ export default function HrDashboard() {
             <button onClick={signout} className="btn secondary">Sign Out</button>
           </div>
 
+          {isOffline && (
+            <div style={{ padding: 12, background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 8, marginBottom: 16, color: '#854d0e' }}>
+              ⚠️ You are currently offline. Showing cached data.
+            </div>
+          )}
           {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
 
           {stats && (

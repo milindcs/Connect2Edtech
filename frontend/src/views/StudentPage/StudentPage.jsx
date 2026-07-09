@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
 import { API_BASE } from '../../shared/cartApi'
 import { cartList } from '../../shared/cartApi'
+import { getCachedData, setCachedData, useOnlineStatus } from '../../shared/storageUtils'
 
 function formatDate(value) {
   if (!value) return '—'
@@ -13,6 +14,8 @@ function formatDate(value) {
   }
 }
 
+const CACHE_KEY = 'student_dashboard_cache'
+
 export default function StudentPage() {
   const navigate = useNavigate()
   const { user, isAuthenticated, token, signout } = useAuth()
@@ -22,6 +25,7 @@ export default function StudentPage() {
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const isOffline = useOnlineStatus()
 
   useEffect(() => {
     document.title = 'Student Portal | Connect2Edtech'
@@ -38,6 +42,20 @@ export default function StudentPage() {
 
     const load = async () => {
       setLoading(true)
+
+      // Try to load from cache first
+      const cached = getCachedData()
+      if (cached) {
+        if (!cancelled) {
+          setEnrollments(cached.enrollments || [])
+          setContacts(cached.contacts || [])
+          setCheckouts(cached.checkouts || [])
+          setCart(cached.cart || [])
+          setLoading(false)
+        }
+      }
+
+      // Then fetch fresh data
       try {
         const [enrRes, conRes, chkRes, cartData] = await Promise.all([
           fetch(API_BASE + '/api/me/enrollments', { headers: authHeaders }),
@@ -54,13 +72,29 @@ export default function StudentPage() {
           if (!enrRes.ok) throw new Error(enr.error || 'Failed to load enrollments')
           if (!conRes.ok) throw new Error(con.error || 'Failed to load messages')
           if (!chkRes.ok) throw new Error(chk.error || 'Failed to load orders')
-          setEnrollments(enr.enrollments || [])
-          setContacts(con.contacts || [])
-          setCheckouts(chk.checkouts || [])
-          setCart(cartData.items || [])
+
+          const portalData = {
+            enrollments: enr.enrollments || [],
+            contacts: con.contacts || [],
+            checkouts: chk.checkouts || [],
+            cart: cartData.items || []
+          }
+
+          setEnrollments(portalData.enrollments)
+          setContacts(portalData.contacts)
+          setCheckouts(portalData.checkouts)
+          setCart(portalData.cart)
+
+          // Cache the data
+          setCachedData(portalData)
         }
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Failed to load student portal.')
+        if (!cancelled) {
+          // If fetch fails and we have no cache, show error
+          if (!cached) setError(err.message || 'Failed to load student portal.')
+          // If we have cache, use it silently (offline mode)
+          else setError('You are viewing cached data (offline)')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -68,6 +102,7 @@ export default function StudentPage() {
     load()
     return () => { cancelled = true }
   }, [isAuthenticated, token])
+
 
   if (!isAuthenticated) return null
 
@@ -93,6 +128,11 @@ export default function StudentPage() {
             <button onClick={signout} className="btn secondary">Sign Out</button>
           </div>
 
+          {isOffline && (
+            <div style={{ padding: 12, background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 8, marginBottom: 16, color: '#854d0e' }}>
+              ⚠️ You are currently offline. Showing cached data.
+            </div>
+          )}
           {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
 
           <div className="card-grid" style={{ margin: '8px 0 32px' }}>

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
 import { API_BASE } from '../../shared/cartApi'
+import { getCachedData, setCachedData, useOnlineStatus } from '../../shared/storageUtils'
+
+const CACHE_KEY = 'admin_dashboard_cache'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -11,6 +14,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState('')
   const [stats, setStats] = useState(null)
+  const isOffline = useOnlineStatus()
 
   useEffect(() => {
     document.title = 'Admin Dashboard | Connect2Edtech'
@@ -28,16 +32,40 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return
     let cancelled = false
+
     const run = async () => {
+      // Try to load from cache first
+      const cached = getCachedData()
+      if (cached) {
+        if (!cancelled) {
+          setUsers(cached.users || [])
+          setStats(cached.stats)
+          setLoading(false)
+        }
+      }
+
+      // Then fetch fresh data
       try {
         const res = await fetch(API_BASE + '/api/admin/users', {
           headers: { Authorization: `Bearer ${token || ''}` },
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to fetch users')
-        if (!cancelled) setUsers(data.users || [])
+        if (!cancelled) {
+          setUsers(data.users || [])
+          // Cache the data
+          setCachedData({
+            users: data.users || [],
+            stats: stats
+          })
+        }
       } catch (err) {
-        if (!cancelled) setError(err.message)
+        if (!cancelled) {
+          // If fetch fails and we have no cache, show error
+          if (!cached) setError(err.message)
+          // If we have cache, use it silently (offline mode)
+          else setError('You are viewing cached data (offline)')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -57,14 +85,26 @@ export default function AdminDashboard() {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to load stats')
-        if (!cancelled) setStats(data.stats)
+        if (!cancelled) {
+          setStats(data.stats)
+          // Update cache with new stats
+          const cached = getCachedData()
+          if (cached) {
+            setCachedData({
+              ...cached,
+              stats: data.stats
+            })
+          }
+        }
       } catch {
-        // stats are non-critical; ignore
+        // stats are non-critical; ignore if online
+        // If offline, cached stats will be used
       }
     }
     loadStats()
     return () => { cancelled = true }
   }, [isAdmin, token])
+
 
   const changeRole = async (id, role) => {
     setUpdatingId(id)
@@ -104,6 +144,11 @@ export default function AdminDashboard() {
             <button onClick={signout} className="btn secondary">Sign Out</button>
           </div>
 
+          {isOffline && (
+            <div style={{ padding: 12, background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 8, marginBottom: 16, color: '#854d0e' }}>
+              ⚠️ You are currently offline. Showing cached data.
+            </div>
+          )}
           {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
 
           {stats && (
