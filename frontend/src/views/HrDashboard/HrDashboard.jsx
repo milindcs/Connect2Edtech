@@ -88,7 +88,10 @@ export default function HrDashboard() {
       <div className="container">
         <div className="enroll-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 0 }}>HR Dashboard</h2>
+            <div>
+              <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 0 }}>HR Dashboard</h2>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Admin</span>
+            </div>
             <button onClick={signout} className="btn secondary">Sign Out</button>
           </div>
 

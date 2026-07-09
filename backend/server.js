@@ -708,19 +708,18 @@ app.post('/api/cart/add', async (req, res) => {
     if (!courseKey) return res.status(400).json({ ok: false, error: 'courseKey required' });
 
     const conn = await connectMongo();
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
+    }
     const priceNum = typeof price === 'number' ? price : Number(price || 0);
 
-    if (conn && mongoose.connection.readyState === 1) {
-      await CartItem.updateOne(
-        { sessionId, courseKey },
-        { $set: { title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date() } },
-        { upsert: true }
-      );
-      const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
-      res.json({ ok: true, items });
-    } else {
-      res.json({ ok: true, items: [] });
-    }
+    await CartItem.updateOne(
+      { sessionId, courseKey },
+      { $set: { title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date() } },
+      { upsert: true }
+    );
+    const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: e?.message || String(e) });
@@ -731,12 +730,11 @@ app.get('/api/cart', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
     const conn = await connectMongo();
-    if (conn && mongoose.connection.readyState === 1) {
-      const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
-      res.json({ ok: true, items });
-    } else {
-      res.json({ ok: true, items: [] });
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
     }
+    const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: e?.message || String(e) });
@@ -748,13 +746,12 @@ app.delete('/api/cart/:courseKey', async (req, res) => {
     const sessionId = getSessionId(req);
     const { courseKey } = req.params;
     const conn = await connectMongo();
-    if (conn && mongoose.connection.readyState === 1) {
-      await CartItem.deleteOne({ sessionId, courseKey });
-      const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
-      res.json({ ok: true, items });
-    } else {
-      res.json({ ok: true, items: [] });
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
     }
+    await CartItem.deleteOne({ sessionId, courseKey });
+    const items = await CartItem.find({ sessionId }).sort({ addedAt: -1 });
+    res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: e?.message || String(e) });
@@ -765,9 +762,10 @@ app.delete('/api/cart', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
     const conn = await connectMongo();
-    if (conn && mongoose.connection.readyState === 1) {
-      await CartItem.deleteMany({ sessionId });
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable. Please try again later.' });
     }
+    await CartItem.deleteMany({ sessionId });
     res.json({ ok: true });
   } catch (e) {
     console.error(e);

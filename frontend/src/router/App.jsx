@@ -31,10 +31,10 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/hr" element={<HrDashboard />} />
+          <Route path="/dashboard" element={<Navigate to="/student" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

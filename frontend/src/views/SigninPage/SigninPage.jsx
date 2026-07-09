@@ -4,8 +4,11 @@ import { useAuth } from '../../shared/AuthContext'
 
 export default function SigninPage() {
   const navigate = useNavigate()
-  const { signin, isAuthenticated, isAdmin } = useAuth()
+  const { signin, isAuthenticated, isAdmin, resendOtp } = useAuth()
   const [toasts, setToasts] = useState([])
+  const [showResend, setShowResend] = useState(false)
+  const [resendEmail, setResendEmail] = useState('')
+  const [isResending, setIsResending] = useState(false)
   
   // Initialize state from local storage or fallback to empty values
   const [formData, setFormData] = useState(() => {
@@ -56,6 +59,20 @@ export default function SigninPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleResend = async () => {
+    if (!resendEmail) return
+    setIsResending(true)
+    try {
+      await resendOtp(resendEmail)
+      showToast('New verification code sent to your email.', 'success')
+      setShowResend(false)
+    } catch (err) {
+      showToast(err.message || 'Could not resend code.', 'error')
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const email = formData.email.trim()
@@ -76,6 +93,10 @@ export default function SigninPage() {
       showToast('Signed in! Redirecting...', 'success')
     } catch (err) {
       showToast(err.message || 'Could not sign in. Please try again.', 'error')
+      if (err.message?.includes('verify your email')) {
+        setResendEmail(email)
+        setShowResend(true)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -111,6 +132,15 @@ export default function SigninPage() {
                 Create account
               </Link>
             </div>
+
+            {showResend && (
+              <div style={{ marginTop: 16, padding: 16, background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
+                <p style={{ marginBottom: 8, fontSize: '0.9rem' }}>Didn't receive the code? Resend verification email.</p>
+                <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
+                  {isResending ? 'Resending…' : 'Resend Verification Code'}
+                </button>
+              </div>
+            )}
 
             <div className="hint" style={{ marginTop: 6 }}>
               New here? <Link to="/signup">Sign up</Link> to create an account.
