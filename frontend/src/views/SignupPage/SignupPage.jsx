@@ -5,8 +5,9 @@ import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
 
 export default function SignupPage() {
   const navigate = useNavigate()
-  const { signup, verifyOtp, resendOtp, isAuthenticated } = useAuth()
+  const { signin, signup, verifyOtp, resendOtp, isAuthenticated } = useAuth()
   const [toasts, setToasts] = useState([])
+  const [mode, setMode] = useState('signup')
 
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('signup_form_data')
@@ -38,8 +39,8 @@ export default function SignupPage() {
   const [isResending, setIsResending] = useState(false)
 
   useEffect(() => {
-    document.title = 'Sign Up - Connect2Edtech'
-  }, [])
+    document.title = mode === 'signup' ? 'Sign Up - Connect2Edtech' : 'Sign In - Connect2Edtech'
+  }, [mode])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -103,7 +104,7 @@ export default function SignupPage() {
     return 'Good.'
   }, [formData.password, passwordStrength])
 
-  const validate = () => {
+  const validateSignup = () => {
     const name = formData.name.trim()
     const email = formData.email.trim()
     const phone = formData.phone.trim()
@@ -124,9 +125,9 @@ export default function SignupPage() {
     return null
   }
 
-  const handleSubmit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
-    const err = validate()
+    const err = validateSignup()
     if (err) {
       showToast(err, 'error')
       return
@@ -171,7 +172,7 @@ export default function SignupPage() {
     setIsVerifying(true)
     try {
       await verifyOtp(registeredEmail, otp)
-      showToast('Email verified! Redirecting...', 'success')
+      showToast('Email verified! Welcome to Connect2Edtech.', 'success')
       clearSignupStorage()
       setTimeout(() => navigate('/student'), 800)
     } catch (err) {
@@ -193,19 +194,73 @@ export default function SignupPage() {
     }
   }
 
+  const handleSignin = async (e) => {
+    e.preventDefault()
+    const email = formData.email.trim()
+    const password = formData.password
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      showToast('Please enter a valid email address.', 'error')
+      return
+    }
+    if (!password) {
+      showToast('Please enter your password.', 'error')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await signin(email, password)
+      showToast('Signed in! Redirecting...', 'success')
+      clearSignupStorage()
+    } catch (err) {
+      showToast(err.message || 'Could not sign in. Please try again.', 'error')
+      if (err.message?.includes('verify your email')) {
+        setResendEmail(email)
+        setShowResend(true)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const [showResend, setShowResend] = useState(false)
+  const [resendEmail, setResendEmail] = useState('')
+
   return (
     <div className="enroll-wrap">
       <div className="container">
         <div className="enroll-card">
           <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 8 }}>
-            Create your account
+            {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </h2>
           <p className="section-subtitle" style={{ marginBottom: 28 }}>
-            Sign up to get updates and continue your journey on Connect2Edtech.
+            {mode === 'signup'
+              ? 'Sign up to get updates and continue your journey on Connect2Edtech.'
+              : 'Sign in to continue your learning journey.'}
           </p>
 
-          {!requiresVerification ? (
-            <form className="form-grid" onSubmit={handleSubmit} aria-label="Signup form">
+          <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+            <button
+              type="button"
+              className={mode === 'signup' ? 'btn primary' : 'btn secondary'}
+              onClick={() => { setMode('signup'); setRequiresVerification(false); setOtp(''); setRegisteredEmail(''); }}
+              style={{ flex: 1 }}
+            >
+              Create Account
+            </button>
+            <button
+              type="button"
+              className={mode === 'signin' ? 'btn primary' : 'btn secondary'}
+              onClick={() => setMode('signin')}
+              style={{ flex: 1 }}
+            >
+              Sign In
+            </button>
+          </div>
+
+          {mode === 'signup' && !requiresVerification ? (
+            <form className="form-grid" onSubmit={handleSignup} aria-label="Signup form">
               <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                 <label>
                   <span className="field-label">Full Name</span>
@@ -279,7 +334,6 @@ export default function SignupPage() {
                 <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isSubmitting}>
                   {isSubmitting ? 'Saving…' : 'Sign Up'}
                 </button>
-                <Link to="/contact" className="btn secondary" style={{ textAlign: 'center' }}>Need help?</Link>
               </div>
 
               <div className="hint" style={{ marginTop: 6 }}>
@@ -287,14 +341,14 @@ export default function SignupPage() {
               </div>
 
               <div className="hint" style={{ marginTop: 10 }}>
-                Already have an account? <Link to="/signin">Sign in</Link>.
+                Already have an account? <button type="button" onClick={() => setMode('signin')} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Sign in</button>.
               </div>
 
               <div style={{ marginTop: 24, textAlign: 'center' }}>
                 <Link to="/" className="btn secondary">← Back to Home</Link>
               </div>
             </form>
-          ) : (
+          ) : mode === 'signup' && requiresVerification ? (
             <form className="form-grid" onSubmit={handleVerify} aria-label="Verify email form">
               <p style={{ marginBottom: 16 }}>
                 We sent a 6-digit verification code to <strong>{registeredEmail}</strong>.
@@ -323,11 +377,45 @@ export default function SignupPage() {
               </div>
 
               <div className="hint" style={{ marginTop: 10 }}>
-                Wrong email? <button type="button" onClick={() => { setRequiresVerification(false); setRegisteredEmail(''); setOtp(''); clearSignupStorage(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Change email</button>
+                Wrong email? <button type="button" onClick={() => { setMode('signup'); setRequiresVerification(false); setRegisteredEmail(''); setOtp(''); clearSignupStorage(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Change email</button>
+              </div>
+            </form>
+          ) : (
+            <form className="form-grid" onSubmit={handleSignin} aria-label="Sign in form">
+              <label>
+                <span className="field-label">Email Address</span>
+                <input name="email" required type="email" placeholder="you@example.com" value={formData.email} onChange={setField} autoComplete="email" />
+              </label>
+
+              <label>
+                <span className="field-label">Password</span>
+                <input name="password" required type="password" placeholder="Enter your password" value={formData.password} onChange={setField} autoComplete="current-password" />
+              </label>
+
+              <div className="form-actions" style={{ marginTop: 6 }}>
+                <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isSubmitting}>
+                  {isSubmitting ? 'Signing in…' : 'Sign In'}
+                </button>
+              </div>
+
+              {showResend && (
+                <div style={{ marginTop: 16, padding: 16, background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
+                  <p style={{ marginBottom: 8, fontSize: '0.9rem' }}>Didn't receive the code? Resend verification email.</p>
+                  <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
+                    {isResending ? 'Resending…' : 'Resend Verification Code'}
+                  </button>
+                </div>
+              )}
+
+              <div className="hint" style={{ marginTop: 10 }}>
+                Don't have an account? <button type="button" onClick={() => { setMode('signup'); setShowResend(false); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Create account</button>.
+              </div>
+
+              <div style={{ marginTop: 24, textAlign: 'center' }}>
+                <Link to="/" className="btn secondary">← Back to Home</Link>
               </div>
             </form>
           )}
-
         </div>
       </div>
 
