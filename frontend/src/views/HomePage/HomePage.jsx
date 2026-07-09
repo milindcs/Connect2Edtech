@@ -210,9 +210,9 @@ export default function HomePage() {
               <div key={c.key} className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Link to={`/course/${c.key}`} style={{ textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
                   <div className="card-number">{c.price === 0 ? 'Free' : `₹${c.price}`}</div>
-                  <h3 style={{ marginBottom: 8, color: '#000000' }}>{c.title}</h3>
+                  <h3 style={{ marginBottom: 8, color: 'var(--text-primary)' }}>{c.title}</h3>
                   <p style={{ marginBottom: 10 }}>{c.subtitle}</p>
-                  <p style={{ color: '#333333', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>
                     {c.meta}
                   </p>
 <ul style={{ listStyle: 'none', marginBottom: 20 }}>
@@ -221,14 +221,14 @@ export default function HomePage() {
                         key={i}
                         style={{
                           fontSize: '0.9rem',
-                          color: '#333333',
+                          color: 'var(--text-muted)',
                           marginBottom: 8,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 8
                         }}
                       >
-                        <span style={{ color: '#ff00ff' }}>✦</span>
+                        <span style={{ color: '#ec4899' }}>✦</span>
                         {f}
                       </li>
                     ))}
@@ -326,19 +326,19 @@ export default function HomePage() {
 
           <div className="two-col" style={{ marginTop: 40 }}>
             <div className="card">
-              <h3 style={{ fontSize: '1.5rem', marginBottom: 12, color: '#000000' }}>Contact Information</h3>
-               <p style={{ color: '#333333', marginBottom: 20 }}>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: 12, color: 'var(--text-primary)' }}>Contact Information</h3>
+               <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>
                   Reach out to us directly or visit our office in Mysuru. Our team is ready to assist you with course selection and enrollment.
                 </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{ color: '#000000' }}>
+                <p style={{ color: 'var(--text-primary)' }}>
                   📍 Location: Mysuru, Karnataka, India
                 </p>
-                <p style={{ color: '#000000' }}>
-                  📧 Email: <a href="mailto:hr@connect2future.com" style={{ color: '#000000' }}>hr@connect2future.com</a>
+                <p style={{ color: 'var(--text-primary)' }}>
+                  📧 Email: <a href="mailto:hr@connect2future.com" style={{ color: 'var(--text-primary)' }}>hr@connect2future.com</a>
                 </p>
-                <p style={{ color: '#000000' }}>
-                  📞 Phone: <a href="tel:+917019436720" style={{ color: '#000000' }}>+91 7019436720</a>
+                <p style={{ color: 'var(--text-primary)' }}>
+                  📞 Phone: <a href="tel:+917019436720" style={{ color: 'var(--text-primary)' }}>+91 7019436720</a>
                 </p>
               </div>
               <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -348,7 +348,7 @@ export default function HomePage() {
             </div>
 
             <div className="card" style={{ height: 'fit-content' }}>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: 12, color: '#000000' }}>What We Can Help With</h3>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: 12, color: 'var(--text-primary)' }}>What We Can Help With</h3>
               <ul style={{ listStyle: 'none', marginBottom: 0 }}>
                 {[
                   'College Partnership Inquiries',
@@ -356,8 +356,8 @@ export default function HomePage() {
                   'Internship Project Verification',
                   'Certification & Placement Support'
                 ].map((x, i) => (
-                  <li key={i} style={{ fontSize: '0.95rem', color: '#333333', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#000000' }}>✓</span>
+                  <li key={i} style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: 'var(--text-primary)' }}>✓</span>
                     {x}
                   </li>
                 ))}

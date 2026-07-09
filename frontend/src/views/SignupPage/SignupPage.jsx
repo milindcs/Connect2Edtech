@@ -253,11 +253,11 @@ export default function SignupPage() {
                 </label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <span className="field-label">Password Strength</span>
-                  <div style={{ background: 'rgba(0, 255, 0, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 14 }}>
-                    <div style={{ fontWeight: 700, marginBottom: 6, color: '#000000' }}>{passwordHint}</div>
+                  <div style={{ background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 14 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--text-primary)' }}>{passwordHint}</div>
                     <div style={{ display: 'flex', gap: 8 }} aria-label="password strength meter">
                       {[0, 1, 2, 3].map((i) => (
-                        <div key={i} style={{ height: 8, width: '25%', borderRadius: 999, background: passwordStrength > i ? 'linear-gradient(135deg, #000000, #000000)' : 'rgba(0, 0, 0, 0.1)', border: '1px solid rgba(0, 0, 0, 0.1)' }} />
+                        <div key={i} style={{ height: 8, width: '25%', borderRadius: 999, background: passwordStrength > i ? 'linear-gradient(135deg, #ec4899, #db2777)' : 'rgba(219, 39, 119, 0.1)', border: '1px solid rgba(219, 39, 119, 0.1)' }} />
                       ))}
                     </div>
                   </div>

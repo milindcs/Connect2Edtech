@@ -162,7 +162,7 @@ export default function EnrollmentPage() {
             <h3 style={{ fontSize: '1.4rem', marginBottom: 4 }}>Applicant Context</h3>
             
             {error && (
-              <div style={{ color: 'var(--error)', backgroundColor: '#fff5f5', padding: '12px 16px', borderRadius: 6, fontSize: '0.9rem', border: '1px solid var(--error)' }}>
+              <div style={{ color: 'var(--error)', backgroundColor: 'rgba(236, 72, 153, 0.08)', padding: '12px 16px', borderRadius: 6, fontSize: '0.9rem', border: '1px solid var(--error)' }}>
                 {error}
               </div>
             )}

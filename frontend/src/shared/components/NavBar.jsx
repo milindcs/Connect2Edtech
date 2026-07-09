@@ -42,7 +42,7 @@ export default function NavBar({ pathname }) {
                 {isAdmin && (
                   <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin</Link>
                 )}
-                <span style={{ fontSize: '0.9rem', color: '#333' }}>{user?.name}</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{user?.name}</span>
                 <button onClick={signout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Sign Out</button>
               </>
             ) : (

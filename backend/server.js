@@ -1,4 +1,4 @@
-to import express from 'express';
+import express from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
@@ -105,6 +105,57 @@ function adminAuth(req, res, next) {
   }
 }
 
+// One-time bootstrap: promote (or create) an admin account.
+// Guarded by ADMIN_BOOTSTRAP_SECRET env var. Disabled when the secret is unset.
+app.post('/api/admin/bootstrap', async (req, res) => {
+  try {
+    const secret = process.env.ADMIN_BOOTSTRAP_SECRET
+    if (!secret) {
+      return res.status(403).json({ ok: false, error: 'Bootstrap is disabled.' })
+    }
+    const { secret: providedSecret, email, name, phone, password } = req.body || {}
+    if (providedSecret !== secret) {
+      return res.status(403).json({ ok: false, error: 'Invalid secret.' })
+    }
+    if (!email) {
+      return res.status(400).json({ ok: false, error: 'email is required.' })
+    }
+
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+
+    const cleanEmail = String(email).trim()
+    const existing = await SignupSubmission.findOne({ email: cleanEmail })
+    if (existing) {
+      await SignupSubmission.updateOne(
+        { _id: existing._id },
+        { $set: { role: 'admin', verified: true } }
+      )
+      return res.json({ ok: true, message: `Promoted ${cleanEmail} to admin.`, created: false })
+    }
+
+    if (!password) {
+      return res.status(400).json({ ok: false, error: 'password is required to create a new admin.' })
+    }
+    const salt = await bcrypt.genSalt(10)
+    const passwordHash = await bcrypt.hash(password, salt)
+    await SignupSubmission.create({
+      name: name ? String(name).trim() : 'Admin',
+      email: cleanEmail,
+      phone: phone ? String(phone).trim() : '0000000000',
+      passwordHash,
+      role: 'admin',
+      verified: true,
+    })
+    return res.json({ ok: true, message: `Created admin ${cleanEmail}.`, created: true })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Bootstrap failed.' })
+  }
+})
+
 // MongoDB Models
 const SignupSubmissionSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -175,20 +226,22 @@ const Enrollment = mongoose.model('Enrollment', EnrollmentSchema);
 
 
 // MongoDB Connection
+import { getMongoUri, stopMemoryServer } from './config/mongo.js';
+
 let mongoConnectionPromise = null;
 
 async function connectMongo() {
   if (mongoose.connection.readyState === 1) return mongoose.connection;
   if (mongoConnectionPromise) return mongoConnectionPromise;
 
-  let uri = process.env.MONGODB_URI || process.env.MONGODB_LOCAL || 'mongodb://localhost:27017/connect2edtech';
+  const uri = await getMongoUri();
   mongoose.set('strictQuery', true);
 
   mongoConnectionPromise = mongoose.connect(uri, { serverSelectionTimeoutMS: 5000, socketTimeoutMS: 5000 })
     .then((m) => { console.log('[MongoDB] connected'); return m; })
     .catch((err) => {
       console.log('[MongoDB] connection failed:', err.message);
-      console.log('[MongoDB] hint: check Atlas IP whitelist, user/password, and cluster address.');
+      console.log('[MongoDB] hint: check Atlas IP whitelist, user/password, and cluster address. Set USE_MEMORY_DB=true for local dev.');
       mongoConnectionPromise = null;
       return null;
     });
@@ -432,6 +485,43 @@ app.get('/api/admin/users', adminAuth, async (req, res) => {
   }
 })
 
+// Admin - update a user's role (user <-> admin)
+app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { role } = req.body || {}
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({ ok: false, error: 'Invalid role. Use "user" or "admin".' })
+    }
+
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid user id.' })
+    }
+
+    const account = await SignupSubmission.findById(id)
+    if (!account) {
+      return res.status(404).json({ ok: false, error: 'User not found.' })
+    }
+
+    // Prevent an admin from removing their own admin access (lockout guard)
+    if (account._id.toString() === req.admin.userId && role !== 'admin') {
+      return res.status(400).json({ ok: false, error: 'You cannot remove your own admin role.' })
+    }
+
+    await SignupSubmission.updateOne({ _id: account._id }, { $set: { role } })
+
+    res.json({ ok: true, message: `Role updated to ${role}.`, user: { id: account._id.toString(), role } })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to update role.' })
+  }
+})
+
 // Contact - store in MongoDB + redirect to WhatsApp
 app.post('/api/contact', async (req, res) => {
   try {
@@ -632,6 +722,14 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
   });
+
+  const shutdown = async () => {
+    console.log('\n[Server] shutting down...');
+    await stopMemoryServer();
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 export default app;
