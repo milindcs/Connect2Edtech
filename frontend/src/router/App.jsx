@@ -14,6 +14,8 @@ import SignupPage from '../views/SignupPage/SignupPage'
 import SigninPage from '../views/SigninPage/SigninPage'
 import AdminDashboard from '../views/AdminDashboard/AdminDashboard'
 import UserDashboard from '../views/UserDashboard/UserDashboard'
+import StudentPage from '../views/StudentPage/StudentPage'
+import HrDashboard from '../views/HrDashboard/HrDashboard'
 
 export default function App() {
   return (
@@ -30,7 +32,9 @@ export default function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />
           <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/hr" element={<HrDashboard />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

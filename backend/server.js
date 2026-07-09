@@ -601,6 +601,51 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
   }
 })
 
+// HR - list all contact submissions
+app.get('/api/admin/contacts', adminAuth, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+    const items = await ContactSubmission.find({}).sort({ createdAt: -1 }).limit(100)
+    res.json({ ok: true, contacts: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch contacts.' })
+  }
+})
+
+// HR - list all enrollments
+app.get('/api/admin/enrollments', adminAuth, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+    const items = await Enrollment.find({}).sort({ createdAt: -1 }).limit(100)
+    res.json({ ok: true, enrollments: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch enrollments.' })
+  }
+})
+
+// HR - list all checkouts/orders
+app.get('/api/admin/checkouts', adminAuth, async (req, res) => {
+  try {
+    const conn = await connectMongo()
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' })
+    }
+    const items = await CartCheckout.find({}).sort({ createdAt: -1 }).limit(100)
+    res.json({ ok: true, checkouts: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch checkouts.' })
+  }
+})
+
 // Contact - store in MongoDB + redirect to WhatsApp
 app.post('/api/contact', async (req, res) => {
   try {
