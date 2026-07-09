@@ -788,9 +788,13 @@ const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
 app.use(express.static(FRONTEND_DIST));
 
 // SPA fallback for client-side routing
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ success: false, message: 'API endpoint not found' });
+  }
+  // Don't mask missing static assets with index.html — return 404 instead.
+  if (path.extname(req.path)) {
+    return res.status(404).send('Not found');
   }
   res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
 });

@@ -18,7 +18,6 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': { target: 'https://connect2edtech.onrender.com', changeOrigin: true },
-      '/send-certificate': { target: 'https://connect2edtech.onrender.com', changeOrigin: true },
     },
   },
   publicDir: 'public',
