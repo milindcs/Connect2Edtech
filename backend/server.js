@@ -11,6 +11,9 @@ import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
 import { createDocument, findOne, updateById, find, countDocuments, clearCollection } from './store.js';
 
+// Mongo-backed store functions are async; this server uses them as async where needed.
+
+
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
 

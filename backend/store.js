@@ -1,153 +1,134 @@
-import { randomUUID } from 'crypto';
+import { ObjectId } from 'mongodb';
+import { getDb } from './mongoClient.js';
 
-const collections = {};
-
-export function getCollection(name) {
-  if (!collections[name]) {
-    collections[name] = [];
-  }
-  return collections[name];
+function normalizeId(id) {
+  // If an id is an ObjectId-like string, convert it.
+  // Otherwise keep it as-is.
+  if (typeof id !== 'string') return id;
+  if (ObjectId.isValid(id)) return new ObjectId(id);
+  return id;
 }
 
-export function createDocument(collectionName, doc) {
-  const collection = getCollection(collectionName);
+function applySort(options = {}) {
+  if (!options.sort) return null;
+  // expects { sort: { createdAt: -1 } }
+  return options.sort;
+}
+
+function applyLimit(options = {}) {
+  if (typeof options.limit === 'number') return options.limit;
+  return null;
+}
+
+function toMongoQuery(query = {}) {
+  const mongoQuery = {};
+  for (const [k, v] of Object.entries(query || {})) {
+    if (v instanceof RegExp) {
+      mongoQuery[k] = v;
+    } else if (k === '_id') {
+      mongoQuery[k] = normalizeId(v);
+    } else {
+      mongoQuery[k] = v;
+    }
+  }
+  return mongoQuery;
+}
+
+async function getCollection(collectionName) {
+  const db = await getDb();
+  return db.collection(collectionName);
+}
+
+export async function createDocument(collectionName, doc) {
+  const coll = await getCollection(collectionName);
+  const now = new Date();
   const newDoc = {
     ...doc,
-    _id: typeof randomUUID === 'function' ? randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    createdAt: doc.createdAt || new Date(),
+    createdAt: doc.createdAt || now,
   };
-  collection.push(newDoc);
-  return newDoc;
+  const res = await coll.insertOne(newDoc);
+  return { ...newDoc, _id: res.insertedId };
 }
 
-export function findById(collectionName, id) {
-  const collection = getCollection(collectionName);
-  return collection.find((doc) => doc._id === id) || null;
+export async function findById(collectionName, id) {
+  const coll = await getCollection(collectionName);
+  const _id = normalizeId(id);
+  const doc = await coll.findOne({ _id });
+  return doc || null;
 }
 
-export function findOne(collectionName, query) {
-  const collection = getCollection(collectionName);
-  return collection.find((doc) => {
-    return Object.keys(query).every((key) => {
-      if (query[key] instanceof RegExp) {
-        return query[key].test(String(doc[key] || ''));
-      }
-      return doc[key] === query[key];
-    });
-  }) || null;
+export async function findOne(collectionName, query) {
+  const coll = await getCollection(collectionName);
+  const mongoQuery = toMongoQuery(query);
+  return coll.findOne(mongoQuery);
 }
 
-export function find(collectionName, query = {}, options = {}) {
-  let collection = getCollection(collectionName);
+export async function find(collectionName, query = {}, options = {}) {
+  const coll = await getCollection(collectionName);
+  const mongoQuery = toMongoQuery(query);
 
-  if (query && Object.keys(query).length > 0) {
-    collection = collection.filter((doc) => {
-      return Object.keys(query).every((key) => {
-        const val = query[key];
-        if (val instanceof RegExp) {
-          return val.test(String(doc[key] || ''));
-        }
-        return doc[key] === val;
-      });
-    });
+  let cursor = coll.find(mongoQuery);
+
+  const sort = applySort(options);
+  if (sort) cursor = cursor.sort(sort);
+
+  const limit = applyLimit(options);
+  if (limit) cursor = cursor.limit(limit);
+
+  return cursor.toArray();
+}
+
+export async function updateOne(collectionName, query, update) {
+  const coll = await getCollection(collectionName);
+  const mongoQuery = toMongoQuery(query);
+  const updateDoc = update?.$set ? update : { $set: update || {} };
+
+  const res = await coll.findOneAndUpdate(mongoQuery, updateDoc, { returnDocument: 'after' });
+  return res.value || null;
+}
+
+export async function updateById(collectionName, id, update) {
+  const coll = await getCollection(collectionName);
+  const _id = normalizeId(id);
+  const updateDoc = update?.$set ? update : { $set: update || {} };
+
+  const res = await coll.findOneAndUpdate({ _id }, updateDoc, { returnDocument: 'after' });
+  return res.value || null;
+}
+
+export async function deleteOne(collectionName, query) {
+  const coll = await getCollection(collectionName);
+  const mongoQuery = toMongoQuery(query);
+  const res = await coll.deleteOne(mongoQuery);
+  return res.deletedCount > 0;
+}
+
+export async function deleteMany(collectionName, query = {}) {
+  const coll = await getCollection(collectionName);
+  const mongoQuery = toMongoQuery(query);
+  if (!query || Object.keys(query).length === 0) {
+    const count = await coll.countDocuments({});
+    await coll.deleteMany({});
+    return count;
   }
-
-  if (options.sort) {
-    const sortKey = Object.keys(options.sort)[0];
-    const sortDir = options.sort[sortKey];
-    collection = [...collection].sort((a, b) => {
-      const aVal = a[sortKey] || '';
-      const bVal = b[sortKey] || '';
-      if (aVal < bVal) return sortDir === -1 ? 1 : -1;
-      if (aVal > bVal) return sortDir === -1 ? -1 : 1;
-      return 0;
-    });
-  }
-
-  if (typeof options.limit === 'number') {
-    collection = collection.slice(0, options.limit);
-  }
-
-  return collection;
+  const res = await coll.deleteMany(mongoQuery);
+  return res.deletedCount || 0;
 }
 
-export function updateOne(collectionName, query, update) {
-  const collection = getCollection(collectionName);
-  const index = collection.findIndex((doc) => {
-    return Object.keys(query).every((key) => doc[key] === query[key]);
-  });
-
-  if (index === -1) return null;
-
-  const existing = collection[index];
-  const $set = update.$set || {};
-
-  if (Object.keys(query).length === 1 && Object.keys(query)[0] === '_id') {
-    collection[index] = { ...existing, ...$set, _id: existing._id };
-    return collection[index];
-  }
-
-  collection[index] = { ...existing, ...$set };
-  return collection[index];
+export async function countDocuments(collectionName, query = {}) {
+  const coll = await getCollection(collectionName);
+  const mongoQuery = toMongoQuery(query);
+  return coll.countDocuments(mongoQuery);
 }
 
-export function updateById(collectionName, id, update) {
-  const collection = getCollection(collectionName);
-  const index = collection.findIndex((doc) => doc._id === id);
-
-  if (index === -1) return null;
-
-  const existing = collection[index];
-  const $set = update.$set || update;
-
-  collection[index] = { ...existing, ...$set, _id: existing._id };
-  return collection[index];
+export async function clearCollection(collectionName) {
+  const coll = await getCollection(collectionName);
+  await coll.deleteMany({});
 }
 
-export function deleteOne(collectionName, query) {
-  const collection = getCollection(collectionName);
-  const index = collection.findIndex((doc) => {
-    return Object.keys(query).every((key) => doc[key] === query[key]);
-  });
-
-  if (index === -1) return false;
-
-  collection.splice(index, 1);
-  return true;
+export async function clearAll() {
+  const db = await getDb();
+  const collections = await db.listCollections().toArray();
+  await Promise.all(collections.map((c) => db.collection(c.name).deleteMany({})));
 }
 
-export function deleteMany(collectionName, query = {}) {
-  const collection = getCollection(collectionName);
-  if (Object.keys(query).length === 0) {
-    const removed = collection.length;
-    collections[collectionName] = [];
-    return removed;
-  }
-
-  const removed = collection.filter((doc) => {
-    return Object.keys(query).every((key) => doc[key] === query[key]);
-  }).length;
-
-  collections[collectionName] = collection.filter((doc) => {
-    return !Object.keys(query).every((key) => doc[key] === query[key]);
-  });
-
-  return removed;
-}
-
-export function countDocuments(collectionName, query = {}) {
-  if (Object.keys(query).length === 0) {
-    return getCollection(collectionName).length;
-  }
-  return find(collectionName, query).length;
-}
-
-export function clearCollection(collectionName) {
-  collections[collectionName] = [];
-}
-
-export function clearAll() {
-  Object.keys(collections).forEach((key) => {
-    collections[key] = [];
-  });
-}

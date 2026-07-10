@@ -38,8 +38,9 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
 
       let existing = null;
       try {
-        const results = connectStore('signups', { email: String(email).trim() });
+        const results = await connectStore('signups', { email: String(email).trim() });
         existing = results.length > 0 ? results[0] : null;
+
       } catch {
         existing = null;
       }
@@ -48,11 +49,12 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
         if (existing.verified) {
           return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
         }
-        updateById('signups', existing._id, {
+        await updateById('signups', existing._id, {
           $set: { name: trimmed(name), phone: trimmed(phone), whatsappNumber: linkedWhatsapp, passwordHash, role: accountRole, otp, otpExpiry }
         });
+
       } else {
-        createDocument('signups', {
+        await createDocument('signups', {
           name: trimmed(name),
           email: String(email).trim(),
           phone: trimmed(phone),
@@ -62,6 +64,7 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
           otp,
           otpExpiry,
         });
+
       }
 
       try {

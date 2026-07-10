@@ -14,8 +14,9 @@ export function createSigninRouter({ findOne, signJwt }) {
       }
 
       const safe = String(email).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const account = findOne('signups', { email: new RegExp('^' + safe + '$', 'i') });
+      const account = await findOne('signups', { email: new RegExp('^' + safe + '$', 'i') });
       if (!account) {
+
         return res.status(401).json({ ok: false, error: 'No account found for this email. Please sign up first.' });
       }
 

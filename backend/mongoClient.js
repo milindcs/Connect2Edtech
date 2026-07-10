@@ -1,0 +1,40 @@
+import { MongoClient } from 'mongodb';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const uri = process.env.MONGODB_URI || process.env.MONGODB_URL || '';
+if (!uri) {
+  // Don’t throw at import-time in case some environments don’t use DB.
+  // Consumers will throw when connecting.
+  console.warn('[mongoClient] Missing MONGODB_URI/MONGODB_URL');
+}
+
+let clientPromise;
+
+export function getMongoClient() {
+  if (!clientPromise) {
+    if (!uri) {
+      throw new Error('Missing MONGODB_URI (or MONGODB_URL) in environment');
+    }
+
+    const client = new MongoClient(uri, {
+      // Safe defaults for common hosted Mongo setups
+      maxPoolSize: 10,
+    });
+
+    clientPromise = client.connect().then(() => client);
+  }
+
+  return clientPromise;
+}
+
+export async function getDb() {
+  const client = await getMongoClient();
+
+  // If DB name is provided in the URI, mongodb will expose it as client.db().
+  // Otherwise, fall back to env DB_NAME.
+  const dbName = process.env.MONGODB_DB_NAME;
+  return dbName ? client.db(dbName) : client.db();
+}
+
