@@ -47,7 +47,7 @@ export default function HrDashboard() {
       setLoading(true)
 
       // Try to load from cache first
-      const cached = getCachedData()
+      const cached = getCachedData(CACHE_KEY)
       if (cached) {
         if (!cancelled) {
           setStats(cached.stats || null)
@@ -91,7 +91,7 @@ export default function HrDashboard() {
           setCheckouts(dashboardData.checkouts)
 
           // Cache the data
-          setCachedData(dashboardData)
+          setCachedData(CACHE_KEY, dashboardData)
         }
       } catch (err) {
         if (!cancelled) {

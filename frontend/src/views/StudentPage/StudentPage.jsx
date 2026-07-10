@@ -44,7 +44,7 @@ export default function StudentPage() {
       setLoading(true)
 
       // Try to load from cache first
-      const cached = getCachedData()
+      const cached = getCachedData(CACHE_KEY)
       if (cached) {
         if (!cancelled) {
           setEnrollments(cached.enrollments || [])
@@ -87,7 +87,7 @@ export default function StudentPage() {
           setCart(portalData.cart)
 
           // Cache the data
-          setCachedData(portalData)
+          setCachedData(CACHE_KEY, portalData)
         }
       } catch (err) {
         if (!cancelled) {

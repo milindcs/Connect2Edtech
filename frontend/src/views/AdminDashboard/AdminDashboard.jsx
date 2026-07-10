@@ -8,6 +8,8 @@ import DataTable from '../shared/dashboard/DataTable'
 import ChartCards from '../shared/dashboard/ChartCards'
 
 
+const CACHE_KEY = 'admin_dashboard_cache'
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const { isAdmin, isAuthenticated, token, user, signout } = useAuth()
@@ -39,7 +41,7 @@ export default function AdminDashboard() {
 
     const run = async () => {
       // Try to load from cache first
-      const cached = getCachedData()
+      const cached = getCachedData(CACHE_KEY)
       if (cached) {
         if (!cancelled) {
           setUsers(cached.users || [])
@@ -58,7 +60,7 @@ export default function AdminDashboard() {
         if (!cancelled) {
           setUsers(data.users || [])
           // Cache the data
-          setCachedData({
+          setCachedData(CACHE_KEY, {
             users: data.users || [],
             stats: stats
           })
@@ -92,9 +94,9 @@ export default function AdminDashboard() {
         if (!cancelled) {
           setStats(data.stats)
           // Update cache with new stats
-          const cached = getCachedData()
+          const cached = getCachedData(CACHE_KEY)
           if (cached) {
-            setCachedData({
+            setCachedData(CACHE_KEY, {
               ...cached,
               stats: data.stats
             })
