@@ -38,7 +38,7 @@ app.use(
   })
 );
 
-app.options('*', cors());
+app.options('{*splat}', cors());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -560,7 +560,7 @@ app.post('/api/checkout/submit', async (req, res) => {
 const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
 app.use(express.static(FRONTEND_DIST));
 
-app.get('/*', (req, res) => {
+app.get('{*splat}', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ success: false, message: 'API endpoint not found' });
   }
