@@ -133,6 +133,7 @@ export function AuthProvider({ children }) {
     role: user?.role || 'user',
     isAuthenticated: Boolean(token && user),
     isAdmin: user?.role === 'admin',
+    isStaff: user?.role === 'admin' || user?.role === 'hr',
     signup,
     verifyOtp,
     resendOtp,

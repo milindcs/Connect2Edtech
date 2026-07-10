@@ -16,8 +16,7 @@ function formatDate(value) {
 
 export default function MailPage() {
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, user, token, signout } = useAuth()
-  const isStaff = isAdmin || user?.role === 'hr'
+  const { isAdmin, isAuthenticated, isStaff, user, token, signout } = useAuth()
 
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)

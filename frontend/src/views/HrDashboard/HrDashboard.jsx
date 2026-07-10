@@ -17,8 +17,7 @@ const CACHE_KEY = 'hr_dashboard_cache'
 
 export default function HrDashboard() {
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, token, user, signout } = useAuth()
-  const isStaff = isAdmin || user?.role === 'hr'
+  const { isAdmin, isAuthenticated, isStaff, token, user, signout } = useAuth()
   const [contacts, setContacts] = useState([])
   const [enrollments, setEnrollments] = useState([])
   const [checkouts, setCheckouts] = useState([])
