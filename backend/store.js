@@ -33,10 +33,18 @@ function toMongoQuery(query = {}) {
   return mongoQuery;
 }
 
+// getDb() is defined in backend/mongoClient.js
+import { getDb } from './mongoClient.js';
+
+// Re-export for backward compatibility (server.js imports getDb from ./store.js).
+export { getDb };
+
 async function getCollection(collectionName) {
   const db = await getDb();
   return db.collection(collectionName);
 }
+
+
 
 export async function createDocument(collectionName, doc) {
   const coll = await getCollection(collectionName);

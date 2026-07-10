@@ -40,11 +40,14 @@ export function createMailRouter({ findOne, updateById, find, sendEmail }) {
       const text = `${body}\n\n— ${fromName}, Connect2Edtech`;
       const html = `<p>${body.replace(/\n/g, '<br/>')}</p><p>— ${fromName}, Connect2Edtech</p>`;
 
+      // Record the reply even if the outbound email fails, so staff always
+      // see it in the inbox. The email send is best-effort.
+      let emailSent = true;
       try {
         await sendEmail({ to: contact.email, subject: String(subject).trim(), text, html });
       } catch (mailErr) {
-        console.error('[Mail] reply failed:', mailErr?.message || mailErr);
-        return res.status(502).json({ ok: false, error: 'Failed to send reply email.' });
+        emailSent = false;
+        console.error('[Mail] reply email failed (reply still recorded):', mailErr?.message || mailErr);
       }
 
       const updated = await updateById('contacts', id, {
@@ -52,7 +55,12 @@ export function createMailRouter({ findOne, updateById, find, sendEmail }) {
         replied: true,
       })
 
-      res.json({ ok: true, message: 'Reply sent.', contact: updated });
+      res.json({
+        ok: true,
+        message: emailSent ? 'Reply sent.' : 'Reply recorded, but the email could not be sent.',
+        emailSent,
+        contact: updated,
+      });
     } catch (e) {
       console.error(e);
       res.status(500).json({ ok: false, error: 'Failed to send reply.' });

@@ -1483,6 +1483,29 @@ input:focus, select:focus, textarea:focus {
   background: rgba(0, 0, 0, 0.05);
 }
 
+/* Call to Action Button */
+.cta-button {
+  background-color: #e91e63; /* Your brand pink */
+  color: #ffffff;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+/* Ensure keyboard users see where they are */
+.cta-button:focus {
+  outline: 3px solid #000000; /* High visibility focus indicator */
+  outline-offset: 2px;
+}
+
+/* Hover state for mouse users */
+.cta-button:hover {
+  background-color: #c2185b; /* Darker shade for feedback */
+}
+
 /* Floating WhatsApp Button Override */
 .whatsapp-floating-cta {
   position: fixed;

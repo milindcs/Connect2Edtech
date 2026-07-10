@@ -1,51 +1,50 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
+import { isValidEmail } from '../../shared/authValidation'
+
+const STORAGE_KEY = 'signin_form_data'
+
+function dashboardForRole(role) {
+  return role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+}
 
 export default function SigninPage() {
   const navigate = useNavigate()
-  const { signin, isAuthenticated, isAdmin, user, resendOtp } = useAuth()
+  const { signin, isAuthenticated, user, resendOtp } = useAuth()
+
   const [toasts, setToasts] = useState([])
+  const [formData, setFormData] = useState(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+      return { email: parsed.email || '', password: '' }
+    } catch {
+      return { email: '', password: '' }
+    }
+  })
+
+  const [errors, setErrors] = useState({})
   const [showResend, setShowResend] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
-  const [isResending, setIsResending] = useState(false)
-  
-  // Initialize state from local storage or fallback to empty values
-  const [formData, setFormData] = useState(() => {
-    const saved = localStorage.getItem('signin_form_data')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        // Secure choice: Don't persist passwords across browser sessions
-        return { email: parsed.email || '', password: '' }
-      } catch (e) {
-        // Fallback if parsing fails
-      }
-    }
-    return { email: '', password: '' }
-  })
-  
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isResending, setIsResending] = useState(false)
 
   useEffect(() => {
     document.title = 'Sign In - Connect2Edtech'
   }, [])
 
-  // Sync form modifications to localStorage
   useEffect(() => {
-    localStorage.setItem('signin_form_data', JSON.stringify({ email: formData.email }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: formData.email }))
   }, [formData.email])
 
   useEffect(() => {
     if (!isAuthenticated) return
-    const role = user?.role
-    const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
-    localStorage.removeItem('signin_form_data') // Clear on successful login
-    navigate(target)
+    localStorage.removeItem(STORAGE_KEY)
+    navigate(dashboardForRole(user?.role))
   }, [isAuthenticated, user?.role, navigate])
 
   const showToast = (message, type = 'success') => {
-    const id = Date.now()
+    const id = Date.now() + Math.random()
     setToasts((prev) => [...prev, { id, message, type }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
@@ -55,6 +54,7 @@ export default function SigninPage() {
   const setField = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
   const handleResend = async () => {
@@ -74,24 +74,22 @@ export default function SigninPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const email = formData.email.trim()
-    const password = formData.password
-
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      showToast('Please enter a valid email address.', 'error')
-      return
-    }
-    if (!password) {
-      showToast('Please enter your password.', 'error')
+    const nextErrors = {}
+    if (!isValidEmail(email)) nextErrors.email = 'Please enter a valid email address.'
+    if (!formData.password) nextErrors.password = 'Please enter your password.'
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
       return
     }
 
     setIsSubmitting(true)
     try {
-      await signin(email, password)
+      await signin(email, formData.password)
       showToast('Signed in! Redirecting...', 'success')
     } catch (err) {
-      showToast(err.message || 'Could not sign in. Please try again.', 'error')
-      if (err.message?.includes('verify your email')) {
+      const message = err.message || 'Could not sign in. Please try again.'
+      showToast(message, 'error')
+      if (message.toLowerCase().includes('verify')) {
         setResendEmail(email)
         setShowResend(true)
       }
@@ -111,15 +109,35 @@ export default function SigninPage() {
             Sign in to continue your journey on Connect2Edtech.
           </p>
 
-          <form className="form-grid" onSubmit={handleSubmit} aria-label="Sign in form">
+          <form className="form-grid" onSubmit={handleSubmit} noValidate aria-label="Sign in form">
             <label>
               <span className="field-label">Email Address</span>
-              <input name="email" required type="email" placeholder="you@example.com" value={formData.email} onChange={setField} autoComplete="email" />
+              <input
+                name="email"
+                required
+                type="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={setField}
+                autoComplete="email"
+                className={errors.email ? 'input-error' : ''}
+              />
+              {errors.email && <span className="field-error">{errors.email}</span>}
             </label>
 
             <label>
               <span className="field-label">Password</span>
-              <input name="password" required type="password" placeholder="Enter your password" value={formData.password} onChange={setField} autoComplete="current-password" />
+              <input
+                name="password"
+                required
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={setField}
+                autoComplete="current-password"
+                className={errors.password ? 'input-error' : ''}
+              />
+              {errors.password && <span className="field-error">{errors.password}</span>}
             </label>
 
             <div className="form-actions" style={{ marginTop: 6 }}>
@@ -133,7 +151,9 @@ export default function SigninPage() {
 
             {showResend && (
               <div style={{ marginTop: 16, padding: 16, background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
-                <p style={{ marginBottom: 8, fontSize: '0.9rem' }}>Didn't receive the code? Resend verification email.</p>
+                <p style={{ marginBottom: 8, fontSize: '0.9rem' }}>
+                  Your email isn't verified yet. Didn't receive the code? Resend verification email.
+                </p>
                 <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
                   {isResending ? 'Resending…' : 'Resend Verification Code'}
                 </button>

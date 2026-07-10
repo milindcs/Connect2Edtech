@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+import dns from 'node:dns';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,6 +7,16 @@ import { fileURLToPath } from 'url';
 // Load .env from backend directory
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Some sandboxed/dev environments point Node's DNS resolver at an unreachable
+// 127.0.0.1. Allow overriding it via DNS_SERVERS (comma-separated). Left unset
+// in production where the system resolver is correct.
+if (process.env.DNS_SERVERS) {
+  const servers = process.env.DNS_SERVERS.split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (servers.length) dns.setServers(servers);
+}
 
 const uri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOURI || '';
 if (!uri) {

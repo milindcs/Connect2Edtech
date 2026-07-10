@@ -73,6 +73,24 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
         console.error('[Mail] OTP send failed:', mailErr?.message || mailErr);
       }
 
+      // Also store a raw signup submission (without password/OTP)
+      try {
+        const ipAddress = (req.headers?.['x-forwarded-for']?.toString()?.split(',')?.[0]?.trim() || req.ip || '').toString();
+        await createDocument('signupsubmissions', {
+          name: trimmed(name),
+          email: String(email).trim(),
+          phone: trimmed(phone),
+          whatsappNumber: linkedWhatsapp,
+          connectWhatsapp: !!connectWhatsapp,
+          role: accountRole,
+          hostname: process.env.HOSTNAME || '',
+          ip: ipAddress,
+        });
+      } catch (subErr) {
+        // Do not break signup if submission logging fails.
+        console.error('[SignupSubmissions] failed:', subErr?.message || subErr);
+      }
+
       res.json({ ok: true, message: 'Account created. Verification code sent to your email.', requiresVerification: true });
     } catch (e) {
       console.error(e);

@@ -2,47 +2,75 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
 import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
+import {
+  validateSignup,
+  passwordStrength,
+  ALLOWED_ROLES,
+} from '../../shared/authValidation'
+
+const STORAGE_KEYS = {
+  form: 'signup_form_data',
+  whatsapp: 'signup_connect_whatsapp',
+  verification: 'signup_requires_verification',
+  email: 'signup_registered_email',
+}
+
+const ROLE_OPTIONS = [
+  { value: 'user', label: 'Student / Learner' },
+  { value: 'hr', label: 'HR / Recruiter' },
+  { value: 'admin', label: 'Admin' },
+]
+
+function dashboardForRole(role) {
+  return role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+}
+
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
 
 export default function SignupPage() {
   const navigate = useNavigate()
-  const { signin, signup, verifyOtp, resendOtp, isAuthenticated, user } = useAuth()
-  const [toasts, setToasts] = useState([])
-  const [mode, setMode] = useState('signup')
+  const { signup, verifyOtp, resendOtp, isAuthenticated, user } = useAuth()
 
-  const dashboardForRole = (r) => (r === 'admin' ? '/admin' : r === 'hr' ? '/hr' : '/student')
+  const [toasts, setToasts] = useState([])
+  const [step, setStep] = useState('form') // 'form' | 'verify'
 
   const [formData, setFormData] = useState(() => {
-    const saved = localStorage.getItem('signup_form_data')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        return { ...parsed, password: '', confirmPassword: '', role: parsed.role || 'user' }
-      } catch (e) {}
+    const saved = readJson(STORAGE_KEYS.form, null)
+    return {
+      name: saved?.name || '',
+      email: saved?.email || '',
+      phone: saved?.phone || '',
+      role: ALLOWED_ROLES.includes(saved?.role) ? saved.role : 'user',
+      whatsappNumber: saved?.whatsappNumber || '',
+      password: '',
+      confirmPassword: '',
     }
-    return { name: '', email: '', phone: '', whatsapp: '', password: '', confirmPassword: '', role: 'user' }
   })
 
-  const [connectWhatsapp, setConnectWhatsapp] = useState(() => {
-    const saved = localStorage.getItem('signup_connect_whatsapp')
-    return saved !== null ? JSON.parse(saved) : true
-  })
+  const [connectWhatsapp, setConnectWhatsapp] = useState(
+    readJson(STORAGE_KEYS.whatsapp, true)
+  )
 
-  const [requiresVerification, setRequiresVerification] = useState(() => {
-    return JSON.parse(localStorage.getItem('signup_requires_verification')) || false
-  })
+  const [registeredEmail, setRegisteredEmail] = useState(
+    localStorage.getItem(STORAGE_KEYS.email) || ''
+  )
 
-  const [registeredEmail, setRegisteredEmail] = useState(() => {
-    return localStorage.getItem('signup_registered_email') || ''
-  })
-
+  const [errors, setErrors] = useState({})
   const [otp, setOtp] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
 
   useEffect(() => {
-    document.title = mode === 'signup' ? 'Sign Up - Connect2Edtech' : 'Sign In - Connect2Edtech'
-  }, [mode])
+    document.title = 'Sign Up - Connect2Edtech'
+  }, [])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -52,31 +80,28 @@ export default function SignupPage() {
   }, [isAuthenticated, navigate, user?.role])
 
   useEffect(() => {
-    const { password, confirmPassword, ...serializableData } = formData
-    localStorage.setItem('signup_form_data', JSON.stringify(serializableData))
+    const { password, confirmPassword, ...rest } = formData
+    localStorage.setItem(STORAGE_KEYS.form, JSON.stringify(rest))
   }, [formData])
 
   useEffect(() => {
-    localStorage.setItem('signup_connect_whatsapp', JSON.stringify(connectWhatsapp))
+    localStorage.setItem(STORAGE_KEYS.whatsapp, JSON.stringify(connectWhatsapp))
   }, [connectWhatsapp])
 
   useEffect(() => {
-    localStorage.setItem('signup_requires_verification', JSON.stringify(requiresVerification))
-  }, [requiresVerification])
+    localStorage.setItem(STORAGE_KEYS.verification, JSON.stringify(step === 'verify'))
+  }, [step])
 
   useEffect(() => {
-    localStorage.setItem('signup_registered_email', registeredEmail)
+    localStorage.setItem(STORAGE_KEYS.email, registeredEmail)
   }, [registeredEmail])
 
-  const clearSignupStorage = () => {
-    localStorage.removeItem('signup_form_data')
-    localStorage.removeItem('signup_connect_whatsapp')
-    localStorage.removeItem('signup_requires_verification')
-    localStorage.removeItem('signup_registered_email')
+  function clearSignupStorage() {
+    Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k))
   }
 
   const showToast = (message, type = 'success') => {
-    const id = Date.now()
+    const id = Date.now() + Math.random()
     setToasts((prev) => [...prev, { id, message, type }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
@@ -86,52 +111,23 @@ export default function SignupPage() {
   const setField = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
-  const passwordStrength = useMemo(() => {
-    const p = formData.password || ''
-    let score = 0
-    if (p.length >= 8) score += 1
-    if (/[A-Z]/.test(p)) score += 1
-    if (/[0-9]/.test(p)) score += 1
-    if (/[^A-Za-z0-9]/.test(p)) score += 1
-    return score
-  }, [formData.password])
-
-  const passwordHint = useMemo(() => {
-    if (!formData.password) return 'Use at least 8 characters.'
-    if (passwordStrength <= 1) return 'Add uppercase, numbers, or symbols to strengthen.'
-    if (passwordStrength === 2) return 'Good start—consider adding a symbol.'
-    if (passwordStrength >= 3) return 'Strong password.'
-    return 'Good.'
-  }, [formData.password, passwordStrength])
-
-  const validateSignup = () => {
-    const name = formData.name.trim()
-    const email = formData.email.trim()
-    const phone = formData.phone.trim()
-    const whatsapp = formData.whatsapp.trim()
-    const password = formData.password
-    const confirmPassword = formData.confirmPassword
-
-    if (name.length < 2) return 'Please enter your full name.'
-    if (!/^\S+@\S+\.\S+$/.test(email)) return 'Please enter a valid email address.'
-    const digits = phone.replace(/\D/g, '')
-    if (digits.length < 10 || digits.length > 15) return 'Please enter a valid phone number.'
-    if (connectWhatsapp) {
-      const waDigits = (whatsapp || phone).replace(/\D/g, '')
-      if (waDigits.length < 10 || waDigits.length > 15) return 'Please enter a valid WhatsApp number.'
-    }
-    if (password.length < 8) return 'Password must be at least 8 characters.'
-    if (password !== confirmPassword) return 'Passwords do not match.'
-    return null
-  }
+  const strength = useMemo(
+    () => passwordStrength(formData.password),
+    [formData.password]
+  )
 
   const handleSignup = async (e) => {
     e.preventDefault()
-    const err = validateSignup()
-    if (err) {
-      showToast(err, 'error')
+    const validation = validateSignup({
+      ...formData,
+      connectWhatsapp,
+    })
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation)
+      showToast('Please fix the highlighted fields.', 'error')
       return
     }
 
@@ -141,14 +137,18 @@ export default function SignupPage() {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        whatsapp: connectWhatsapp ? (formData.whatsapp.trim() || formData.phone.trim()) : '',
+        whatsappNumber: connectWhatsapp
+          ? (formData.whatsappNumber.trim() || formData.phone.trim())
+          : '',
         connectWhatsapp,
         role: formData.role,
         password: formData.password,
       })
+
       if (data.requiresVerification) {
-        setRequiresVerification(true)
         setRegisteredEmail(formData.email.trim())
+        setStep('verify')
+        setOtp('')
         showToast('Account created. Verification code sent to your email.', 'success')
         const msg = [
           'Hello Connect2Edtech! I just signed up.',
@@ -186,10 +186,11 @@ export default function SignupPage() {
   }
 
   const handleResend = async () => {
+    if (!registeredEmail) return
     setIsResending(true)
     try {
       await resendOtp(registeredEmail)
-      showToast('New verification code sent.', 'success')
+      showToast('New verification code sent to your email.', 'success')
     } catch (err) {
       showToast(err.message || 'Could not resend code.', 'error')
     } finally {
@@ -197,238 +198,232 @@ export default function SignupPage() {
     }
   }
 
-  const handleSignin = async (e) => {
-    e.preventDefault()
-    const email = formData.email.trim()
-    const password = formData.password
-
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      showToast('Please enter a valid email address.', 'error')
-      return
-    }
-    if (!password) {
-      showToast('Please enter your password.', 'error')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      await signin(email, password)
-      showToast('Signed in! Redirecting...', 'success')
-      clearSignupStorage()
-    } catch (err) {
-      showToast(err.message || 'Could not sign in. Please try again.', 'error')
-      if (err.message?.includes('verify your email')) {
-        setResendEmail(email)
-        setShowResend(true)
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
+  const goToForm = () => {
+    setStep('form')
+    setOtp('')
+    setErrors({})
+    clearSignupStorage()
   }
-
-  const [showResend, setShowResend] = useState(false)
-  const [resendEmail, setResendEmail] = useState('')
 
   return (
     <div className="enroll-wrap">
       <div className="container">
         <div className="enroll-card">
-          <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 8 }}>
-            {mode === 'signup' ? 'Create your account' : 'Welcome back'}
-          </h2>
-          <p className="section-subtitle" style={{ marginBottom: 28 }}>
-            {mode === 'signup'
-              ? 'Sign up to get updates and continue your journey on Connect2Edtech.'
-              : 'Sign in to continue your learning journey.'}
-          </p>
+          {step === 'form' ? (
+            <>
+              <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 8 }}>
+                Create your account
+              </h2>
+              <p className="section-subtitle" style={{ marginBottom: 28 }}>
+                Sign up to get updates and continue your journey on Connect2Edtech.
+              </p>
 
-          <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-            <button
-              type="button"
-              className={mode === 'signup' ? 'btn primary' : 'btn secondary'}
-              onClick={() => { setMode('signup'); setRequiresVerification(false); setOtp(''); setRegisteredEmail(''); }}
-              style={{ flex: 1 }}
-            >
-              Create Account
-            </button>
-            <button
-              type="button"
-              className={mode === 'signin' ? 'btn primary' : 'btn secondary'}
-              onClick={() => setMode('signin')}
-              style={{ flex: 1 }}
-            >
-              Sign In
-            </button>
-          </div>
+              <form className="form-grid" onSubmit={handleSignup} noValidate aria-label="Signup form">
+                <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  <label>
+                    <span className="field-label">Full Name</span>
+                    <input
+                      name="name"
+                      required
+                      placeholder="Enter your full name"
+                      value={formData.name}
+                      onChange={setField}
+                      autoComplete="name"
+                      className={errors.name ? 'input-error' : ''}
+                    />
+                    {errors.name && <span className="field-error">{errors.name}</span>}
+                  </label>
+                  <label>
+                    <span className="field-label">Phone Number</span>
+                    <input
+                      name="phone"
+                      required
+                      placeholder="+91 7019436720"
+                      value={formData.phone}
+                      onChange={setField}
+                      autoComplete="tel"
+                      className={errors.phone ? 'input-error' : ''}
+                    />
+                    {errors.phone && <span className="field-error">{errors.phone}</span>}
+                  </label>
+                </div>
 
-          {mode === 'signup' && !requiresVerification ? (
-            <form className="form-grid" onSubmit={handleSignup} aria-label="Signup form">
-              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <label>
-                  <span className="field-label">Full Name</span>
-                  <input name="name" required placeholder="Enter your full name" value={formData.name} onChange={setField} autoComplete="name" />
-                </label>
-                <label>
-                  <span className="field-label">Phone Number</span>
-                  <input name="phone" required placeholder="+91 7019436720" value={formData.phone} onChange={setField} autoComplete="tel" />
-                </label>
-              </div>
-
-              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                 <label>
                   <span className="field-label">I am a</span>
                   <select name="role" value={formData.role} onChange={setField}>
-                    <option value="user">Student / Learner</option>
-                    <option value="hr">HR / Recruiter</option>
-                    <option value="admin">Admin</option>
+                    {ROLE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </label>
-              </div>
 
-              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                 <label>
                   <span className="field-label">WhatsApp Number</span>
                   <input
-                    name="whatsapp"
+                    name="whatsappNumber"
                     placeholder={connectWhatsapp ? 'Same as phone (or enter another)' : '+91 7019436720'}
-                    value={formData.whatsapp}
+                    value={formData.whatsappNumber}
                     onChange={setField}
                     autoComplete="tel"
+                    disabled={!connectWhatsapp}
+                    className={errors.whatsappNumber ? 'input-error' : ''}
                   />
+                  {errors.whatsappNumber && (
+                    <span className="field-error">{errors.whatsappNumber}</span>
+                  )}
                 </label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <span className="field-label">Connect WhatsApp</span>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
-                    <input
-                      type="checkbox"
-                      checked={connectWhatsapp}
-                      onChange={(e) => setConnectWhatsapp(e.target.checked)}
-                      style={{ width: 'auto' }}
-                    />
-                    Link my WhatsApp number to this email
-                  </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={connectWhatsapp}
+                    onChange={(e) => setConnectWhatsapp(e.target.checked)}
+                    style={{ width: 'auto' }}
+                  />
+                  Link my WhatsApp number to this email for course updates
+                </label>
+                <div className="hint" style={{ marginTop: -8 }}>
+                  Your WhatsApp number is linked to your email so we can reach you with course updates.
                 </div>
-              </div>
 
-              <div className="hint" style={{ marginTop: 4 }}>
-                Your WhatsApp number is linked to your email so we can reach you with course updates.
-              </div>
-
-              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                 <label>
                   <span className="field-label">Email Address</span>
-                  <input name="email" required type="email" placeholder="you@example.com" value={formData.email} onChange={setField} autoComplete="email" />
+                  <input
+                    name="email"
+                    required
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={setField}
+                    autoComplete="email"
+                    className={errors.email ? 'input-error' : ''}
+                  />
+                  {errors.email && <span className="field-error">{errors.email}</span>}
                 </label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <span className="field-label">Password Strength</span>
-                  <div style={{ background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 14 }}>
-                    <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--text-primary)' }}>{passwordHint}</div>
-                    <div style={{ display: 'flex', gap: 8 }} aria-label="password strength meter">
-                      {[0, 1, 2, 3].map((i) => (
-                        <div key={i} style={{ height: 8, width: '25%', borderRadius: 999, background: passwordStrength > i ? 'linear-gradient(135deg, #ec4899, #db2777)' : 'rgba(219, 39, 119, 0.1)', border: '1px solid rgba(219, 39, 119, 0.1)' }} />
-                      ))}
-                    </div>
+
+                <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  <label>
+                    <span className="field-label">Password</span>
+                    <input
+                      name="password"
+                      required
+                      type="password"
+                      placeholder="Create a password"
+                      value={formData.password}
+                      onChange={setField}
+                      autoComplete="new-password"
+                      className={errors.password ? 'input-error' : ''}
+                    />
+                    {errors.password && <span className="field-error">{errors.password}</span>}
+                  </label>
+                  <label>
+                    <span className="field-label">Confirm Password</span>
+                    <input
+                      name="confirmPassword"
+                      required
+                      type="password"
+                      placeholder="Re-enter password"
+                      value={formData.confirmPassword}
+                      onChange={setField}
+                      autoComplete="new-password"
+                      className={errors.confirmPassword ? 'input-error' : ''}
+                    />
+                    {errors.confirmPassword && (
+                      <span className="field-error">{errors.confirmPassword}</span>
+                    )}
+                  </label>
+                </div>
+
+                <div
+                  style={{ background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 14 }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--text-primary)' }}>
+                    {strength.label}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }} aria-label="password strength meter">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        style={{
+                          height: 8,
+                          width: '25%',
+                          borderRadius: 999,
+                          background:
+                            strength.score > i
+                              ? 'linear-gradient(135deg, #ec4899, #db2777)'
+                              : 'rgba(219, 39, 119, 0.1)',
+                          border: '1px solid rgba(219, 39, 119, 0.1)',
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              <div className="two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <label>
-                  <span className="field-label">Password</span>
-                  <input name="password" required type="password" placeholder="Create a password" value={formData.password} onChange={setField} autoComplete="new-password" />
-                </label>
-                <label>
-                  <span className="field-label">Confirm Password</span>
-                  <input name="confirmPassword" required type="password" placeholder="Re-enter password" value={formData.confirmPassword} onChange={setField} autoComplete="new-password" />
-                </label>
-              </div>
-
-              <div className="form-actions" style={{ marginTop: 6 }}>
-                <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving…' : 'Sign Up'}
-                </button>
-              </div>
-
-              <div className="hint" style={{ marginTop: 6 }}>
-                By signing up, you agree to be contacted about your learning journey.
-              </div>
-
-              <div className="hint" style={{ marginTop: 10 }}>
-                Already have an account? <button type="button" onClick={() => setMode('signin')} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Sign in</button>.
-              </div>
-
-              <div style={{ marginTop: 24, textAlign: 'center' }}>
-                <Link to="/" className="btn secondary">← Back to Home</Link>
-              </div>
-            </form>
-          ) : mode === 'signup' && requiresVerification ? (
-            <form className="form-grid" onSubmit={handleVerify} aria-label="Verify email form">
-              <p style={{ marginBottom: 16 }}>
-                We sent a 6-digit verification code to <strong>{registeredEmail}</strong>.
-              </p>
-              <label>
-                <span className="field-label">Verification Code</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                  required
-                  style={{ letterSpacing: 8, textAlign: 'center', fontSize: '1.25rem' }}
-                />
-              </label>
-
-              <div className="form-actions" style={{ marginTop: 6 }}>
-                <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isVerifying}>
-                  {isVerifying ? 'Verifying…' : 'Verify Email'}
-                </button>
-                <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
-                  {isResending ? 'Resending…' : 'Resend Code'}
-                </button>
-              </div>
-
-              <div className="hint" style={{ marginTop: 10 }}>
-                Wrong email? <button type="button" onClick={() => { setMode('signup'); setRequiresVerification(false); setRegisteredEmail(''); setOtp(''); clearSignupStorage(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Change email</button>
-              </div>
-            </form>
-          ) : (
-            <form className="form-grid" onSubmit={handleSignin} aria-label="Sign in form">
-              <label>
-                <span className="field-label">Email Address</span>
-                <input name="email" required type="email" placeholder="you@example.com" value={formData.email} onChange={setField} autoComplete="email" />
-              </label>
-
-              <label>
-                <span className="field-label">Password</span>
-                <input name="password" required type="password" placeholder="Enter your password" value={formData.password} onChange={setField} autoComplete="current-password" />
-              </label>
-
-              <div className="form-actions" style={{ marginTop: 6 }}>
-                <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isSubmitting}>
-                  {isSubmitting ? 'Signing in…' : 'Sign In'}
-                </button>
-              </div>
-
-              {showResend && (
-                <div style={{ marginTop: 16, padding: 16, background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
-                  <p style={{ marginBottom: 8, fontSize: '0.9rem' }}>Didn't receive the code? Resend verification email.</p>
-                  <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
-                    {isResending ? 'Resending…' : 'Resend Verification Code'}
+                <div className="form-actions" style={{ marginTop: 6 }}>
+                  <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving…' : 'Sign Up'}
                   </button>
                 </div>
-              )}
 
-              <div className="hint" style={{ marginTop: 10 }}>
-                Don't have an account? <button type="button" onClick={() => { setMode('signup'); setShowResend(false); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Create account</button>.
-              </div>
+                <div className="hint" style={{ marginTop: 6 }}>
+                  By signing up, you agree to be contacted about your learning journey.
+                </div>
 
-              <div style={{ marginTop: 24, textAlign: 'center' }}>
-                <Link to="/" className="btn secondary">← Back to Home</Link>
-              </div>
-            </form>
+                <div className="hint" style={{ marginTop: 10 }}>
+                  Already have an account?{' '}
+                  <Link to="/signin" style={{ textDecoration: 'underline' }}>Sign in</Link>.
+                </div>
+
+                <div style={{ marginTop: 24, textAlign: 'center' }}>
+                  <Link to="/" className="btn secondary">← Back to Home</Link>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 8 }}>
+                Verify your email
+              </h2>
+              <p className="section-subtitle" style={{ marginBottom: 28 }}>
+                We sent a 6-digit code to <strong>{registeredEmail}</strong>.
+              </p>
+
+              <form className="form-grid" onSubmit={handleVerify} aria-label="Verify email form">
+                <label>
+                  <span className="field-label">Verification Code</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="Enter 6-digit code"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                    required
+                    style={{ letterSpacing: 8, textAlign: 'center', fontSize: '1.25rem' }}
+                  />
+                </label>
+
+                <div className="form-actions" style={{ marginTop: 6 }}>
+                  <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isVerifying}>
+                    {isVerifying ? 'Verifying…' : 'Verify Email'}
+                  </button>
+                  <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
+                    {isResending ? 'Resending…' : 'Resend Code'}
+                  </button>
+                </div>
+
+                <div className="hint" style={{ marginTop: 10 }}>
+                  Wrong email?{' '}
+                  <button
+                    type="button"
+                    onClick={goToForm}
+                    style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    Change email
+                  </button>
+                </div>
+              </form>
+            </>
           )}
         </div>
       </div>

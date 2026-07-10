@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
 import { API_BASE } from '../../shared/cartApi'
 import { getCachedData, setCachedData, useOnlineStatus } from '../../shared/storageUtils'
+import DashboardShell from '../shared/dashboard/DashboardShell'
+import DataTable from '../shared/dashboard/DataTable'
+import ChartCards from '../shared/dashboard/ChartCards'
 
-const CACHE_KEY = 'admin_dashboard_cache'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -15,6 +17,8 @@ export default function AdminDashboard() {
   const [updatingId, setUpdatingId] = useState('')
   const [stats, setStats] = useState(null)
   const isOffline = useOnlineStatus()
+
+
 
   useEffect(() => {
     document.title = 'Admin Dashboard | Connect2Edtech'
@@ -132,100 +136,134 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated || !isAdmin) return null
 
+  const statCards = stats
+    ? [
+        { label: 'Users', value: stats.totalUsers },
+        { label: 'Verified', value: stats.verifiedUsers },
+        { label: 'Admins', value: stats.admins },
+        { label: 'Enrollments', value: stats.enrollments },
+        { label: 'Messages', value: stats.contacts },
+        { label: 'Orders', value: stats.checkouts },
+        { label: 'Revenue', value: `₹${stats.revenue || 0}` },
+      ]
+    : []
+
   return (
-    <div className="enroll-wrap">
-      <div className="container">
-        <div className="enroll-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <div>
-              <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 0 }}>Admin Dashboard</h2>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Admin</span>
-            </div>
-            <button onClick={signout} className="btn secondary">Sign Out</button>
-          </div>
-
-          {isOffline && (
-            <div style={{ padding: 12, background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 8, marginBottom: 16, color: '#854d0e' }}>
-              ⚠️ You are currently offline. Showing cached data.
-            </div>
-          )}
-          {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
-
-          {stats && (
-            <div className="card-grid" style={{ margin: '8px 0 32px' }}>
-              {[
-                { label: 'Users', value: stats.totalUsers },
-                { label: 'Verified', value: stats.verifiedUsers },
-                { label: 'Admins', value: stats.admins },
-                { label: 'Enrollments', value: stats.enrollments },
-                { label: 'Messages', value: stats.contacts },
-                { label: 'Orders', value: stats.checkouts },
-                { label: 'Revenue', value: `₹${stats.revenue || 0}` },
-              ].map((s) => (
-                <div key={s.label} className="card" style={{ padding: 20 }}>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800, fontFamily: 'var(--font-title)', background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    {s.value}
-                  </div>
-                  <div style={{ color: '#6b2a4a', fontWeight: 600, marginTop: 4 }}>{s.label}</div>
-                </div>
-              ))}
-              <Link to="/hr" className="card" style={{ padding: 20, textDecoration: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, minHeight: 120 }}>
-                <div style={{ fontSize: '2rem' }}>💼</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#6b2a4a' }}>HR Dashboard</div>
-                <div style={{ fontSize: '0.85rem', color: '#9d174d' }}>Open HR page →</div>
-              </Link>
-            </div>
-          )}
-
-          {loading ? (
-            <p>Loading users...</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Name</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Email</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Phone</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Status</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Role</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => {
-                    const currentRole = u.role || 'user'
-                    const isSelf = u._id === user?._id
-                    return (
-                      <tr key={u._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: 8 }}>{u.name}{isSelf && <span style={{ fontSize: '0.75rem', color: '#be185d' }}> (you)</span>}</td>
-                        <td style={{ padding: 8 }}>{u.email}</td>
-                        <td style={{ padding: 8 }}>{u.phone}</td>
-                        <td style={{ padding: 8 }}>{u.verified ? 'Verified' : 'Unverified'}</td>
-                        <td style={{ padding: 8 }}>
-                          <select
-                            value={currentRole}
-                            disabled={updatingId === u._id}
-                            onChange={(e) => changeRole(u._id, e.target.value)}
-                            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-color)', background: '#fff' }}
-                          >
-                            <option value="user">user</option>
-                            <option value="admin">admin</option>
-                          </select>
-                        </td>
-                        <td style={{ padding: 8 }}>{new Date(u.createdAt).toLocaleDateString()}</td>
-                      </tr>
-                    )
-                  })}
-                  {users.length === 0 && (
-                    <tr><td colSpan="6" style={{ padding: 16, textAlign: 'center' }}>No users found.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+    <DashboardShell
+      title="Admin Dashboard"
+      roleLabel="Admin"
+      stats={statCards.map((s) => ({ ...s, value: s.value }))}
+      breadcrumbs={[
+        { label: 'Home', href: '/' },
+        { label: 'Admin' },
+      ]}
+      rightHeader={
+        <Link
+          to="/hr"
+          className="btn"
+          style={{
+            background: 'rgba(255,255,255,0.4)',
+            border: '1px solid rgba(219, 39, 119, 0.4)',
+            color: '#831843',
+            padding: '10px 16px',
+            textDecoration: 'none',
+          }}
+        >
+          HR Dashboard →
+        </Link>
+      }
+    >
+      {isOffline && (
+        <div
+          style={{
+            padding: 12,
+            background: 'rgba(234, 179, 8, 0.1)',
+            border: '1px solid rgba(234, 179, 8, 0.3)',
+            borderRadius: 8,
+            marginBottom: 16,
+            color: '#854d0e',
+          }}
+        >
+          ⚠️ You are currently offline. Showing cached data.
         </div>
-      </div>
-    </div>
+      )}
+      {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
+
+      <DataTable
+        title="User Management"
+        subtitle="Search by name, email, or phone. Update roles instantly."
+        rows={users}
+        showPagination={true}
+        initialRowsPerPage={20}
+        columns={[
+          {
+            header: 'Name',
+            searchKey: (u) => u.name,
+            cell: (u) => (
+              <span>
+                {u.name}
+                {u._id === user?._id && (
+                  <span style={{ fontSize: '0.75rem', color: '#be185d' }}> (you)</span>
+                )}
+              </span>
+            ),
+          },
+          { header: 'Email', searchKey: (u) => u.email, cell: (u) => u.email },
+          { header: 'Phone', searchKey: (u) => u.phone, cell: (u) => u.phone },
+          {
+            header: 'Status',
+            searchKey: (u) => (u.verified ? 'verified' : 'unverified'),
+            cell: (u) => (u.verified ? 'Verified' : 'Unverified'),
+          },
+          {
+            header: 'Role',
+            searchKey: (u) => u.role,
+            cell: (u) => {
+              const currentRole = u.role || 'user'
+              return (
+                <select
+                  value={currentRole}
+                  disabled={updatingId === u._id}
+                  onChange={(e) => changeRole(u._id, e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border-color)',
+                    background: '#fff',
+                    minWidth: 96,
+                  }}
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              )
+            },
+          },
+          {
+            header: 'Joined',
+            searchKey: (u) => (u.createdAt ? new Date(u.createdAt).toISOString() : ''),
+            cell: (u) => (u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'),
+          },
+        ]}
+      />
+
+      {loading && <p style={{ marginTop: 16 }}>Loading users…</p>}
+
+      {stats && (
+        <ChartCards
+          stats={[
+            { label: 'Users', value: stats.totalUsers },
+            { label: 'Verified', value: stats.verifiedUsers },
+            { label: 'Admins', value: stats.admins },
+            { label: 'Enrollments', value: stats.enrollments },
+            { label: 'Messages', value: stats.contacts },
+            { label: 'Orders', value: stats.checkouts },
+            { label: 'Revenue', value: Number(stats.revenue || 0) },
+          ]}
+        />
+      )}
+    </DashboardShell>
   )
 }
+
+
