@@ -174,10 +174,10 @@ export default function SignupPage() {
     }
     setIsVerifying(true)
     try {
-      await verifyOtp(registeredEmail, otp)
-      showToast('Email verified! Welcome to Connect2Edtech.', 'success')
+      await verifyOtp(registeredEmail, otp, { autoLogin: false })
+      showToast('Email verified! Please sign in to continue.', 'success')
       clearSignupStorage()
-      setTimeout(() => navigate(dashboardForRole(user?.role)), 800)
+      setTimeout(() => navigate('/signin'), 800)
     } catch (err) {
       showToast(err.message || 'Verification failed.', 'error')
     } finally {

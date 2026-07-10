@@ -83,13 +83,13 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  const verifyOtp = async (email, otp) => {
+  const verifyOtp = async (email, otp, { autoLogin = true } = {}) => {
     const data = await apiFetch('/api/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ email, otp }),
     })
     if (!data.ok) throw new Error(data.error || 'Verification failed')
-    if (data.token && data.user) {
+    if (autoLogin && data.token && data.user) {
       setState({ token: data.token, user: data.user })
     }
     return data
