@@ -64,6 +64,11 @@ async function sendOtpEmail(toEmail, otp) {
   });
 }
 
+async function sendEmail({ to, subject, text, html }) {
+  const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com';
+  await transporter.sendMail({ from, to, subject, text, html });
+}
+
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -97,6 +102,23 @@ function adminAuth(req, res, next) {
     const decoded = jwt.verify(match[1], JWT_SECRET);
     if (decoded.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Admin access only' });
+    }
+    req.admin = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ ok: false, error: 'Invalid token' });
+  }
+}
+
+// Staff auth: allows admins and HR. Mirror of adminAuth but permits the 'hr' role.
+function staffAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return res.status(401).json({ ok: false, error: 'Access denied' });
+  try {
+    const decoded = jwt.verify(match[1], JWT_SECRET);
+    if (decoded.role !== 'admin' && decoded.role !== 'hr') {
+      return res.status(403).json({ ok: false, error: 'Staff access only' });
     }
     req.admin = decoded;
     next();
@@ -164,7 +186,7 @@ const SignupSubmissionSchema = new mongoose.Schema({
   whatsappNumber: { type: String, default: '' },
   passwordHash: { type: String, required: true },
   verified: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ['user', 'admin', 'hr'], default: 'user' },
   otp: { type: String, default: '' },
   otpExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
@@ -180,6 +202,11 @@ const ContactSubmissionSchema = new mongoose.Schema({
   courses: { type: String, default: '' },
   hostname: { type: String, default: '' },
   ip: { type: String, default: '' },
+  replied: { type: Boolean, default: false },
+  replies: {
+    type: [{ from: String, body: String, at: { type: Date, default: Date.now } }],
+    default: [],
+  },
   createdAt: { type: Date, default: Date.now },
 }, { versionKey: false });
 const ContactSubmission = mongoose.model('ContactSubmission', ContactSubmissionSchema);
@@ -624,6 +651,77 @@ app.post('/api/contact', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: 'Failed to submit contact form.' });
+  }
+});
+
+// Mail inbox (admin/HR) - list contact inquiries
+app.get('/api/mail', staffAuth, async (req, res) => {
+  try {
+    const conn = await connectMongo();
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' });
+    }
+    const items = await ContactSubmission.find({}).sort({ createdAt: -1 }).limit(200);
+    res.json({ ok: true, messages: items });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: 'Failed to load inbox.' });
+  }
+});
+
+// Mail - reply to a contact inquiry (records the reply; email send is best-effort)
+app.post('/api/mail/:id/reply', staffAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { subject, message } = req.body || {};
+    if (!subject || !message) {
+      return res.status(400).json({ ok: false, error: 'subject and message are required' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid message id.' });
+    }
+
+    const conn = await connectMongo();
+    if (!conn || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ ok: false, error: 'Service temporarily unavailable.' });
+    }
+
+    const contact = await ContactSubmission.findById(id);
+    if (!contact) {
+      return res.status(404).json({ ok: false, error: 'Message not found.' });
+    }
+    if (!contact.email) {
+      return res.status(400).json({ ok: false, error: 'This inquiry has no email address to reply to.' });
+    }
+
+    const fromName = req.admin?.name || req.user?.name || 'Connect2Edtech Team';
+    const body = String(message).trim();
+    const text = `${body}\n\n— ${fromName}, Connect2Edtech`;
+    const html = `<p>${body.replace(/\n/g, '<br/>')}</p><p>— ${fromName}, Connect2Edtech</p>`;
+
+    let emailSent = true;
+    try {
+      await sendEmail({ to: contact.email, subject: String(subject).trim(), text, html });
+    } catch (mailErr) {
+      emailSent = false;
+      console.error('[Mail] reply email failed (reply still recorded):', mailErr?.message || mailErr);
+    }
+
+    const updated = await ContactSubmission.findByIdAndUpdate(
+      id,
+      { $push: { replies: { from: fromName, body, at: new Date() } }, $set: { replied: true } },
+      { new: true }
+    );
+
+    res.json({
+      ok: true,
+      message: emailSent ? 'Reply sent.' : 'Reply recorded, but the email could not be sent.',
+      emailSent,
+      contact: updated,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: 'Failed to send reply.' });
   }
 });
 
