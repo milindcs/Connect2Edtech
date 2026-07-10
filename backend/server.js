@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 import { createSignupRouter } from './routes/signup.js';
 import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
-import { createDocument, findOne, updateById, find, countDocuments, clearCollection } from './store.js';
+import { createDocument, findOne, updateById, find, countDocuments, clearCollection, getDb } from './store.js';
 
 // Mongo-backed store functions are async; this server uses them as async where needed.
 
@@ -153,9 +153,9 @@ app.post('/api/admin/bootstrap', async (req, res) => {
     }
 
     const cleanEmail = String(email).trim()
-    const existing = findOne('signups', { email: cleanEmail })
+    const existing = await findOne('signups', { email: cleanEmail })
     if (existing) {
-      updateById('signups', existing._id, { $set: { role: 'admin', verified: true } })
+      await updateById('signups', existing._id, { $set: { role: 'admin', verified: true } })
       return res.json({ ok: true, message: `Promoted ${cleanEmail} to admin.`, created: false })
     }
 
@@ -164,7 +164,7 @@ app.post('/api/admin/bootstrap', async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(password, salt)
-    createDocument('signups', {
+    await createDocument('signups', {
       name: name ? String(name).trim() : 'Admin',
       email: cleanEmail,
       phone: phone ? String(phone).trim() : '0000000000',
@@ -207,7 +207,7 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'email and otp are required' })
     }
 
-    const account = findOne('signups', { email: String(email).trim() })
+    const account = await findOne('signups', { email: String(email).trim() })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'Account not found.' })
     }
@@ -224,7 +224,7 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid OTP.' })
     }
 
-    updateById('signups', account._id, { verified: true, otp: '', otpExpiry: null })
+    await updateById('signups', account._id, { verified: true, otp: '', otpExpiry: null })
     const token = signJwt({ ...account, verified: true })
     res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: true, role: account.role || 'user' } })
   } catch (e) {
@@ -240,7 +240,7 @@ app.post('/api/resend-otp', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'email is required' })
     }
 
-    const account = findOne('signups', { email: String(email).trim() })
+    const account = await findOne('signups', { email: String(email).trim() })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'Account not found.' })
     }
@@ -251,7 +251,7 @@ app.post('/api/resend-otp', async (req, res) => {
 
     const otp = generateOtp()
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
-    updateById('signups', account._id, { otp, otpExpiry })
+    await updateById('signups', account._id, { otp, otpExpiry })
 
     try {
       await sendOtpEmail(String(email).trim(), otp)
@@ -268,7 +268,7 @@ app.post('/api/resend-otp', async (req, res) => {
 
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
-    const account = findOne('signups', { _id: req.user.userId })
+    const account = await findOne('signups', { _id: req.user.userId })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
@@ -282,7 +282,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 
 app.get('/api/me/enrollments', authMiddleware, async (req, res) => {
   try {
-    const items = find('enrollments', { email: req.user.email }, { sort: { createdAt: -1 } })
+    const items = await find('enrollments', { email: req.user.email }, { sort: { createdAt: -1 } })
     res.json({ ok: true, enrollments: items })
   } catch (e) {
     console.error(e)
@@ -292,7 +292,7 @@ app.get('/api/me/enrollments', authMiddleware, async (req, res) => {
 
 app.get('/api/me/contacts', authMiddleware, async (req, res) => {
   try {
-    const items = find('contacts', { email: req.user.email }, { sort: { createdAt: -1 } })
+    const items = await find('contacts', { email: req.user.email }, { sort: { createdAt: -1 } })
     res.json({ ok: true, contacts: items })
   } catch (e) {
     console.error(e)
@@ -302,7 +302,7 @@ app.get('/api/me/contacts', authMiddleware, async (req, res) => {
 
 app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
   try {
-    const items = find('checkouts', { email: req.user.email }, { sort: { createdAt: -1 } })
+    const items = await find('checkouts', { email: req.user.email }, { sort: { createdAt: -1 } })
     res.json({ ok: true, checkouts: items })
   } catch (e) {
     console.error(e)
@@ -312,7 +312,7 @@ app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
 
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
-    const users = find('signups', {}, { sort: { createdAt: -1 } })
+    const users = await find('signups', {}, { sort: { createdAt: -1 } })
     res.json({ ok: true, users: users.map(({ passwordHash, otp, otpExpiry, ...u }) => u) })
   } catch (e) {
     console.error(e)
@@ -328,7 +328,7 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid role. Use "user" or "admin".' })
     }
 
-    const account = findOne('signups', { _id: id })
+    const account = await findOne('signups', { _id: id })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
@@ -337,7 +337,7 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'You cannot remove your own admin role.' })
     }
 
-    updateById('signups', id, { role })
+    await updateById('signups', id, { role })
     res.json({ ok: true, message: `Role updated to ${role}.`, user: { id: account._id.toString(), role } })
   } catch (e) {
     console.error(e)
@@ -347,16 +347,17 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
 
 app.get('/api/admin/stats', staffAuth, async (req, res) => {
   try {
-    const totalUsers = countDocuments('signups')
-    const verifiedUsers = countDocuments('signups', { verified: true })
-    const admins = countDocuments('signups', { role: 'admin' })
-    const enrollments = countDocuments('enrollments')
-    const contacts = countDocuments('contacts')
-    const checkouts = countDocuments('checkouts')
-    const recentEnroll = find('enrollments', {}, { sort: { createdAt: -1 } }).slice(0, 5)
-    const recentCheckout = find('checkouts', {}, { sort: { createdAt: -1 } }).slice(0, 5)
+    const totalUsers = await countDocuments('signups')
+    const verifiedUsers = await countDocuments('signups', { verified: true })
+    const admins = await countDocuments('signups', { role: 'admin' })
+    const enrollments = await countDocuments('enrollments')
+    const contacts = await countDocuments('contacts')
+    const checkouts = await countDocuments('checkouts')
+    const recentEnroll = await find('enrollments', {}, { sort: { createdAt: -1 } })
+    const recentCheckout = await find('checkouts', {}, { sort: { createdAt: -1 } })
 
-    const revenue = find('checkouts').reduce((sum, c) => sum + (typeof c.totalAmount === 'number' ? c.totalAmount : 0), 0)
+    const checkoutsList = await find('checkouts')
+    const revenue = checkoutsList.reduce((sum, c) => sum + (typeof c.totalAmount === 'number' ? c.totalAmount : 0), 0)
 
     res.json({
       ok: true,
@@ -372,7 +373,7 @@ app.get('/api/admin/stats', staffAuth, async (req, res) => {
 
 app.get('/api/admin/contacts', staffAuth, async (req, res) => {
   try {
-    const items = find('contacts', {}, { sort: { createdAt: -1 } }).slice(0, 100)
+    const items = await find('contacts', {}, { sort: { createdAt: -1 } })
     res.json({ ok: true, contacts: items })
   } catch (e) {
     console.error(e)
@@ -382,7 +383,7 @@ app.get('/api/admin/contacts', staffAuth, async (req, res) => {
 
 app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
   try {
-    const items = find('enrollments', {}, { sort: { createdAt: -1 } }).slice(0, 100)
+    const items = await find('enrollments', {}, { sort: { createdAt: -1 } })
     res.json({ ok: true, enrollments: items })
   } catch (e) {
     console.error(e)
@@ -392,7 +393,7 @@ app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
 
 app.get('/api/admin/checkouts', staffAuth, async (req, res) => {
   try {
-    const items = find('checkouts', {}, { sort: { createdAt: -1 } }).slice(0, 100)
+    const items = await find('checkouts', {}, { sort: { createdAt: -1 } })
     res.json({ ok: true, checkouts: items })
   } catch (e) {
     console.error(e)
@@ -409,7 +410,7 @@ app.post('/api/contact', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'name and email are required' });
     }
 
-    createDocument('contacts', {
+      await createDocument('contacts', {
       name, email, phone: phone || '', message: message || '', courses: courses || '',
       hostname: req.hostname || '', ip: getClientIp(req),
     });
@@ -429,7 +430,7 @@ app.post('/api/enrollment', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'name and email are required' });
     }
 
-    createDocument('enrollments', {
+    await createDocument('enrollments', {
       name, email, phone: phone || '', college: college || '', message: message || '',
       courseKey: courseKey || '', courseTitle: courseTitle || '',
       hostname: req.hostname || '', ip: getClientIp(req),
@@ -450,20 +451,20 @@ app.post('/api/cart/add', async (req, res) => {
     const { courseKey, title, price, image } = req.body || {};
     if (!courseKey) return res.status(400).json({ ok: false, error: 'courseKey required' });
 
-    const existing = find('cart', { sessionId, courseKey })
+    const existing = await find('cart', { sessionId, courseKey })
     const priceNum = typeof price === 'number' ? price : Number(price || 0);
 
     if (existing.length > 0) {
-      updateById('cart', existing[0]._id, {
+      await updateById('cart', existing[0]._id, {
         title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date()
       })
     } else {
-      createDocument('cart', {
+      await createDocument('cart', {
         sessionId, courseKey, title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date()
       })
     }
 
-    const items = find('cart', { sessionId }, { sort: { addedAt: -1 } })
+    const items = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
     res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
@@ -474,7 +475,7 @@ app.post('/api/cart/add', async (req, res) => {
 app.get('/api/cart', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
-    const items = find('cart', { sessionId }, { sort: { addedAt: -1 } })
+    const items = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
     res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
@@ -486,12 +487,15 @@ app.delete('/api/cart/:courseKey', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
     const { courseKey } = req.params;
-    const existing = find('cart', { sessionId, courseKey })
+    const existing = await find('cart', { sessionId, courseKey })
     if (existing.length > 0) {
-      const idx = find('cart').findIndex((doc) => doc._id === existing[0]._id)
-      if (idx !== -1) find('cart').splice(idx, 1)
+      const cart = await find('cart')
+      const idx = cart.findIndex((doc) => doc._id === existing[0]._id)
+      if (idx !== -1) {
+        cart.splice(idx, 1)
+      }
     }
-    const items = find('cart', { sessionId }, { sort: { addedAt: -1 } })
+    const items = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
     res.json({ ok: true, items });
   } catch (e) {
     console.error(e);
@@ -502,10 +506,11 @@ app.delete('/api/cart/:courseKey', async (req, res) => {
 app.delete('/api/cart', async (req, res) => {
   try {
     const sessionId = getSessionId(req);
-    const existing = find('cart', { sessionId })
+    const existing = await find('cart', { sessionId })
+    const cartItems = await find('cart')
     existing.forEach((doc) => {
-      const idx = find('cart').findIndex((d) => d._id === doc._id)
-      if (idx !== -1) find('cart').splice(idx, 1)
+      const idx = cartItems.findIndex((d) => d._id === doc._id)
+      if (idx !== -1) cartItems.splice(idx, 1)
     })
     res.json({ ok: true });
   } catch (e) {
@@ -519,11 +524,11 @@ app.post('/api/checkout/submit', async (req, res) => {
     const sessionId = getSessionId(req);
     const { submissionType, name, email, phone, note, courseTitle, totalAmount, clientCartSnapshot } = req.body || {};
 
-    const existingItems = find('cart', { sessionId }, { sort: { addedAt: -1 } })
+    const existingItems = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
     const snapshotCourses = Array.isArray(clientCartSnapshot) ? clientCartSnapshot : [];
     const effectiveItems = existingItems && existingItems.length ? existingItems : snapshotCourses;
 
-    createDocument('checkouts', {
+    await createDocument('checkouts', {
       sessionId,
       submissionType: submissionType || 'checkout',
       name: name || '',
@@ -536,9 +541,10 @@ app.post('/api/checkout/submit', async (req, res) => {
     });
 
     if (existingItems && existingItems.length) {
+      const cartItems = await find('cart')
       existingItems.forEach((doc) => {
-        const idx = find('cart').findIndex((d) => d._id === doc._id)
-        if (idx !== -1) find('cart').splice(idx, 1)
+        const idx = cartItems.findIndex((d) => d._id === doc._id)
+        if (idx !== -1) cartItems.splice(idx, 1)
       })
     }
 
@@ -573,10 +579,29 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 10000;
 
-if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
-  });
+async function startServer() {
+  try {
+    // Test MongoDB connection on startup
+    const db = await getDb();
+    console.log('✅ MongoDB connected successfully');
+    
+    if (process.env.VERCEL !== '1') {
+      app.listen(PORT, () => {
+        console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
+      });
+    }
+  } catch (e) {
+    console.error('❌ Failed to connect to MongoDB:', e.message);
+    console.error('Server will continue but database operations will fail.');
+    
+    if (process.env.VERCEL !== '1') {
+      app.listen(PORT, () => {
+        console.log(`🚀 Connect2Edtech Backend running on port ${PORT} (without DB)`);
+      });
+    }
+  }
 }
+
+startServer();
 
 export default app;

@@ -1,5 +1,4 @@
 import { ObjectId } from 'mongodb';
-import { getDb } from './mongoClient.js';
 
 function normalizeId(id) {
   // If an id is an ObjectId-like string, convert it.

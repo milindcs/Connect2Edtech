@@ -8,8 +8,8 @@ export function createMailRouter({ findOne, updateById, find, sendEmail }) {
 
   router.get('/', async (req, res) => {
     try {
-      const items = find('contacts', {}, { sort: { createdAt: -1 } }).slice(0, 200);
-      res.json({ ok: true, messages: items });
+      const items = await find('contacts', {}, { sort: { createdAt: -1 } });
+      res.json({ ok: true, messages: items.slice(0, 200) });
     } catch (e) {
       console.error(e);
       res.status(500).json({ ok: false, error: 'Failed to load inbox.' });
@@ -27,7 +27,7 @@ export function createMailRouter({ findOne, updateById, find, sendEmail }) {
         return res.status(400).json({ ok: false, error: 'Invalid message id.' });
       }
 
-      const contact = findOne('contacts', { _id: id });
+      const contact = await findOne('contacts', { _id: id });
       if (!contact) {
         return res.status(404).json({ ok: false, error: 'Message not found.' });
       }
@@ -47,7 +47,7 @@ export function createMailRouter({ findOne, updateById, find, sendEmail }) {
         return res.status(502).json({ ok: false, error: 'Failed to send reply email.' });
       }
 
-      const updated = updateById('contacts', id, {
+      const updated = await updateById('contacts', id, {
         replies: [...(contact.replies || []), { from: fromName, body, at: new Date() }],
         replied: true,
       })

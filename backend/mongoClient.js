@@ -1,9 +1,13 @@
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+// Load .env from backend directory
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+dotenv.config({ path: path.join(__dirname, '.env') });
 
-const uri = process.env.MONGODB_URI || process.env.MONGODB_URL || '';
+const uri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGOURI || '';
 if (!uri) {
   // Don’t throw at import-time in case some environments don’t use DB.
   // Consumers will throw when connecting.

@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "db:test": "node test-mongodb.js",
+    "db:setup": "node setup-mongodb.js",
+    "db:indexes": "node scripts/create-indexes.js",
+    "db:analyze": "node scripts/optimize-queries.js",
+    "db:bootstrap": "node scripts/bootstrap-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
