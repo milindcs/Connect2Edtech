@@ -17,7 +17,6 @@ export default function NavBar({ pathname }) {
     { to: '/courses', label: 'Courses' },
     { to: '/enrollment', label: 'Enroll' },
     { to: '/dashboard', label: 'Dashboard' },
-    { to: '/student', label: 'Student' },
   ]
 
   return (
