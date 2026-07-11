@@ -1,29 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
-import { cartAdd } from '../../shared/cartApi'
 
 
 export default function CourseDetailsPage() {
   const { course: courseParam } = useParams()
   const [course, setCourse] = useState(null)
-  const [toasts, setToasts] = useState([])
-
-  const showToast = (message, type = 'success') => {
-    const id = Date.now() + Math.random()
-    setToasts((prev) => [...prev, { id, message, type }])
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000)
-  }
-
-  const handleAddToCart = async () => {
-    if (!course) return
-    try {
-      await cartAdd({ courseKey: course.key, title: course.title, price: course.price, image: course.image || '' })
-      showToast(`Added "${course.title}" to your cart.`, 'success')
-    } catch {
-      showToast('Could not add to cart.', 'error')
-    }
-  }
 
   useEffect(() => {
     const key = normalizeCourseKey(courseParam)
@@ -132,25 +114,12 @@ export default function CourseDetailsPage() {
                   >
                     Enroll Now
                   </Link>
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    style={{ textAlign: 'center' }}
-                    onClick={handleAddToCart}
-                  >
-                    Add to Cart
-                  </button>
                 </div>
              </aside>
           </div>
         </section>
       </div>
 
-      <div className="toast-container">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast show ${t.type}`}>{t.message}</div>
-        ))}
-      </div>
     </div>
   )
 }
