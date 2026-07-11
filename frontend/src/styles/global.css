@@ -403,6 +403,16 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
 }
 
+input[type="password"] {
+  font-family: var(--font-body);
+}
+
+input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
 .form-actions {
   display: flex;
   gap: 12px;
@@ -414,6 +424,11 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.85rem;
   color: #333333;
   line-height: 1.4;
+}
+
+.btn[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Hero Section */
@@ -1084,6 +1099,232 @@ input:focus, select:focus, textarea:focus {
   padding: 40px;
   max-width: 1000px;
   margin: 0 auto;
+}
+
+/* Auth Pages */
+.auth-page {
+  padding: 40px 0;
+}
+
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 40px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+}
+
+.auth-subtitle {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.auth-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.input-error {
+  border-color: var(--error) !important;
+}
+
+.field-error {
+  font-size: 0.8rem;
+  color: var(--error);
+  margin-top: 4px;
+}
+
+.strength-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.strength-header {
+  margin-bottom: 10px;
+}
+
+.strength-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.strength-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.strength-segment {
+  height: 10px;
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(219, 39, 119, 0.1);
+  border: 1px solid rgba(219, 39, 119, 0.1);
+  transition: background 0.2s ease;
+}
+
+.strength-segment.is-filled {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  border-color: transparent;
+}
+
+.checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(236, 72, 153, 0.03);
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.checkbox-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.checkbox-card span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkbox-card .hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-submit {
+  width: 100%;
+  justify-content: center;
+  padding: 14px 20px;
+  font-size: 1rem;
+}
+
+.auth-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.auth-footer a {
+  color: var(--border-focus);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: inherit;
+  padding: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.resend-card {
+  margin-top: 16px;
+  padding: 20px;
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resend-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #854d0e;
+}
+
+.otp-input {
+  letter-spacing: 10px;
+  text-align: center;
+  font-size: 1.5rem;
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card {
+    padding: 24px;
+  }
 }
 
 .cart-empty {

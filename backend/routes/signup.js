@@ -20,14 +20,14 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
       if (!name || !email || !phone) {
         return res.status(400).json({ ok: false, error: 'name, email, phone are required' });
       }
-      if (!password || typeof password !== 'string' || password.length < 8) {
-        return res.status(400).json({ ok: false, error: 'password is required (min 8 chars)' });
+      if (!password || typeof password !== 'string' || password.length < 4) {
+        return res.status(400).json({ ok: false, error: 'password is required (min 4 chars)' });
       }
       if (!/^\S+@\S+\.\S+$/.test(String(email).trim())) {
         return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
       }
 
-      const accountRole = ALLOWED_ROLES.includes(role) ? role : 'user';
+      const accountRole = 'user'
 
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(password, salt);

@@ -112,7 +112,7 @@ function adminAuth(req, res, next) {
   if (!match) return res.status(401).json({ ok: false, error: 'Access denied' });
   try {
     const decoded = jwt.verify(match[1], JWT_SECRET);
-    if (decoded.role !== 'admin') {
+    if (decoded.role !== 'admin' && decoded.role !== 'hr') {
       return res.status(403).json({ ok: false, error: 'Admin access only' });
     }
     req.admin = decoded;
@@ -300,16 +300,6 @@ app.get('/api/me/contacts', authMiddleware, async (req, res) => {
   }
 })
 
-app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
-  try {
-    const items = await find('checkouts', { email: req.user.email }, { sort: { createdAt: -1 } })
-    res.json({ ok: true, checkouts: items })
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Failed to fetch orders.' })
-  }
-})
-
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
     const users = await find('signups', {}, { sort: { createdAt: -1 } })
@@ -324,8 +314,8 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
   try {
     const { id } = req.params
     const { role } = req.body || {}
-    if (!['user', 'admin'].includes(role)) {
-      return res.status(400).json({ ok: false, error: 'Invalid role. Use "user" or "admin".' })
+    if (!['user', 'admin', 'hr'].includes(role)) {
+      return res.status(400).json({ ok: false, error: 'Invalid role. Use "user", "admin", or "hr".' })
     }
 
     const account = await findOne('signups', { _id: id })
@@ -333,8 +323,9 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
       return res.status(404).json({ ok: false, error: 'User not found.' })
     }
 
-    if (account._id.toString() === req.admin.userId && role !== 'admin') {
-      return res.status(400).json({ ok: false, error: 'You cannot remove your own admin role.' })
+    const isAdmin = account.role === 'admin' || account.role === 'hr'
+    if (account._id.toString() === req.admin.userId && !isAdmin) {
+      return res.status(400).json({ ok: false, error: 'You cannot remove your own admin/HR role.' })
     }
 
     await updateById('signups', id, { role })
@@ -350,20 +341,15 @@ app.get('/api/admin/stats', staffAuth, async (req, res) => {
     const totalUsers = await countDocuments('signups')
     const verifiedUsers = await countDocuments('signups', { verified: true })
     const admins = await countDocuments('signups', { role: 'admin' })
+    const hrs = await countDocuments('signups', { role: 'hr' })
     const enrollments = await countDocuments('enrollments')
     const contacts = await countDocuments('contacts')
-    const checkouts = await countDocuments('checkouts')
     const recentEnroll = await find('enrollments', {}, { sort: { createdAt: -1 } })
-    const recentCheckout = await find('checkouts', {}, { sort: { createdAt: -1 } })
-
-    const checkoutsList = await find('checkouts')
-    const revenue = checkoutsList.reduce((sum, c) => sum + (typeof c.totalAmount === 'number' ? c.totalAmount : 0), 0)
 
     res.json({
       ok: true,
-      stats: { totalUsers, verifiedUsers, admins, enrollments, contacts, checkouts, revenue },
+      stats: { totalUsers, verifiedUsers, admins, hrs, enrollments, contacts },
       recentEnrollments: recentEnroll,
-      recentCheckouts: recentCheckout,
     })
   } catch (e) {
     console.error(e)
@@ -391,191 +377,7 @@ app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
   }
 })
 
-app.get('/api/admin/checkouts', staffAuth, async (req, res) => {
-  try {
-    const items = await find('checkouts', {}, { sort: { createdAt: -1 } })
-    res.json({ ok: true, checkouts: items })
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Failed to fetch checkouts.' })
-  }
-})
-
 app.use('/api/mail', staffAuth, createMailRouter({ findOne, updateById, sendEmail }))
-
-app.post('/api/contact', async (req, res) => {
-  try {
-    const { name, email, phone, message, courses } = req.body || {};
-    if (!name || !email) {
-      return res.status(400).json({ ok: false, error: 'name and email are required' });
-    }
-
-      await createDocument('contacts', {
-      name, email, phone: phone || '', message: message || '', courses: courses || '',
-      hostname: req.hostname || '', ip: getClientIp(req),
-    });
-
-    const msg = [`📞 Contact Inquiry`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, `Message: ${trimmed(message) || '—'}`, courses ? `Courses: ${trimmed(courses)}` : null].filter(Boolean).join('\n');
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'Failed to submit contact form.' });
-  }
-});
-
-app.post('/api/enrollment', async (req, res) => {
-  try {
-    const { name, email, phone, college, message, courseKey, courseTitle } = req.body || {};
-    if (!name || !email) {
-      return res.status(400).json({ ok: false, error: 'name and email are required' });
-    }
-
-    await createDocument('enrollments', {
-      name, email, phone: phone || '', college: college || '', message: message || '',
-      courseKey: courseKey || '', courseTitle: courseTitle || '',
-      hostname: req.hostname || '', ip: getClientIp(req),
-    });
-
-    const courseLabel = courseTitle || courseKey || 'Unspecified course';
-    const msg = [`🎓 New Enrollment`, `Course: ${trimmed(courseLabel) || '—'}`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, message ? `Requirements: ${trimmed(message)}` : null].filter(Boolean).join('\n');
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'Failed to submit enrollment.' });
-  }
-});
-
-app.post('/api/cart/add', async (req, res) => {
-  try {
-    const sessionId = getSessionId(req);
-    const { courseKey, title, price, image } = req.body || {};
-    if (!courseKey) return res.status(400).json({ ok: false, error: 'courseKey required' });
-
-    const existing = await find('cart', { sessionId, courseKey })
-    const priceNum = typeof price === 'number' ? price : Number(price || 0);
-
-    if (existing.length > 0) {
-      await updateById('cart', existing[0]._id, {
-        title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date()
-      })
-    } else {
-      await createDocument('cart', {
-        sessionId, courseKey, title: title || '', price: Number.isFinite(priceNum) ? priceNum : 0, image: image || '', addedAt: new Date()
-      })
-    }
-
-    const items = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
-    res.json({ ok: true, items });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: e?.message || String(e) });
-  }
-});
-
-app.get('/api/cart', async (req, res) => {
-  try {
-    const sessionId = getSessionId(req);
-    const items = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
-    res.json({ ok: true, items });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: e?.message || String(e) });
-  }
-});
-
-app.delete('/api/cart/:courseKey', async (req, res) => {
-  try {
-    const sessionId = getSessionId(req);
-    const { courseKey } = req.params;
-    const existing = await find('cart', { sessionId, courseKey })
-    if (existing.length > 0) {
-      const cart = await find('cart')
-      const idx = cart.findIndex((doc) => doc._id === existing[0]._id)
-      if (idx !== -1) {
-        cart.splice(idx, 1)
-      }
-    }
-    const items = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
-    res.json({ ok: true, items });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: e?.message || String(e) });
-  }
-});
-
-app.delete('/api/cart', async (req, res) => {
-  try {
-    const sessionId = getSessionId(req);
-    const existing = await find('cart', { sessionId })
-    const cartItems = await find('cart')
-    existing.forEach((doc) => {
-      const idx = cartItems.findIndex((d) => d._id === doc._id)
-      if (idx !== -1) cartItems.splice(idx, 1)
-    })
-    res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: e?.message || String(e) });
-  }
-});
-
-app.post('/api/checkout/submit', async (req, res) => {
-  try {
-    const sessionId = getSessionId(req);
-    const { submissionType, name, email, phone, note, courseTitle, totalAmount, clientCartSnapshot } = req.body || {};
-
-    const existingItems = await find('cart', { sessionId }, { sort: { addedAt: -1 } })
-    const snapshotCourses = Array.isArray(clientCartSnapshot) ? clientCartSnapshot : [];
-    const effectiveItems = existingItems && existingItems.length ? existingItems : snapshotCourses;
-
-    await createDocument('checkouts', {
-      sessionId,
-      submissionType: submissionType || 'checkout',
-      name: name || '',
-      email: email || '',
-      phone: phone || '',
-      note: note || '',
-      courseTitle: courseTitle || '',
-      totalAmount: typeof totalAmount === 'number' ? totalAmount : Number(totalAmount || 0),
-      courses: effectiveItems.map((x) => ({ courseKey: x.courseKey, title: x.title, price: x.price, image: x.image })),
-    });
-
-    if (existingItems && existingItems.length) {
-      const cartItems = await find('cart')
-      existingItems.forEach((doc) => {
-        const idx = cartItems.findIndex((d) => d._id === doc._id)
-        if (idx !== -1) cartItems.splice(idx, 1)
-      })
-    }
-
-    const courseList = effectiveItems.map(i => i.title).join(', ') || courseTitle;
-    const msg = [`🛒 Checkout Request`, `Type: ${submissionType || 'checkout'}`, `Name: ${trimmed(name) || '—'}`, `Email: ${trimmed(email) || '—'}`, `Phone: ${trimmed(phone) || '—'}`, `Courses: ${courseList || '—'}`, totalAmount ? `Total: ₹${totalAmount}` : null, note ? `Note: ${trimmed(note)}` : null].filter(Boolean).join('\n');
-    res.json({ ok: true, whatsappUrl: buildWhatsAppUrl(msg) });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'Failed to submit checkout.' });
-  }
-});
-
-const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
-app.use(express.static(FRONTEND_DIST));
-
-app.get('{*splat}', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ success: false, message: 'API endpoint not found' });
-  }
-  if (path.extname(req.path)) {
-    return res.status(404).send('Not found');
-  }
-  res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
-});
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found'
-  });
-});
 
 const PORT = process.env.PORT || 10000;
 

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
 
-
 export default function CourseDetailsPage() {
   const { course: courseParam } = useParams()
   const [course, setCourse] = useState(null)
@@ -37,8 +36,6 @@ export default function CourseDetailsPage() {
     sections.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
   }, [courseParam])
-
-
 
   if (!course) {
     return (
@@ -105,17 +102,17 @@ export default function CourseDetailsPage() {
                 Category: {course.meta}{course.hr && ` • ${course.hr}`}
               </p>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <Link
-                    id="enrollFromDetail"
-                    to={`/enrollment?course=${course.key}`}
-                    className="btn primary"
-                    style={{ textAlign: 'center' }}
-                  >
-                    Enroll Now
-                  </Link>
-                </div>
-             </aside>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Link
+                  id="enrollFromDetail"
+                  to={`/enrollment?course=${course.key}`}
+                  className="btn primary"
+                  style={{ textAlign: 'center' }}
+                >
+                  Enroll Now
+                </Link>
+              </div>
+            </aside>
           </div>
         </section>
       </div>

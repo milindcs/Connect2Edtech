@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
-import { enrollmentSubmit, checkoutSubmit, cartList } from '../../shared/cartApi'
+import { enrollmentSubmit } from '../../shared/cartApi'
 
 export default function EnrollmentPage() {
   const location = useLocation()
@@ -26,7 +26,6 @@ export default function EnrollmentPage() {
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
-  const [cart, setCart] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -64,22 +63,6 @@ export default function EnrollmentPage() {
     localStorage.setItem('enrollment_form_data', JSON.stringify(formData))
   }, [formData])
 
-  useEffect(() => {
-    const updateCart = async () => {
-      try {
-        const data = await cartList()
-        setCart(Array.isArray(data.items) ? data.items : [])
-      } catch {
-        setCart([])
-      }
-    }
-    updateCart()
-
-    const onUpdated = () => updateCart()
-    window.addEventListener('cart-updated', onUpdated)
-    return () => window.removeEventListener('cart-updated', onUpdated)
-  }, [])
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((prev) => ({
@@ -109,28 +92,15 @@ export default function EnrollmentPage() {
 
     setIsSubmitting(true)
     try {
-      if (cart.length > 0) {
-        await checkoutSubmit({
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          note: formData.college ? `College: ${formData.college}` : '',
-        })
-      } else if (course) {
-        await enrollmentSubmit({
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          college: formData.college,
-          courseKey: course.key,
-          courseTitle: course.title,
-          message: formData.college ? `College: ${formData.college}` : ''
-        })
-      } else {
-        setError('No course selected and your cart is empty.')
-        setIsSubmitting(false)
-        return
-      }
+      await enrollmentSubmit({
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        college: formData.college,
+        courseKey: course ? course.key : '',
+        courseTitle: course ? course.title : '',
+        message: formData.college ? `College: ${formData.college}` : ''
+      })
 
       localStorage.removeItem('enrollment_form_data')
       setIsSubmitted(true)
@@ -148,9 +118,7 @@ export default function EnrollmentPage() {
         <div className="detail-shell" style={{ maxWidth: 600, margin: '0 auto', padding: '40px 24px' }}>
           <h2 style={{ color: 'var(--border-focus)', marginBottom: 16 }}>Enrollment Received!</h2>
           <p style={{ color: 'var(--text-primary)', marginBottom: 12, fontSize: '1.1rem' }}>
-            {cart.length > 0
-              ? <>Your checkout for <strong>{cart.length} program{pl(cart.length)}</strong> has been received.</>
-              : <>You have successfully initiated enrollment for <strong>{course ? course.title : 'the program'}</strong>.</>}
+            You have successfully initiated enrollment for <strong>{course ? course.title : 'the program'}</strong>.
           </p>
           <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: '0.95rem', lineHeight: '1.6' }}>
             An onboarding confirmation overview has been sent to <strong>{formData.email}</strong>. Our training coordinator team will review your profile credentials and follow up with you shortly.
@@ -167,8 +135,6 @@ export default function EnrollmentPage() {
       </div>
     )
   }
-
-  const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
 
   return (
     <div className="container" style={{ padding: '60px 24px' }}>
@@ -192,23 +158,7 @@ export default function EnrollmentPage() {
               </div>
             )}
 
-            {cart.length > 0 && (
-              <div style={{ background: 'rgba(219, 39, 119, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, marginBottom: 8 }}>
-                <h4 style={{ margin: '0 0 8px', fontSize: '1rem' }}>Your Cart ({cart.length} item{pl(cart.length)})</h4>
-                {cart.map((item) => (
-                  <div key={item.courseKey} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: 4 }}>
-                    <span>{item.title || item.courseKey}</span>
-                    <span style={{ color: '#9d174d', fontWeight: 700 }}>{item.price === 0 ? 'Free' : `₹${Number(item.price).toFixed(2)}`}</span>
-                  </div>
-                ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700, marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-                  <span>Total</span>
-                  <span style={{ color: '#9d174d' }}>{total === 0 ? 'Free' : `₹${total.toFixed(2)}`}</span>
-                </div>
-              </div>
-            )}
-
-            {!cart.length && course && (
+            {course && (
               <div style={{ background: 'rgba(219, 39, 119, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, marginBottom: 8 }}>
                 <h4 style={{ margin: '0 0 8px', fontSize: '1rem' }}>Selected Track</h4>
                 <div style={{ fontSize: '0.9rem' }}>
@@ -291,37 +241,12 @@ export default function EnrollmentPage() {
             </div>
 
             <button type="submit" className="btn primary" style={{ width: '100%', marginTop: 12, justifyContent: 'center' }} disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting…' : cart.length > 0 ? 'Confirm Checkout' : 'Confirm & Lock Registration'}
+              {isSubmitting ? 'Submitting…' : 'Confirm & Lock Registration'}
             </button>
-
-            {cart.length > 0 && (
-              <Link to="/cart" className="btn secondary" style={{ width: '100%', marginTop: 4, justifyContent: 'center', textAlign: 'center' }}>
-                ← Back to Cart
-              </Link>
-            )}
           </form>
 
           <aside style={{ width: '100%', maxWidth: 360 }}>
-            {cart.length > 0 ? (
-              <div className="card" style={{ padding: 24, position: 'sticky', top: 24 }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: 16 }}>Cart Summary</h3>
-                {cart.map((item) => (
-                  <div key={item.courseKey} style={{ marginBottom: 12 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{item.title || item.courseKey}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      {item.price === 0 ? 'Free' : `₹${Number(item.price).toFixed(2)}`}
-                    </div>
-                  </div>
-                ))}
-                <hr style={{ border: 'none', borderTop: '1px solid var(--border)', marginBottom: 16 }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Total:</span>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                    {total === 0 ? 'Free' : `₹${total.toFixed(2)}`}
-                  </span>
-                </div>
-              </div>
-            ) : course ? (
+            {course ? (
               <div className="card" style={{ padding: 24, position: 'sticky', top: 24 }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: 16 }}>Selected Track</h3>
                 
@@ -366,8 +291,4 @@ export default function EnrollmentPage() {
       </div>
     </div>
   )
-}
-
-function pl(n) {
-  return n === 1 ? '' : 's'
 }

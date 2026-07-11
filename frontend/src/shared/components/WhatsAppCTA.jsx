@@ -39,18 +39,14 @@ export default function WhatsAppCTA() {
 
 
       const course = getVisibleText('#detail-course-name');
-      const certType = getSelectedOptionText(document.getElementById('verifyType')) || getVisibleText('#previewType') || getVisibleText('#certTitle');
-      const program = getVisibleText('#previewProgram') || getVisibleText('#detail-course-name');
+      const program = getVisibleText('#detail-course-name');
       const detailPrice = getVisibleText('#detail-price');
       const detailMeta = getVisibleText('#detail-meta');
-      const certMeta = getVisibleText('#certMeta');
 
       if (course) details.push({ label: 'Course', value: course });
-      if (certType && certType !== '—' && !certType.includes('Certification Details')) details.push({ label: 'Certificate type', value: certType });
       if (program && program !== '—') details.push({ label: 'Program', value: program });
       if (detailPrice && detailPrice !== '$0.00' && detailPrice !== 'Price') details.push({ label: 'Price', value: detailPrice });
       if (detailMeta) details.push({ label: 'Course meta', value: detailMeta });
-      if (certMeta) details.push({ label: 'Certification meta', value: certMeta });
 
       return details;
 
@@ -96,7 +92,7 @@ export default function WhatsAppCTA() {
     }
 
     function getFormDetails() {
-      const form = document.querySelector('#contactForm, #enrollForm, #checkoutForm, #verifyForm, #receiveForm') || document.forms[0];
+      const form = document.querySelector('#contactForm, #enrollForm') || document.forms[0];
       if (!form) return [];
 
       const details = [];

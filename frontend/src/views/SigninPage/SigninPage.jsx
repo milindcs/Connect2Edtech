@@ -9,6 +9,37 @@ function dashboardForRole(role) {
   return role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
 }
 
+function PasswordInput({ label, name, value, onChange, placeholder, error, autoComplete }) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <div className="field">
+      <label className="field-label" htmlFor={name}>{label}</label>
+      <div className="input-wrapper">
+        <input
+          id={name}
+          name={name}
+          required
+          type={visible ? 'text' : 'password'}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          autoComplete={autoComplete}
+          className={error ? 'input-error' : ''}
+        />
+        <button
+          type="button"
+          className="password-toggle"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? 'Hide password' : 'Show password'}
+        >
+          {visible ? '🙈' : '👁️'}
+        </button>
+      </div>
+      {error && <span className="field-error">{error}</span>}
+    </div>
+  )
+}
+
 export default function SigninPage() {
   const navigate = useNavigate()
   const { signin, isAuthenticated, user, resendOtp } = useAuth()
@@ -48,20 +79,25 @@ export default function SigninPage() {
     setToasts((prev) => [...prev, { id, message, type }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 3000)
+    }, 4000)
   }
 
   const setField = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }))
+    if (showResend && name === 'email') {
+      setResendEmail(value)
+      setShowResend(false)
+    }
   }
 
   const handleResend = async () => {
-    if (!resendEmail) return
+    const email = resendEmail || formData.email.trim()
+    if (!email) return
     setIsResending(true)
     try {
-      await resendOtp(resendEmail)
+      await resendOtp(email)
       showToast('New verification code sent to your email.', 'success')
       setShowResend(false)
     } catch (err) {
@@ -99,76 +135,59 @@ export default function SigninPage() {
   }
 
   return (
-    <div className="enroll-wrap">
-      <div className="container">
-        <div className="enroll-card">
-          <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 8 }}>
-            Welcome back
-          </h2>
-          <p className="section-subtitle" style={{ marginBottom: 28 }}>
-            Sign in to continue your journey on Connect2Edtech.
-          </p>
-
-          <form className="form-grid" onSubmit={handleSubmit} noValidate aria-label="Sign in form">
-            <label>
-              <span className="field-label">Email Address</span>
-              <input
-                name="email"
-                required
-                type="email"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={setField}
-                autoComplete="email"
-                className={errors.email ? 'input-error' : ''}
-              />
-              {errors.email && <span className="field-error">{errors.email}</span>}
-            </label>
-
-            <label>
-              <span className="field-label">Password</span>
-              <input
-                name="password"
-                required
-                type="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={setField}
-                autoComplete="current-password"
-                className={errors.password ? 'input-error' : ''}
-              />
-              {errors.password && <span className="field-error">{errors.password}</span>}
-            </label>
-
-            <div className="form-actions" style={{ marginTop: 6 }}>
-              <button className="btn primary" type="submit" style={{ flexGrow: 1 }} disabled={isSubmitting}>
-                {isSubmitting ? 'Signing in…' : 'Sign In'}
-              </button>
-              <Link to="/signup" className="btn secondary" style={{ textAlign: 'center' }}>
-                Create account
-              </Link>
-            </div>
-
-            {showResend && (
-              <div style={{ marginTop: 16, padding: 16, background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
-                <p style={{ marginBottom: 8, fontSize: '0.9rem' }}>
-                  Your email isn't verified yet. Didn't receive the code? Resend verification email.
-                </p>
-                <button type="button" className="btn secondary" onClick={handleResend} disabled={isResending} style={{ flexGrow: 1 }}>
-                  {isResending ? 'Resending…' : 'Resend Verification Code'}
-                </button>
-              </div>
-            )}
-
-            <div className="hint" style={{ marginTop: 6 }}>
-              New here? <Link to="/signup">Sign up</Link> to create an account.
-            </div>
-
-            <div style={{ marginTop: 24, textAlign: 'center' }}>
-              <Link to="/" className="btn secondary">← Back to Home</Link>
-            </div>
-          </form>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1 className="auth-title">Welcome back</h1>
+          <p className="auth-subtitle">Sign in to continue your learning journey.</p>
         </div>
+
+        <form className="auth-form" onSubmit={handleSubmit} noValidate aria-label="Sign in form">
+          <div className="field">
+            <label className="field-label" htmlFor="email">Email Address</label>
+            <input
+              id="email"
+              name="email"
+              required
+              type="email"
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={setField}
+              autoComplete="email"
+              className={errors.email ? 'input-error' : ''}
+            />
+            {errors.email && <span className="field-error">{errors.email}</span>}
+          </div>
+
+          <PasswordInput
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={setField}
+            placeholder="Enter your password"
+            error={errors.password}
+            autoComplete="current-password"
+          />
+
+          <button className="btn primary auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign In'}
+          </button>
+
+          {showResend && (
+            <div className="resend-card">
+              <p className="resend-text">
+                📩 Your email isn't verified yet. Didn't receive the code?
+              </p>
+              <button type="button" className="btn secondary auth-submit" onClick={handleResend} disabled={isResending}>
+                {isResending ? 'Resending…' : 'Resend Verification Code'}
+              </button>
+            </div>
+          )}
+
+          <p className="auth-footer">
+            New here? <Link to="/signup">Create an account</Link>.
+          </p>
+        </form>
       </div>
 
       <div className="toast-container">
