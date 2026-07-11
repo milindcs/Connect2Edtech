@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
+import { cartAdd } from '../../shared/cartApi'
 
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
+  const [toasts, setToasts] = useState([])
+
+  const showToast = (message, type = 'success') => {
+    const id = Date.now() + Math.random()
+    setToasts((prev) => [...prev, { id, message, type }])
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000)
+  }
+
+  const handleAddToCart = async (c) => {
+    try {
+      await cartAdd({ courseKey: c.key, title: c.title, price: c.price, image: c.image || '' })
+      showToast(`Added "${c.title}" to your cart.`, 'success')
+    } catch {
+      showToast('Could not add to cart.', 'error')
+    }
+  }
 
   useEffect(() => {
     document.title = 'Courses - Core Technology Domains'
@@ -127,6 +144,14 @@ export default function CoursesPage() {
                   >
                     View Details
                   </Link>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    style={{ flexGrow: 1, textAlign: 'center' }}
+                    onClick={() => handleAddToCart(c)}
+                  >
+                    Add to Cart
+                  </button>
                 </div>
               </div>
             ))}
@@ -135,6 +160,12 @@ export default function CoursesPage() {
 
       <div style={{ marginTop: 32, textAlign: 'center' }}>
         <Link to="/" className="btn secondary">← Back to Home</Link>
+      </div>
+
+      <div className="toast-container">
+        {toasts.map((t) => (
+          <div key={t.id} className={`toast show ${t.type}`}>{t.message}</div>
+        ))}
       </div>
     </div>
   )
