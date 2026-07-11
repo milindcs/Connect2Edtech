@@ -10,7 +10,7 @@ export default function DashboardShell({
   children,
   rightHeader,
 }) {
-  const { signout, user } = useAuth()
+  const { user } = useAuth()
 
   const headerBadgeStyle = useMemo(() => {
     return {
@@ -66,9 +66,6 @@ export default function DashboardShell({
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {rightHeader}
-              <button onClick={signout} className="btn secondary">
-                Sign Out
-              </button>
             </div>
           </div>
 

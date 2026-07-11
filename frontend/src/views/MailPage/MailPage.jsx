@@ -16,7 +16,7 @@ function formatDate(value) {
 
 export default function MailPage() {
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, isStaff, user, token, signout } = useAuth()
+  const { isAdmin, isAuthenticated, isStaff, user, token } = useAuth()
 
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -103,7 +103,6 @@ export default function MailPage() {
               <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 0 }}>Mail Inbox</h2>
               <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Staff</span>
             </div>
-            <button onClick={signout} className="btn secondary">Sign Out</button>
           </div>
 
           {toast && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{toast}</p>}
