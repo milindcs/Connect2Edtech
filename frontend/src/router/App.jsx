@@ -5,10 +5,10 @@ import { AuthProvider, useAuth } from '../shared/AuthContext'
 
 // Redirect the generic "Dashboard" link to the user's actual dashboard by role.
 function DashboardRedirect() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isStaff } = useAuth()
   if (!isAuthenticated) return <Navigate to="/signin" replace />
   const role = user?.role
-  const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+  const target = isStaff ? '/admin' : role === 'student' ? '/student' : '/'
   return <Navigate to={target} replace />
 }
 
@@ -22,6 +22,7 @@ import ContactPage from '../views/ContactPage/ContactPage'
 import SignupPage from '../views/SignupPage/SignupPage'
 import SigninPage from '../views/SigninPage/SigninPage'
 import AdminDashboard from '../views/AdminDashboard/AdminDashboard'
+import AdminRoute from '../views/AdminDashboard/AdminRoute'
 import StudentPage from '../views/StudentPage/StudentPage'
 import HrDashboard from '../views/HrDashboard/HrDashboard'
 import MailPage from '../views/MailPage/MailPage'
@@ -41,7 +42,7 @@ export default function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />
           <Route path="/student" element={<StudentPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/hr" element={<HrDashboard />} />
           <Route path="/mail" element={<MailPage />} />
           <Route path="/dashboard" element={<DashboardRedirect />} />

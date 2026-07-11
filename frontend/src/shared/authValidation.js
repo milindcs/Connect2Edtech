@@ -18,22 +18,22 @@ export function isValidPhone(value) {
 }
 
 export function isValidPassword(value) {
-  return typeof value === 'string' && value.length >= 4
+  return typeof value === 'string' && value.length >= 8
 }
 
 // Returns a 0-4 strength score and a human label for the meter.
 export function passwordStrength(value) {
   const p = value || ''
   let score = 0
-  if (p.length >= 4) score += 1
   if (p.length >= 8) score += 1
   if (/[A-Z]/.test(p)) score += 1
   if (/[0-9]/.test(p)) score += 1
+  if (/[^A-Za-z0-9]/.test(p)) score += 1
 
-  let label = 'Use at least 4 characters.'
+  let label = 'Use at least 8 characters.'
   if (p.length >= 1) {
-    if (score <= 1) label = 'Weak — consider making it longer.'
-    else if (score === 2) label = 'Fair password.'
+    if (score <= 1) label = 'Weak — add uppercase, numbers, or symbols.'
+    else if (score === 2) label = 'Fair — consider adding a symbol.'
     else if (score === 3) label = 'Good password.'
     else label = 'Strong password.'
   }
@@ -41,7 +41,7 @@ export function passwordStrength(value) {
 }
 
 // Validates the signup payload and returns a field -> error map (empty when valid).
-export function validateSignup({ name, email, phone, whatsappNumber, connectWhatsapp, password, confirmPassword }) {
+export function validateSignup({ name, email, phone, password, confirmPassword, whatsappNumber, connectWhatsapp }) {
   const errors = {}
   if (!name || name.trim().length < 2) errors.name = 'Please enter your full name.'
   if (!isValidEmail(email)) errors.email = 'Please enter a valid email address.'
@@ -49,7 +49,9 @@ export function validateSignup({ name, email, phone, whatsappNumber, connectWhat
   if (connectWhatsapp && !isValidPhone(whatsappNumber || phone)) {
     errors.whatsappNumber = 'Please enter a valid WhatsApp number (10–15 digits).'
   }
-  if (!isValidPassword(password)) errors.password = 'Password must be at least 4 characters.'
-  if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match.'
+  if (!isValidPassword(password)) errors.password = 'Password must be at least 8 characters.'
+  if (confirmPassword !== undefined && password !== confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match.'
+  }
   return errors
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
-import { API_BASE } from '../../shared/cartApi'
+import api from '../../shared/api'
 import { getCachedData, setCachedData, useOnlineStatus } from '../../shared/storageUtils'
 import DashboardShell from '../shared/dashboard/DashboardShell'
 
@@ -53,27 +53,17 @@ export default function StudentPage() {
       }
 
       try {
-        const [enrRes, conRes, chkRes] = await Promise.all([
-          fetch(API_BASE + '/api/me/enrollments', { headers }),
-          fetch(API_BASE + '/api/me/contacts', { headers }),
-          fetch(API_BASE + '/api/me/checkouts', { headers }),
-        ])
-
         const [enr, con, chk] = await Promise.all([
-          enrRes.json(),
-          conRes.json(),
-          chkRes.json(),
+          api.get('/api/me/enrollments'),
+          api.get('/api/me/contacts'),
+          api.get('/api/me/checkouts'),
         ])
 
         if (!cancelled) {
-          if (!enrRes.ok) throw new Error(enr.error || 'Failed to load enrollments')
-          if (!conRes.ok) throw new Error(con.error || 'Failed to load messages')
-          if (!chkRes.ok) throw new Error(chk.error || 'Failed to load orders')
-
           const portalData = {
-            enrollments: enr.enrollments || [],
-            contacts: con.contacts || [],
-            checkouts: chk.checkouts || [],
+            enrollments: enr.data?.enrollments || [],
+            contacts: con.data?.contacts || [],
+            checkouts: chk.data?.checkouts || [],
           }
 
           setEnrollments(portalData.enrollments)

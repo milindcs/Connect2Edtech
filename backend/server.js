@@ -11,6 +11,10 @@ import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
 import { createDocument, findOne, updateById, find, countDocuments, clearCollection, getDb } from './store.js';
 
+// Google OAuth configuration
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+
 // Mongo-backed store functions are async; this server uses them as async where needed.
 
 
@@ -196,11 +200,86 @@ function buildWhatsAppUrl(message) {
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-app.use('/api/signup', createSignupRouter({ connectStore: find, createDocument, updateById, sendOtpEmail }))
+app.use('/api/auth/signup', createSignupRouter({ connectStore: find, createDocument, updateById, sendOtpEmail }))
 
-app.use('/api/signin', createSigninRouter({ findOne, signJwt }))
+app.use('/api/auth/signin', createSigninRouter({ findOne, signJwt }))
 
-app.post('/api/verify-otp', async (req, res) => {
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { idToken } = req.body || {}
+    if (!idToken) {
+      return res.status(400).json({ ok: false, error: 'Google ID token is required' })
+    }
+
+    if (!GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ ok: false, error: 'Google OAuth is not configured on the server' })
+    }
+
+    const tokenRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`)
+    if (!tokenRes.ok) {
+      return res.status(401).json({ ok: false, error: 'Invalid Google token' })
+    }
+
+    const tokenData = await tokenRes.json()
+    if (tokenData.aud !== GOOGLE_CLIENT_ID) {
+      return res.status(401).json({ ok: false, error: 'Invalid token audience' })
+    }
+    const googleEmail = String(tokenData.email || '').trim().toLowerCase()
+    const googleName = String(tokenData.name || tokenData.given_name || '').trim()
+    const googlePicture = String(tokenData.picture || '').trim()
+
+    if (!googleEmail) {
+      return res.status(400).json({ ok: false, error: 'Google account has no email' })
+    }
+
+    let account = await findOne('signups', { email: googleEmail })
+
+    if (!account) {
+      const randomPassword = Math.random().toString(36).slice(2) + Date.now().toString(36)
+      const salt = await bcrypt.genSalt(10)
+      const passwordHash = await bcrypt.hash(randomPassword, salt)
+
+      account = await createDocument('signups', {
+        name: googleName || googleEmail.split('@')[0],
+        email: googleEmail,
+        phone: '',
+        whatsappNumber: '',
+        passwordHash,
+        role: 'user',
+        verified: true,
+        googleId: tokenData.sub,
+        picture: googlePicture,
+      })
+    } else {
+      const updates = {}
+      if (!account.googleId) updates.googleId = tokenData.sub
+      if (!account.picture && googlePicture) updates.picture = googlePicture
+      if (Object.keys(updates).length > 0) {
+        await updateById('signups', account._id, { $set: updates })
+      }
+    }
+
+    const token = signJwt(account)
+    res.json({
+      ok: true,
+      token,
+      user: {
+        name: account.name,
+        email: account.email,
+        phone: account.phone,
+        whatsappNumber: account.whatsappNumber || '',
+        verified: account.verified,
+        role: account.role || 'user',
+        picture: account.picture || googlePicture,
+      },
+    })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Google authentication failed' })
+  }
+})
+
+app.post('/api/auth/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body || {}
     if (!email || !otp) {
@@ -233,7 +312,7 @@ app.post('/api/verify-otp', async (req, res) => {
   }
 })
 
-app.post('/api/resend-otp', async (req, res) => {
+app.post('/api/auth/resend-otp', async (req, res) => {
   try {
     const { email } = req.body || {}
     if (!email) {
@@ -374,6 +453,46 @@ app.get('/api/admin/enrollments', staffAuth, async (req, res) => {
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Failed to fetch enrollments.' })
+  }
+})
+
+app.get('/api/admin/email-status', adminAuth, async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      status: {
+        smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+        smtpPort: Number(process.env.SMTP_PORT || 587),
+        smtpUser: process.env.SMTP_USER || '',
+        smtpFrom: process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com',
+      }
+    })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch email status.' })
+  }
+})
+
+app.post('/api/admin/test-email', adminAuth, async (req, res) => {
+  try {
+    const { to } = req.body || {}
+    const recipient = String(to || process.env.SMTP_USER || '').trim()
+    if (!recipient) {
+      return res.status(400).json({ ok: false, error: 'Recipient email is required.' })
+    }
+
+    const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com'
+    await sendEmail({
+      to: recipient,
+      subject: 'Connect2Edtech - Test Email',
+      text: 'This is a test email from Connect2Edtech. If you received this, your Gmail/SMTP connection is working.',
+      html: '<p>This is a test email from <strong>Connect2Edtech</strong>. If you received this, your Gmail/SMTP connection is working.</p>',
+    })
+
+    res.json({ ok: true, message: `Test email sent to ${recipient}` })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to send test email.' })
   }
 })
 

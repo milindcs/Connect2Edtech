@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
-import { API_BASE } from '../../shared/cartApi'
+import api from '../../shared/api'
 import { getCachedData, setCachedData, useOnlineStatus } from '../../shared/storageUtils'
 
 function formatDate(value) {
@@ -61,28 +61,23 @@ export default function HrDashboard() {
       // Then fetch fresh data
       try {
         const [statsRes, contactsRes, enrollmentsRes, checkoutsRes] = await Promise.all([
-          fetch(API_BASE + '/api/admin/stats', { headers }),
-          fetch(API_BASE + '/api/admin/contacts', { headers }),
-          fetch(API_BASE + '/api/admin/enrollments', { headers }),
-          fetch(API_BASE + '/api/admin/checkouts', { headers }),
+          api.get('/api/admin/stats'),
+          api.get('/api/admin/contacts'),
+          api.get('/api/admin/enrollments'),
+          api.get('/api/admin/checkouts'),
         ])
-        const [statsData, contactsData, enrollmentsData, checkoutsData] = await Promise.all([
-          statsRes.json(),
-          contactsRes.json(),
-          enrollmentsRes.json(),
-          checkoutsRes.json(),
-        ])
+        const [statsData, contactsData, enrollmentsData, checkoutsData] = [
+          statsRes.data,
+          contactsRes.data,
+          enrollmentsRes.data,
+          checkoutsRes.data,
+        ]
         if (!cancelled) {
-          if (!statsRes.ok) throw new Error(statsData.error || 'Failed to load stats')
-          if (!contactsRes.ok) throw new Error(contactsData.error || 'Failed to load contacts')
-          if (!enrollmentsRes.ok) throw new Error(enrollmentsData.error || 'Failed to load enrollments')
-          if (!checkoutsRes.ok) throw new Error(checkoutsData.error || 'Failed to load checkouts')
-
           const dashboardData = {
             stats: statsData.stats || null,
             contacts: contactsData.contacts || [],
             enrollments: enrollmentsData.enrollments || [],
-            checkouts: checkoutsData.checkouts || []
+            checkouts: checkoutsData.checkouts || [],
           }
 
           setStats(dashboardData.stats)

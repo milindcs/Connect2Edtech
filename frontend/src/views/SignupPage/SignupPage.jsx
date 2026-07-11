@@ -1,406 +1,506 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../shared/AuthContext'
-import { buildWhatsAppUrl, cleanText } from '../../shared/whatsappUtils'
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../shared/AuthContext";
 import {
   validateSignup,
   passwordStrength,
-} from '../../shared/authValidation'
+} from "../../shared/authValidation";
 
-const STORAGE_KEYS = {
-  form: 'signup_form_data',
-  whatsapp: 'signup_connect_whatsapp',
-  verification: 'signup_requires_verification',
-  email: 'signup_registered_email',
-}
+const STORAGE_KEY = "signup_form_data";
 
 function dashboardForRole(role) {
-  return role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
-}
-
-function readJson(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch {
-    return fallback
+  switch (role) {
+    case "admin":
+      return "/admin";
+    case "hr":
+      return "/hr";
+    case "student":
+      return "/student";
+    default:
+      return "/";
   }
 }
 
-function PasswordInput({ label, name, value, onChange, placeholder, error, autoComplete }) {
-  const [visible, setVisible] = useState(false)
+function PasswordInput({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  error,
+  autoComplete,
+}) {
+  const [visible, setVisible] = useState(false);
+
   return (
     <div className="field">
-      <label className="field-label" htmlFor={name}>{label}</label>
+      <label className="field-label">{label}</label>
+
       <div className="input-wrapper">
         <input
-          id={name}
+          type={visible ? "text" : "password"}
           name={name}
-          required
-          type={visible ? 'text' : 'password'}
-          placeholder={placeholder}
           value={value}
+          placeholder={placeholder}
           onChange={onChange}
           autoComplete={autoComplete}
-          className={error ? 'input-error' : ''}
+          className={error ? "input-error" : ""}
         />
+
         <button
           type="button"
           className="password-toggle"
-          onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? 'Hide password' : 'Show password'}
+          onClick={() => setVisible(!visible)}
         >
-          {visible ? '🙈' : '👁️'}
+          {visible ? "🙈" : "👁"}
         </button>
       </div>
+
       {error && <span className="field-error">{error}</span>}
     </div>
-  )
+  );
 }
 
 export default function SignupPage() {
-  const navigate = useNavigate()
-  const { signup, verifyOtp, resendOtp, isAuthenticated, user } = useAuth()
+  const navigate = useNavigate();
 
-  const [toasts, setToasts] = useState([])
-  const [step, setStep] = useState('form')
+  const {
+    signup,
+    verifyOtp,
+    resendOtp,
+    googleSignin,
+    isAuthenticated,
+    user,
+  } = useAuth();
 
-  const [formData, setFormData] = useState(() => {
-    const saved = readJson(STORAGE_KEYS.form, null)
-    return {
-      name: saved?.name || '',
-      email: saved?.email || '',
-      phone: saved?.phone || '',
-      whatsappNumber: saved?.whatsappNumber || '',
-      password: '',
-      confirmPassword: '',
-    }
-  })
+  const [step, setStep] = useState("form");
 
-  const [connectWhatsapp, setConnectWhatsapp] = useState(
-    readJson(STORAGE_KEYS.whatsapp, true)
-  )
+  const [otp, setOtp] = useState("");
 
-  const [registeredEmail, setRegisteredEmail] = useState(
-    localStorage.getItem(STORAGE_KEYS.email) || ''
-  )
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
-  const [errors, setErrors] = useState({})
-  const [otp, setOtp] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isResending, setIsResending] = useState(false)
+  const [errors, setErrors] = useState({});
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const [isResending, setIsResending] = useState(false);
+
+  const [toasts, setToasts] = useState([]);
+
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
-    document.title = 'Sign Up - Connect2Edtech'
-  }, [])
+    document.title = "Sign Up - Connect2Edtech";
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
-      clearSignupStorage()
-      navigate(dashboardForRole(user?.role))
+      localStorage.removeItem(STORAGE_KEY);
+      navigate(dashboardForRole(user?.role));
     }
-  }, [isAuthenticated, navigate, user?.role])
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
-    const { password, confirmPassword, ...rest } = formData
-    localStorage.setItem(STORAGE_KEYS.form, JSON.stringify(rest))
-  }, [formData])
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    document.body.appendChild(script)
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.whatsapp, JSON.stringify(connectWhatsapp))
-  }, [connectWhatsapp])
+    return () => {
+      document.body.removeChild(script)
+    }
+  }, [])
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.verification, JSON.stringify(step === 'verify'))
-  }, [step])
+  const handleGoogleSignup = async () => {
+    setGoogleLoading(true)
+    try {
+      const google = window.google
+      if (!google) {
+        showToast('Google Sign-In is loading. Please try again.', 'error')
+        return
+      }
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.email, registeredEmail)
-  }, [registeredEmail])
+      const client = google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+        callback: async (response) => {
+          try {
+            const data = await googleSignin(response.credential)
+            showToast('Signed in with Google!', 'success')
+            setTimeout(() => navigate(dashboardForRole(data.user?.role)), 500)
+          } catch (err) {
+            showToast(err.message || 'Google sign-in failed', 'error')
+          } finally {
+            setGoogleLoading(false)
+          }
+        },
+      })
 
-  function clearSignupStorage() {
-    Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k))
+      client.prompt()
+    } catch (err) {
+      showToast('Google Sign-In is not available.', 'error')
+      setGoogleLoading(false)
+    }
   }
 
-  const showToast = (message, type = 'success') => {
-    const id = Date.now() + Math.random()
-    setToasts((prev) => [...prev, { id, message, type }])
+  const showToast = (message, type = "success") => {
+    const id = Date.now();
+
+    setToasts((prev) => [...prev, { id, message, type }]);
+
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 4000)
-  }
+      setToasts((prev) => prev.filter((x) => x.id !== id));
+    }, 4000);
+  };
 
   const setField = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }))
-  }
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
 
   const strength = useMemo(
     () => passwordStrength(formData.password),
     [formData.password]
-  )
+  );
 
   const handleSignup = async (e) => {
-    e.preventDefault()
-    const validation = validateSignup({
-      ...formData,
-      connectWhatsapp,
-    })
-    if (Object.keys(validation).length > 0) {
-      setErrors(validation)
-      showToast('Please fix the highlighted fields.', 'error')
-      return
+    e.preventDefault();
+
+    const validation = validateSignup(formData);
+
+    if (Object.keys(validation).length) {
+      setErrors(validation);
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
+
     try {
-      const data = await signup({
+      const res = await signup({
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        whatsappNumber: connectWhatsapp
-          ? (formData.whatsappNumber.trim() || formData.phone.trim())
-          : '',
-        connectWhatsapp,
-        password: formData.password,
-      })
+        password: formData.password.trim(),
+      });
 
-      if (data.requiresVerification) {
-        setRegisteredEmail(formData.email.trim())
-        setStep('verify')
-        setOtp('')
-        showToast('Account created! Check your email for the verification code.', 'success')
-        const msg = [
-          'Hello Connect2Edtech! I just signed up.',
-          `Name: ${cleanText(formData.name)}`,
-          `Email: ${cleanText(formData.email)}`,
-        ].join('\n')
-        setTimeout(() => {
-          window.open(buildWhatsAppUrl(msg), '_blank', 'noopener,noreferrer')
-        }, 800)
+      if (res.requiresVerification) {
+        setRegisteredEmail(formData.email);
+
+        setStep("verify");
+
+        showToast("OTP sent to your email.");
       }
+
+      setFormData((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
     } catch (err) {
-      showToast(err.message || 'Signup failed. Please try again.', 'error')
+      showToast(
+        err.message ||
+          "Signup failed",
+        "error"
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleVerify = async (e) => {
-    e.preventDefault()
-    if (!otp || otp.length < 4) {
-      showToast('Please enter the 6-digit verification code.', 'error')
-      return
+    e.preventDefault();
+
+    if (!otp || otp.length !== 6) {
+      showToast("Enter 6 digit OTP", "error");
+      return;
     }
-    setIsVerifying(true)
+
+    setIsVerifying(true);
+
     try {
-      await verifyOtp(registeredEmail, otp, { autoLogin: false })
-      showToast('Email verified! Please sign in to continue.', 'success')
-      clearSignupStorage()
-      setTimeout(() => navigate('/signin'), 800)
+      await verifyOtp(registeredEmail, otp);
+
+      showToast("Email verified");
+
+      navigate("/signin");
     } catch (err) {
-      showToast(err.message || 'Verification failed.', 'error')
+      showToast(err.message, "error");
     } finally {
-      setIsVerifying(false)
+      setIsVerifying(false);
     }
-  }
+  };
 
   const handleResend = async () => {
-    if (!registeredEmail) return
-    setIsResending(true)
-    try {
-      await resendOtp(registeredEmail)
-      showToast('New verification code sent to your email.', 'success')
-    } catch (err) {
-      showToast(err.message || 'Could not resend code.', 'error')
-    } finally {
-      setIsResending(false)
-    }
-  }
+    setIsResending(true);
 
-  const goToForm = () => {
-    setStep('form')
-    setOtp('')
-    setErrors({})
-    clearSignupStorage()
-  }
+    try {
+      await resendOtp(registeredEmail);
+
+      showToast("OTP resent successfully");
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        {step === 'form' ? (
+
+        {step === "form" ? (
           <>
             <div className="auth-header">
-              <h1 className="auth-title">Create Account</h1>
-              <p className="auth-subtitle">Join Connect2Edtech and start learning today.</p>
+              <h1 className="auth-title">Create Your Account</h1>
+
+              <p className="auth-subtitle">
+                Join Connect2Edtech and start your learning journey.
+              </p>
             </div>
 
-            <form className="auth-form" onSubmit={handleSignup} noValidate aria-label="Signup form">
-              <div className="form-row">
-                <div className="field">
-                  <label className="field-label" htmlFor="name">Full Name</label>
-                  <input
-                    id="name"
-                    name="name"
-                    required
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={setField}
-                    autoComplete="name"
-                    className={errors.name ? 'input-error' : ''}
-                  />
-                  {errors.name && <span className="field-error">{errors.name}</span>}
-                </div>
-                <div className="field">
-                  <label className="field-label" htmlFor="phone">Phone Number</label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    required
-                    placeholder="+91 7019436720"
-                    value={formData.phone}
-                    onChange={setField}
-                    autoComplete="tel"
-                    className={errors.phone ? 'input-error' : ''}
-                  />
-                  {errors.phone && <span className="field-error">{errors.phone}</span>}
-                </div>
-              </div>
+            <form
+              className="auth-form"
+              onSubmit={handleSignup}
+              noValidate
+            >
 
               <div className="field">
-                <label className="field-label" htmlFor="email">Email Address</label>
+                <label className="field-label">Full Name</label>
+
                 <input
-                  id="email"
-                  name="email"
-                  required
-                  type="email"
-                  placeholder="you@example.com"
-                  value={formData.email}
+                  type="text"
+                  name="name"
+                  placeholder="Enter Full Name"
+                  value={formData.name}
                   onChange={setField}
-                  autoComplete="email"
-                  className={errors.email ? 'input-error' : ''}
+                  className={errors.name ? "input-error" : ""}
                 />
-                {errors.email && <span className="field-error">{errors.email}</span>}
-              </div>
 
-              <div className="form-row">
-                <PasswordInput
-                  label="Password"
-                  name="password"
-                  value={formData.password}
-                  onChange={setField}
-                  placeholder="Min 4 characters"
-                  error={errors.password}
-                  autoComplete="new-password"
-                />
-                <PasswordInput
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={setField}
-                  placeholder="Re-enter password"
-                  error={errors.confirmPassword}
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <div className="strength-card">
-                <div className="strength-header">
-                  <span className="strength-label">{strength.label}</span>
-                </div>
-                <div className="strength-bar" aria-label="password strength meter">
-                  {[0, 1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className={`strength-segment ${strength.score > i ? 'is-filled' : ''}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <label className="checkbox-card">
-                <input
-                  type="checkbox"
-                  checked={connectWhatsapp}
-                  onChange={(e) => setConnectWhatsapp(e.target.checked)}
-                />
-                <span>
-                  <strong>Link WhatsApp for updates</strong>
-                  <span className="hint">Get course updates and support directly on WhatsApp.</span>
-                </span>
-              </label>
-
-              <div className="field">
-                <label className="field-label" htmlFor="whatsappNumber">WhatsApp Number</label>
-                <input
-                  id="whatsappNumber"
-                  name="whatsappNumber"
-                  placeholder={connectWhatsapp ? 'Same as phone (or enter another)' : 'Optional'}
-                  value={formData.whatsappNumber}
-                  onChange={setField}
-                  autoComplete="tel"
-                  disabled={!connectWhatsapp}
-                  className={errors.whatsappNumber ? 'input-error' : ''}
-                />
-                {errors.whatsappNumber && (
-                  <span className="field-error">{errors.whatsappNumber}</span>
+                {errors.name && (
+                  <span className="field-error">
+                    {errors.name}
+                  </span>
                 )}
               </div>
 
-              <button className="btn primary auth-submit" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating account…' : 'Sign Up'}
+              <div className="field">
+                <label className="field-label">Email Address</label>
+
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter Email"
+                  value={formData.email}
+                  onChange={setField}
+                  className={errors.email ? "input-error" : ""}
+                />
+
+                {errors.email && (
+                  <span className="field-error">
+                    {errors.email}
+                  </span>
+                )}
+              </div>
+
+              <div className="field">
+                <label className="field-label">Phone Number</label>
+
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="Enter Phone Number"
+                  value={formData.phone}
+                  onChange={setField}
+                  className={errors.phone ? "input-error" : ""}
+                />
+
+                {errors.phone && (
+                  <span className="field-error">
+                    {errors.phone}
+                  </span>
+                )}
+              </div>
+
+              <PasswordInput
+                label="Password"
+                name="password"
+                value={formData.password}
+                onChange={setField}
+                placeholder="Minimum 8 characters"
+                error={errors.password}
+                autoComplete="new-password"
+              />
+
+              <PasswordInput
+                label="Confirm Password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={setField}
+                placeholder="Confirm Password"
+                error={errors.confirmPassword}
+                autoComplete="new-password"
+              />
+
+              <div className="strength-card">
+
+                <div className="strength-header">
+                  <strong>Password Strength:</strong>
+                  <span>{strength.label}</span>
+                </div>
+
+                <div className="strength-bar">
+                  {[0, 1, 2, 3].map((item) => (
+                    <div
+                      key={item}
+                      className={`strength-segment ${
+                        strength.score > item ? "is-filled" : ""
+                      }`}
+                    />
+                  ))}
+                </div>
+
+              </div>
+
+              <button
+                type="submit"
+                className="btn primary auth-submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner"></span>
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+
+              <div className="auth-divider">
+                <span>or</span>
+              </div>
+
+              <button
+                type="button"
+                className="btn google-btn"
+                onClick={handleGoogleSignup}
+                disabled={isSubmitting}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
               </button>
 
               <p className="auth-footer">
-                Already have an account? <Link to="/signin">Sign in</Link>.
+                Already have an account?{" "}
+                <Link to="/signin">
+                  Sign In
+                </Link>
               </p>
+
             </form>
           </>
         ) : (
           <>
             <div className="auth-header">
               <div className="auth-icon">📩</div>
-              <h1 className="auth-title">Verify your email</h1>
+
+              <h1 className="auth-title">
+                Verify Your Email
+              </h1>
+
               <p className="auth-subtitle">
-                We sent a 6-digit code to <strong>{registeredEmail}</strong>.
+                We've sent a 6-digit verification code to
               </p>
+
+              <strong>{registeredEmail}</strong>
             </div>
 
-            <form className="auth-form" onSubmit={handleVerify} aria-label="Verify email form">
+            <form
+              className="auth-form"
+              onSubmit={handleVerify}
+            >
               <div className="field">
-                <label className="field-label" htmlFor="otp">Verification Code</label>
+                <label className="field-label">
+                  Verification Code
+                </label>
+
                 <input
-                  id="otp"
                   type="text"
-                  inputMode="numeric"
                   maxLength={6}
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                  required
+                  inputMode="numeric"
                   className="otp-input"
+                  placeholder="Enter 6 Digit OTP"
+                  value={otp}
+                  onChange={(e) =>
+                    setOtp(
+                      e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .slice(0, 6)
+                    )
+                  }
                 />
               </div>
 
-              <div className="form-actions">
-                <button className="btn primary auth-submit" type="submit" disabled={isVerifying}>
-                  {isVerifying ? 'Verifying…' : 'Verify Email'}
-                </button>
-                <button type="button" className="btn secondary auth-submit" onClick={handleResend} disabled={isResending}>
-                  {isResending ? 'Resending…' : 'Resend Code'}
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="btn primary auth-submit"
+                disabled={isVerifying}
+              >
+                {isVerifying ? (
+                  <>
+                    <span className="spinner"></span>
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify Email"
+                )}
+              </button>
+
+              <button
+                type="button"
+                className="btn secondary auth-submit"
+                onClick={handleResend}
+                disabled={isResending}
+              >
+                {isResending ? (
+                  <>
+                    <span className="spinner"></span>
+                    Resending...
+                  </>
+                ) : (
+                  "Resend OTP"
+                )}
+              </button>
 
               <p className="auth-footer">
-                Wrong email?{' '}
+                Wrong email?{" "}
                 <button
                   type="button"
-                  onClick={goToForm}
                   className="link-button"
+                  onClick={() => {
+                    setStep("form");
+                    setOtp("");
+                  }}
                 >
-                  Change email
+                  Change Email
                 </button>
               </p>
             </form>
@@ -416,5 +516,5 @@ export default function SignupPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

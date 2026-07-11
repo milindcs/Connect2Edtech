@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { API_BASE } from './cartApi'
+import api from './api'
 
 const AuthContext = createContext(null)
 
@@ -32,22 +32,18 @@ export function AuthProvider({ children }) {
   }, [token, user, state])
 
   const apiFetch = async (path, options = {}) => {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
+    try {
+      const res = await api.request({
+        url: path,
+        method: options.method || 'get',
+        data: options.body,
+        ...options,
+      })
+      return res.data
+    } catch (err) {
+      const message = err?.response?.data?.error || err.message || 'Request failed'
+      throw new Error(message)
     }
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
-    const res = await fetch(API_BASE + path, {
-      ...options,
-      headers,
-    })
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text || `Request failed: ${res.status}`)
-    }
-    return res.json().catch(() => ({}))
   }
 
   // If token exists but user/role might be stale (e.g. refresh), fetch authoritative user.
@@ -75,7 +71,7 @@ export function AuthProvider({ children }) {
   }, [token, user?.role, user?.verified])
 
   const signup = async (payload) => {
-    const data = await apiFetch('/api/signup', {
+    const data = await apiFetch('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
@@ -84,7 +80,7 @@ export function AuthProvider({ children }) {
   }
 
   const verifyOtp = async (email, otp, { autoLogin = true } = {}) => {
-    const data = await apiFetch('/api/verify-otp', {
+    const data = await apiFetch('/api/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ email, otp }),
     })
@@ -96,7 +92,7 @@ export function AuthProvider({ children }) {
   }
 
   const resendOtp = async (email) => {
-    const data = await apiFetch('/api/resend-otp', {
+    const data = await apiFetch('/api/auth/resend-otp', {
       method: 'POST',
       body: JSON.stringify({ email }),
     })
@@ -105,11 +101,23 @@ export function AuthProvider({ children }) {
   }
 
   const signin = async (email, password) => {
-    const data = await apiFetch('/api/signin', {
+    const data = await apiFetch('/api/auth/signin', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
     if (!data.ok) throw new Error(data.error || 'Sign in failed')
+    if (data.token && data.user) {
+      setState({ token: data.token, user: data.user })
+    }
+    return data
+  }
+
+  const googleSignin = async (idToken) => {
+    const data = await apiFetch('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    })
+    if (!data.ok) throw new Error(data.error || 'Google sign-in failed')
     if (data.token && data.user) {
       setState({ token: data.token, user: data.user })
     }
@@ -138,6 +146,7 @@ export function AuthProvider({ children }) {
     verifyOtp,
     resendOtp,
     signin,
+    googleSignin,
     fetchMe,
     signout,
   }), [token, user])

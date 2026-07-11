@@ -9,7 +9,7 @@ export function createSigninRouter({ findOne, signJwt }) {
   router.post('/', async (req, res) => {
     try {
       const { email, password } = req.body || {};
-      if (!email || !password) {
+      if (!email || !password || String(password).trim().length === 0) {
         return res.status(400).json({ ok: false, error: 'email and password are required' });
       }
 
@@ -20,7 +20,7 @@ export function createSigninRouter({ findOne, signJwt }) {
         return res.status(401).json({ ok: false, error: 'No account found for this email. Please sign up first.' });
       }
 
-      const matched = await bcrypt.compare(password, account.passwordHash || '');
+      const matched = await bcrypt.compare(String(password).trim(), account.passwordHash || '');
       if (!matched) {
         return res.status(401).json({ ok: false, error: 'Incorrect password.' });
       }

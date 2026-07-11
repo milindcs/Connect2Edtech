@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/AuthContext'
-import { API_BASE } from '../../shared/cartApi'
+import api from '../../shared/api'
 
 function formatDate(value) {
   if (!value) return '—'
@@ -42,13 +42,10 @@ export default function MailPage() {
   useEffect(() => {
     if (!isStaff || !token) return
     let cancelled = false
-    const headers = { Authorization: `Bearer ${token}` }
     const load = async () => {
       setLoading(true)
       try {
-        const res = await fetch(API_BASE + '/api/mail', { headers })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to load inbox')
+        const { data } = await api.get('/api/mail')
         if (!cancelled) setMessages(data.messages || [])
       } catch (err) {
         if (!cancelled) setError(err.message || 'Failed to load inbox')
@@ -75,13 +72,10 @@ export default function MailPage() {
     setSending(true)
     setToast('')
     try {
-      const res = await fetch(API_BASE + `/api/mail/${id}/reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ subject: subject.trim(), message: body.trim() }),
+      const { data } = await api.post(`/api/mail/${id}/reply`, {
+        subject: subject.trim(),
+        message: body.trim(),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to send reply')
       setMessages((prev) => prev.map((m) => (m._id === id ? data.contact : m)))
       setActiveId('')
       setToast('Reply sent.')

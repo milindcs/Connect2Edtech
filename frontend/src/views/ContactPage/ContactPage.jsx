@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { API_BASE } from '../../shared/cartApi'
+import api from '../../shared/api'
 import { buildWhatsAppUrl } from '../../shared/whatsappUtils'
 
 export default function ContactPage() {
@@ -39,42 +39,34 @@ export default function ContactPage() {
     return () => observer.disconnect()
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem('contact_form_data', JSON.stringify(formData))
-  }, [formData])
-
-  const showToast = (message, type = 'success') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  }
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value }
+      localStorage.setItem('contact_form_data', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const showToast = (message, type = 'success') => {
+    const id = Date.now()
+    setToasts((prev) => [...prev, { id, message, type }])
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+    }, 3000)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     try {
-      const res = await fetch(API_BASE + '/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          courses: '',
-        })
+      await api.post('/api/contact', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        courses: '',
       })
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        throw new Error(text || `Request failed: ${res.status}`)
-      }
       showToast('Inquiry captured! We will get back to you soon.', 'success')
       localStorage.removeItem('contact_form_data')
       setIsSubmitted(true)

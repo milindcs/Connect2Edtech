@@ -59,16 +59,13 @@ export default function EnrollmentPage() {
     return () => observer.disconnect()
   }, [courseParam])
 
-  useEffect(() => {
-    localStorage.setItem('enrollment_form_data', JSON.stringify(formData))
-  }, [formData])
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    setFormData((prev) => {
+      const next = { ...prev, [name]: type === 'checkbox' ? checked : value }
+      localStorage.setItem('enrollment_form_data', JSON.stringify(next))
+      return next
+    })
   }
 
   const handleSubmit = async (e) => {
