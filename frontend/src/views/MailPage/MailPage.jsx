@@ -32,13 +32,10 @@ export default function MailPage() {
   }, [])
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/signin')
+    if (!isAuthenticated || !token) {
+      setLoading(false)
+      return
     }
-  }, [isAuthenticated, navigate])
-
-  useEffect(() => {
-    if (!isAuthenticated || !token) return
     let cancelled = false
     const load = async () => {
       setLoading(true)
@@ -84,8 +81,6 @@ export default function MailPage() {
     }
   }
 
-  if (!isAuthenticated) return null
-
   return (
     <div className="enroll-wrap">
       <div className="container">
@@ -96,6 +91,14 @@ export default function MailPage() {
               <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Mail</span>
             </div>
           </div>
+
+          {!isAuthenticated && (
+            <div style={{ padding: 20, textAlign: 'center', background: 'rgba(236, 72, 153, 0.05)', border: '1px solid var(--border-color)', borderRadius: 12, marginBottom: 16 }}>
+              <h3 style={{ marginTop: 0 }}>Sign in to access mail</h3>
+              <p style={{ color: '#6b2a4a' }}>The inbox and replies are available after you sign in.</p>
+              <Link to="/signin" className="btn primary">Sign In</Link>
+            </div>
+          )}
 
           {toast && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{toast}</p>}
           {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}

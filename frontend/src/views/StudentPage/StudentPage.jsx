@@ -31,11 +31,10 @@ export default function StudentPage() {
   }, [])
 
   useEffect(() => {
-    if (!isAuthenticated) navigate('/signin')
-  }, [isAuthenticated, navigate])
-
-  useEffect(() => {
-    if (!isAuthenticated || !token) return
+    if (!isAuthenticated || !token) {
+      setLoading(false)
+      return
+    }
     let cancelled = false
     const headers = { Authorization: `Bearer ${token}` }
 
@@ -86,8 +85,6 @@ export default function StudentPage() {
     return () => { cancelled = true }
   }, [isAuthenticated, token])
 
-  if (!isAuthenticated) return null
-
   const stats = useMemo(() => [
     { label: 'My Courses', value: enrollments.length },
     { label: 'My Purchases', value: checkouts.length },
@@ -118,8 +115,15 @@ export default function StudentPage() {
           Browse Courses →
         </Link>
       }
-    >
-      {isOffline && (
+      >
+        {!isAuthenticated && (
+          <div className="card" style={{ padding: 24, marginBottom: 24, textAlign: 'center' }}>
+            <h3 style={{ marginTop: 0 }}>Sign in to view your dashboard</h3>
+            <p style={{ color: '#6b2a4a' }}>Your courses, messages, and profile are available after you sign in.</p>
+            <Link to="/signin" className="btn primary">Sign In</Link>
+          </div>
+        )}
+        {isOffline && (
         <div
           style={{
             padding: 12,
