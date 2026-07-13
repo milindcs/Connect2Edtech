@@ -65,7 +65,9 @@ export default function SigninPage() {
   useEffect(() => {
     if (!isAuthenticated) return
     localStorage.removeItem(STORAGE_KEY)
-    navigate('/dashboard')
+    const role = user?.role
+    const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+    navigate(target)
   }, [isAuthenticated, user?.role, navigate])
 
   useEffect(() => {
@@ -93,9 +95,11 @@ export default function SigninPage() {
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
         callback: async (response) => {
           try {
-            const data = await googleSignin(response.credential)
-            showToast('Signed in with Google!', 'success')
-            setTimeout(() => navigate('/dashboard'), 500)
+          const data = await googleSignin(response.credential)
+          showToast('Signed in with Google!', 'success')
+          const role = data?.user?.role
+          const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+          setTimeout(() => navigate(target), 500)
           } catch (err) {
             showToast(err.message || 'Google sign-in failed', 'error')
           } finally {
@@ -138,9 +142,11 @@ export default function SigninPage() {
 
     setIsSubmitting(true)
     try {
-      await signin(email, formData.password)
+      const data = await signin(email, formData.password)
       showToast('Signed in! Redirecting...', 'success')
-      navigate('/dashboard')
+      const role = data?.user?.role
+      const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+      navigate(target)
     } catch (err) {
       const message = err.message || 'Could not sign in. Please try again.'
       showToast(message, 'error')

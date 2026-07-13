@@ -42,7 +42,7 @@ export function passwordStrength(value) {
 export function validateSignup({ name, email, phone, password, confirmPassword, whatsappNumber, connectWhatsapp }) {
   const errors = {}
   if (!name || !name.trim()) errors.name = 'Please enter your full name.'
-  if (!email || !String(email).trim()) errors.email = 'Please enter a valid email address.'
+  if (!email || !isValidEmail(email)) errors.email = 'Please enter a valid email address.'
   if (!isValidPhone(phone)) errors.phone = 'Please enter a valid phone number (10–15 digits).'
   if (connectWhatsapp && !isValidPhone(whatsappNumber || phone)) {
     errors.whatsappNumber = 'Please enter a valid WhatsApp number (10–15 digits).'
