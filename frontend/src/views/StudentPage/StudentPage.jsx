@@ -21,7 +21,6 @@ export default function StudentPage() {
   const { user, isAuthenticated, token } = useAuth()
   const [enrollments, setEnrollments] = useState([])
   const [contacts, setContacts] = useState([])
-  const [checkouts, setCheckouts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const isOffline = useOnlineStatus()
@@ -46,28 +45,24 @@ export default function StudentPage() {
         if (!cancelled) {
           setEnrollments(cached.enrollments || [])
           setContacts(cached.contacts || [])
-          setCheckouts(cached.checkouts || [])
           setLoading(false)
         }
       }
 
       try {
-        const [enr, con, chk] = await Promise.all([
+        const [enr, con] = await Promise.all([
           api.get('/api/me/enrollments'),
           api.get('/api/me/contacts'),
-          api.get('/api/me/checkouts'),
         ])
 
         if (!cancelled) {
           const portalData = {
             enrollments: enr.data?.enrollments || [],
             contacts: con.data?.contacts || [],
-            checkouts: chk.data?.checkouts || [],
           }
 
           setEnrollments(portalData.enrollments)
           setContacts(portalData.contacts)
-          setCheckouts(portalData.checkouts)
 
           setCachedData(CACHE_KEY, portalData)
         }
@@ -87,9 +82,8 @@ export default function StudentPage() {
 
   const stats = useMemo(() => [
     { label: 'My Courses', value: enrollments.length },
-    { label: 'My Purchases', value: checkouts.length },
     { label: 'Messages', value: contacts.length },
-  ], [enrollments.length, checkouts.length, contacts.length])
+  ], [enrollments.length, contacts.length])
 
   return (
     <DashboardShell

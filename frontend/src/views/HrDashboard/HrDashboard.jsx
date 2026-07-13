@@ -20,7 +20,6 @@ export default function HrDashboard() {
   const { isAdmin, isAuthenticated, isStaff, token, user } = useAuth()
   const [contacts, setContacts] = useState([])
   const [enrollments, setEnrollments] = useState([])
-  const [checkouts, setCheckouts] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -48,42 +47,37 @@ export default function HrDashboard() {
 
       // Try to load from cache first
       const cached = getCachedData(CACHE_KEY)
-      if (cached) {
+       if (cached) {
         if (!cancelled) {
           setStats(cached.stats || null)
           setContacts(cached.contacts || [])
           setEnrollments(cached.enrollments || [])
-          setCheckouts(cached.checkouts || [])
           setLoading(false)
         }
       }
 
       // Then fetch fresh data
       try {
-        const [statsRes, contactsRes, enrollmentsRes, checkoutsRes] = await Promise.all([
+        const [statsRes, contactsRes, enrollmentsRes] = await Promise.all([
           api.get('/api/admin/stats'),
           api.get('/api/admin/contacts'),
           api.get('/api/admin/enrollments'),
-          api.get('/api/admin/checkouts'),
         ])
-        const [statsData, contactsData, enrollmentsData, checkoutsData] = [
+        const [statsData, contactsData, enrollmentsData] = [
           statsRes.data,
           contactsRes.data,
           enrollmentsRes.data,
-          checkoutsRes.data,
         ]
         if (!cancelled) {
           const dashboardData = {
             stats: statsData.stats || null,
             contacts: contactsData.contacts || [],
             enrollments: enrollmentsData.enrollments || [],
-            checkouts: checkoutsData.checkouts || [],
           }
 
           setStats(dashboardData.stats)
           setContacts(dashboardData.contacts)
           setEnrollments(dashboardData.enrollments)
-          setCheckouts(dashboardData.checkouts)
 
           // Cache the data
           setCachedData(CACHE_KEY, dashboardData)
@@ -109,7 +103,6 @@ export default function HrDashboard() {
   const hrStats = stats ? [
     { label: 'Total Contacts', value: stats.contacts },
     { label: 'Enrollments', value: stats.enrollments },
-    { label: 'Orders', value: stats.checkouts },
     { label: 'Revenue', value: `₹${stats.revenue || 0}` },
   ] : []
 
@@ -201,41 +194,6 @@ export default function HrDashboard() {
                       <td style={{ padding: 8 }}>{e.courseTitle || e.courseKey || '—'}</td>
                       <td style={{ padding: 8 }}>{e.college || '—'}</td>
                       <td style={{ padding: 8 }}>{formatDate(e.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Recent Orders */}
-          <h3 style={{ margin: '32px 0 12px' }}>Recent Orders</h3>
-          {loading ? <p>Loading…</p> : checkouts.length === 0 ? (
-            <p style={{ color: '#6b2a4a' }}>No orders yet.</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Type</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Name</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Email</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Courses</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Total</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {checkouts.slice(0, 20).map((o) => (
-                    <tr key={o._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: 8, textTransform: 'capitalize' }}>{o.submissionType || 'order'}</td>
-                      <td style={{ padding: 8 }}>{o.name || '—'}</td>
-                      <td style={{ padding: 8 }}>{o.email || '—'}</td>
-                      <td style={{ padding: 8, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {(o.courses || []).map((c) => c.title).filter(Boolean).join(', ') || o.courseTitle || '—'}
-                      </td>
-                      <td style={{ padding: 8, fontWeight: 700 }}>₹{o.totalAmount || 0}</td>
-                      <td style={{ padding: 8 }}>{formatDate(o.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>

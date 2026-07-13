@@ -423,13 +423,30 @@ app.get('/api/me/contacts', authMiddleware, async (req, res) => {
   }
 })
 
-app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
+app.post('/api/enrollment', async (req, res) => {
   try {
-    const items = await find('checkouts', { email: req.user.email }, { sort: { createdAt: -1 } })
-    res.json({ ok: true, checkouts: items })
+    const { name, email, phone, college, courseKey, courseTitle, message } = req.body || {};
+    if (!name || !email || !phone) {
+      return res.status(400).json({ ok: false, error: 'name, email, and phone are required' });
+    }
+    if (!/^\S+@\S+\.\S+$/.test(String(email).trim())) {
+      return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
+    }
+
+    const enrollment = await createDocument('enrollments', {
+      name: trimmed(name),
+      email: String(email).trim(),
+      phone: trimmed(phone),
+      college: trimmed(college || ''),
+      courseKey: courseKey || '',
+      courseTitle: courseTitle || '',
+      message: message || '',
+    });
+
+    res.json({ ok: true, message: 'Enrollment received.', enrollment });
   } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Failed to fetch purchases.' })
+    console.error(e);
+    res.status(500).json({ ok: false, error: 'Enrollment failed. Please try again.' });
   }
 })
 
