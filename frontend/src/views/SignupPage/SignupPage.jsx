@@ -17,7 +17,7 @@ function dashboardForRole(role) {
     case "student":
       return "/student";
     default:
-      return "/";
+      return "/student";
   }
 }
 

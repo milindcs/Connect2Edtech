@@ -8,7 +8,7 @@ function DashboardRedirect() {
   const { user, isAuthenticated, isStaff } = useAuth()
   if (!isAuthenticated) return <Navigate to="/signin" replace />
   const role = user?.role
-  const target = isStaff ? '/admin' : role === 'student' ? '/student' : '/'
+  const target = isStaff ? '/admin' : role === 'student' || role === 'user' ? '/student' : '/'
   return <Navigate to={target} replace />
 }
 
