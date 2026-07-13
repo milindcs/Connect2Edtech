@@ -43,8 +43,8 @@ export default function App() {
           <Route path="/signin" element={<SigninPage />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/hr" element={<HrDashboard />} />
-          <Route path="/mail" element={<MailPage />} />
+          <Route path="/hr" element={<AdminRoute><HrDashboard /></AdminRoute>} />
+          <Route path="/mail" element={<AdminRoute><MailPage /></AdminRoute>} />
           <Route path="/dashboard" element={<DashboardRedirect />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
