@@ -16,7 +16,7 @@ function formatDate(value) {
 
 export default function MailPage() {
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, isStaff, user, token } = useAuth()
+  const { isAuthenticated, user, token } = useAuth()
 
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -34,13 +34,11 @@ export default function MailPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/signin')
-    } else if (!isStaff) {
-      navigate('/')
     }
-  }, [isAuthenticated, isStaff, navigate])
+  }, [isAuthenticated, navigate])
 
   useEffect(() => {
-    if (!isStaff || !token) return
+    if (!isAuthenticated || !token) return
     let cancelled = false
     const load = async () => {
       setLoading(true)
@@ -55,7 +53,7 @@ export default function MailPage() {
     }
     load()
     return () => { cancelled = true }
-  }, [isStaff, token])
+  }, [isAuthenticated, token])
 
   const openReply = (m) => {
     setActiveId(m._id)
@@ -86,7 +84,7 @@ export default function MailPage() {
     }
   }
 
-  if (!isAuthenticated || !isStaff) return null
+  if (!isAuthenticated) return null
 
   return (
     <div className="enroll-wrap">
@@ -95,7 +93,7 @@ export default function MailPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div>
               <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 0 }}>Mail Inbox</h2>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Staff</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Mail</span>
             </div>
           </div>
 

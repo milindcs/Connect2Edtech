@@ -45,9 +45,9 @@ export default function NavBar({ pathname }) {
                   <>
                     <Link to="/admin" className={pathname === '/admin' ? 'active' : ''}>Admin Dashboard</Link>
                     <Link to="/hr" className={pathname === '/hr' ? 'active' : ''}>HR Dashboard</Link>
-                    <Link to="/mail" className={pathname === '/mail' ? 'active' : ''}>Mail</Link>
                   </>
                 )}
+                <Link to="/mail" className={pathname === '/mail' ? 'active' : ''}>Mail</Link>
                 <span style={{ fontSize: '0.9rem', color: '#831843' }}>{user?.name}</span>
                 <button onClick={signout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Sign Out</button>
               </>

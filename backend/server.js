@@ -550,7 +550,7 @@ app.post('/api/admin/test-email', adminAuth, async (req, res) => {
   }
 })
 
-app.use('/api/mail', staffAuth, createMailRouter({ findOne, updateById, sendEmail }))
+app.use('/api/mail', authMiddleware, createMailRouter({ findOne, updateById, sendEmail }))
 
 if (fs.existsSync(distDir) && process.env.VERCEL !== '1') {
   app.get('/{*splat}', (req, res, next) => {
