@@ -91,9 +91,31 @@ export default function SignupPage() {
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const [formData, setFormData] = useState(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      return {
+        name: parsed.name || "",
+        email: parsed.email || "",
+        phone: parsed.phone || "",
+        password: "",
+        confirmPassword: "",
+      };
+    } catch {
+      return { name: "", email: "", phone: "", password: "", confirmPassword: "" };
+    }
+  });
+
   useEffect(() => {
     document.title = "Sign Up - Connect2Edtech";
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ name: formData.name, email: formData.email, phone: formData.phone })
+    );
+  }, [formData.name, formData.email, formData.phone]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -231,7 +253,7 @@ export default function SignupPage() {
     setIsVerifying(true);
 
     try {
-      await verifyOtp(registeredEmail, otp);
+      await verifyOtp(registeredEmail, otp, { autoLogin: false });
 
       showToast("Email verified");
 

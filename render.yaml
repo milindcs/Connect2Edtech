@@ -3,7 +3,7 @@ services:
     name: connect2edtech
     runtime: node
     plan: free
-    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    buildCommand: cd frontend && npm install && CI=false npm run build && cd ../backend && npm install
     startCommand: cd backend && node server.js
     envVars:
       - key: MONGODB_URI
@@ -14,6 +14,8 @@ services:
         value: production
       - key: VERCEL
         value: "0"
+      - key: CI
+        value: "false"
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -25,6 +27,8 @@ services:
       - key: MAIL_FROM
         sync: false
       - key: ADMIN_BOOTSTRAP_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
         sync: false
       - key: CORS_ORIGINS
         value: "https://connect2edtech.onrender.com,http://localhost:5173,http://localhost:10000"

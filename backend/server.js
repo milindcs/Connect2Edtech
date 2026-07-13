@@ -1,8 +1,11 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
+import dns from 'dns';
 import dotenv from "dotenv";
+import fs from "fs";
 import path from "path";
+import os from 'os';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
@@ -20,6 +23,38 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config();
+
+const MONGO_HOST = (process.env.MONGODB_URI || '').includes('mongodb+srv')
+  ? (process.env.MONGODB_URI.match(/mongodb\+srv:\/\/[^@/]+\@([^\/\?]+)/) || [])[1]
+  : '';
+
+async function ensureWorkingDns() {
+  const configured = (process.env.DNS_SERVERS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const candidates = [
+    ...configured,
+    '192.168.29.1',
+    '8.8.8.8',
+    '1.1.1.1',
+  ];
+  const target = MONGO_HOST ? `_mongodb._tcp.${MONGO_HOST}` : 'cluster0.nyefwik.mongodb.net';
+  try {
+    await dns.promises.resolveSrv(target);
+    return;
+  } catch {
+  }
+  for (const server of candidates) {
+    try {
+      dns.setServers([server]);
+      await dns.promises.resolveSrv(target);
+      console.log(`🔧 Using DNS server ${server} (system default was unreachable)`);
+      return;
+    } catch {
+    }
+  }
+}
 
 const app = express();
 const CORS_ORIGINS = (process.env.CORS_ORIGINS ||
@@ -46,6 +81,11 @@ app.options('{*splat}', cors());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+const distDir = path.join(__dirname, '..', 'frontend', 'dist');
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+}
 
 const WHATSAPP_PHONE = '917019436720';
 
@@ -498,10 +538,18 @@ app.post('/api/admin/test-email', adminAuth, async (req, res) => {
 
 app.use('/api/mail', staffAuth, createMailRouter({ findOne, updateById, sendEmail }))
 
+if (fs.existsSync(distDir) && process.env.VERCEL !== '1') {
+  app.get('/{*splat}', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(distDir, 'index.html'));
+  });
+}
+
 const PORT = process.env.PORT || 10000;
 
 async function startServer() {
   try {
+    await ensureWorkingDns();
     // Test MongoDB connection on startup
     const db = await getDb();
     console.log('✅ MongoDB connected successfully');
