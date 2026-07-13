@@ -91,6 +91,8 @@ export default function SignupPage() {
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const [devOtp, setDevOtp] = useState("");
+
   const [formData, setFormData] = useState(() => {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -223,6 +225,8 @@ export default function SignupPage() {
 
         setStep("verify");
 
+        setDevOtp(res.devOtp || "");
+
         showToast("OTP sent to your email.");
       }
 
@@ -269,7 +273,9 @@ export default function SignupPage() {
     setIsResending(true);
 
     try {
-      await resendOtp(registeredEmail);
+      const res = await resendOtp(registeredEmail);
+
+      if (res?.devOtp) setDevOtp(res.devOtp);
 
       showToast("OTP resent successfully");
     } catch (err) {
@@ -454,6 +460,12 @@ export default function SignupPage() {
 
               <strong>{registeredEmail}</strong>
             </div>
+
+            {!import.meta.env.PROD && devOtp && (
+              <div className="dev-otp-hint">
+                Dev OTP: <strong>{devOtp}</strong>
+              </div>
+            )}
 
             <form
               className="auth-form"

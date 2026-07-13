@@ -91,7 +91,12 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
         console.error('[SignupSubmissions] failed:', subErr?.message || subErr);
       }
 
-      res.json({ ok: true, message: 'Account created. Verification code sent to your email.', requiresVerification: true });
+      res.json({
+        ok: true,
+        message: 'Account created. Verification code sent to your email.',
+        requiresVerification: true,
+        ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
+      });
     } catch (e) {
       console.error(e);
       res.status(500).json({ ok: false, error: 'Signup failed. Please try again.' });

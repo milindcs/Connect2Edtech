@@ -378,7 +378,11 @@ app.post('/api/auth/resend-otp', async (req, res) => {
       console.error('[Mail] OTP resend failed:', mailErr.message)
     }
 
-    res.json({ ok: true, message: 'New verification code sent to your email.' })
+    res.json({
+      ok: true,
+      message: 'New verification code sent to your email.',
+      ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
+    })
   } catch (e) {
     console.error(e)
     res.status(500).json({ ok: false, error: 'Resend failed.' })
