@@ -10,12 +10,10 @@
 
 ### ✅ 2. Database Indexes
 - **Created** `scripts/create-indexes.js` for automated index creation
-- **Designed** optimized indexes for all 5 collections:
+- **Designed** optimized indexes for all 3 collections:
   - **signups:** 4 indexes (email unique, verified+createdAt, role+createdAt, createdAt)
   - **enrollments:** 3 indexes (email+createdAt, courseKey+createdAt, createdAt)
   - **contacts:** 3 indexes (email, createdAt, replied+createdAt)
-  - **checkouts:** 3 indexes (email+createdAt, sessionId+createdAt, createdAt)
-  - **cart:** 2 indexes (sessionId+courseKey unique, sessionId+addedAt)
 - All indexes use `background: true` for non-blocking creation
 
 ### ✅ 3. Query Optimization
@@ -135,18 +133,6 @@ backend/
 - **Indexes:** 3 optimized indexes
 - **Used by:** Contact form, mail inbox
 
-### 4. checkouts
-- **Purpose:** Shopping cart checkout requests
-- **Key Fields:** sessionId, email, totalAmount
-- **Indexes:** 3 optimized indexes
-- **Used by:** Checkout form, admin dashboard
-
-### 5. cart
-- **Purpose:** Shopping cart items
-- **Key Fields:** sessionId, courseKey (unique)
-- **Indexes:** 2 optimized indexes
-- **Used by:** Cart management
-
 ## Next Steps
 
 ### Once MongoDB Atlas is Accessible
@@ -181,10 +167,9 @@ backend/
 4. **Test API Endpoints**
    - POST /api/signup - Create user account
    - POST /api/signin - User login
-   - POST /api/enrollment - Course enrollment
-   - POST /api/contact - Contact form
-   - POST /api/cart/add - Add to cart
-   - GET /api/admin/stats - Admin statistics
+  - POST /api/enrollment - Course enrollment
+  - POST /api/contact - Contact form
+  - GET /api/admin/stats - Admin statistics
 
 ## Performance Optimizations Implemented
 

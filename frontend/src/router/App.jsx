@@ -29,8 +29,6 @@ import AdminRoute from '../views/AdminDashboard/AdminRoute'
 import StudentPage from '../views/StudentPage/StudentPage'
 import HrDashboard from '../views/HrDashboard/HrDashboard'
 import MailPage from '../views/MailPage/MailPage'
-import CartPage from '../views/CartPage/CartPage'
-import VerifyCertificatePage from '../views/VerifyCertificatePage/VerifyCertificatePage'
 
 export default function App() {
   return (
@@ -49,8 +47,6 @@ export default function App() {
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/hr" element={<AdminRoute><HrDashboard /></AdminRoute>} />
           <Route path="/mail" element={<MailPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/verify-certificate/:id" element={<VerifyCertificatePage />} />
           <Route path="/dashboard" element={<DashboardRedirect />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -72,35 +72,6 @@ async function createIndexes() {
           options: { name: 'replied_created_idx', background: true },
           description: 'Compound index for replied messages'
         }
-      ],
-      checkouts: [
-        { 
-          key: { email: 1, createdAt: -1 }, 
-          options: { name: 'email_created_idx', background: true },
-          description: 'Compound index for user checkouts'
-        },
-        { 
-          key: { sessionId: 1, createdAt: -1 }, 
-          options: { name: 'session_created_idx', background: true },
-          description: 'Compound index for session-based queries'
-        },
-        { 
-          key: { createdAt: -1 }, 
-          options: { name: 'created_at_desc_idx', background: true },
-          description: 'Index for recent checkouts'
-        }
-      ],
-      cart: [
-        { 
-          key: { sessionId: 1, courseKey: 1 }, 
-          options: { unique: true, name: 'session_course_unique', background: true },
-          description: 'Unique compound index for cart items'
-        },
-        { 
-          key: { sessionId: 1, addedAt: -1 }, 
-          options: { name: 'session_added_idx', background: true },
-          description: 'Compound index for user cart items'
-        }
       ]
     };
 

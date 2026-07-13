@@ -79,7 +79,7 @@ export default function ContactPage() {
   return (
     <div className="container" style={{ paddingTop: 48, paddingBottom: 80 }}>
       <section className="detail-hero animate-on-scroll animate-fade-up" style={{ marginBottom: 48 }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: 12 }}>Contact Our Team</h1>
+        <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3rem)', marginBottom: 12 }}>Contact Our Team</h1>
         <p className="section-subtitle">
           Have questions about college partnerships, on-campus training, certifications, or placement support? We are here to help.
         </p>
@@ -107,7 +107,7 @@ export default function ContactPage() {
           </div>
         </div>
       ) : (
-        <div className="contact-wrapper animate-on-scroll animate-fade-left stagger-2">
+        <div className="contact-wrapper">
           <div className="card contact-form-card">
             <h2 style={{ fontSize: '1.5rem', marginBottom: 16 }}>Send Us a Message</h2>
 

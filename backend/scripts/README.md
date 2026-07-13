@@ -40,8 +40,6 @@ node backend/scripts/create-indexes.js
 - **signups:** email (unique), verified+createdAt, role+createdAt, createdAt
 - **enrollments:** email+createdAt, courseKey+createdAt, createdAt
 - **contacts:** email, createdAt, replied+createdAt
-- **checkouts:** email+createdAt, sessionId+createdAt, createdAt
-- **cart:** sessionId+courseKey (unique), sessionId+addedAt
 
 **Use when:**
 - Setting up a new database

@@ -23,9 +23,5 @@ async function main() {
 
   r = await fetch(BASE + "/api/me/contacts", { headers: h });
   console.log("CONTACTS", r.status, (await r.json()).contacts?.length);
-
-  r = await fetch(BASE + "/api/me/checkouts", { headers: h });
-  const cj = await r.json();
-  console.log("CHECKOUTS", r.status, cj.checkouts?.length, cj.error || "");
 }
 main().catch((e) => { console.error(e); process.exit(1); });

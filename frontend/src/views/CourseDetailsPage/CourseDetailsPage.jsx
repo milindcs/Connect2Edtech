@@ -61,7 +61,7 @@ export default function CourseDetailsPage() {
           <p id="detail-subtitle">{course.subtitle}</p>
         </section>
 
-        <section className="detail-body animate-on-scroll animate-slide stagger-2">
+        <section className="detail-body">
           <div className="two-col">
             <div>
               {course.image && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { coursesData, normalizeCourseKey } from '../../shared/coursesData'
 import { enrollmentSubmit } from '../../shared/cartApi'
+import { buildWhatsAppUrl } from '../../shared/whatsappUtils'
 
 export default function EnrollmentPage() {
   const location = useLocation()
@@ -31,6 +32,12 @@ export default function EnrollmentPage() {
   useEffect(() => {
     document.title = course ? `Enroll in ${course.title} - Connect2Edtech` : 'Program Enrollment - Connect2Edtech'
   }, [course])
+
+  useEffect(() => {
+    if (isSubmitted) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [isSubmitted])
 
   useEffect(() => {
     if (courseParam) {
@@ -120,6 +127,17 @@ export default function EnrollmentPage() {
           <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: '0.95rem', lineHeight: '1.6' }}>
             An onboarding confirmation overview has been sent to <strong>{formData.email}</strong>. Our training coordinator team will review your profile credentials and follow up with you shortly.
           </p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 16, fontSize: '0.95rem', lineHeight: '1.6' }}>
+            Have questions? Chat with our onboarding advisor on WhatsApp:{' '}
+            <a
+              href={buildWhatsAppUrl(`Hi, I just enrolled for ${course ? course.title : 'a program'} on Connect2Edtech!`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#25D366', fontWeight: 700 }}
+            >
+              +91 7019436720
+            </a>
+          </p>
           <div className="btn-row" style={{ justifyContent: 'center' }}>
             <Link to="/courses" className="btn primary">
               Browse More Programs
@@ -127,6 +145,15 @@ export default function EnrollmentPage() {
             <Link to="/" className="btn secondary">
               Return Home
             </Link>
+            <a
+              href={buildWhatsAppUrl(`Hi, I just enrolled for ${course ? course.title : 'a program'} on Connect2Edtech!`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn primary"
+              style={{ background: '#25D366', borderColor: '#25D366' }}
+            >
+              Chat on WhatsApp
+            </a>
           </div>
         </div>
       </div>
@@ -138,13 +165,13 @@ export default function EnrollmentPage() {
       <div className="detail-shell" style={{ maxWidth: 960, margin: '0 auto' }}>
         
         <section className="detail-hero animate-on-scroll animate-fade-up" style={{ marginBottom: 40, textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: 12 }}>Training Track Enrollment</h1>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', marginBottom: 12 }}>Training Track Enrollment</h1>
           <p className="section-subtitle">
             Provide your academic profile information below to register your seat and initialize your learning module timeline.
           </p>
         </section>
 
-        <div className="two-col animate-on-scroll animate-slide stagger-2" style={{ gap: 40 }}>
+        <div className="two-col" style={{ gap: 40 }}>
           
           <form className="card" onSubmit={handleSubmit} style={{ width: '100%', padding: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
             <h3 style={{ fontSize: '1.4rem', marginBottom: 4 }}>Applicant Context</h3>

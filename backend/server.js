@@ -12,8 +12,7 @@ import nodemailer from 'nodemailer';
 import { createSignupRouter } from './routes/signup.js';
 import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
-import { createCartRouter } from './routes/cart.js';
-import { createCheckoutRouter } from './routes/checkout.js';
+import { createAdminRouter } from './routes/admin.js';
 import { createDocument, findOne, updateById, find, countDocuments, clearCollection, deleteOne, getDb } from './store.js';
 
 // Google OAuth configuration
@@ -368,6 +367,27 @@ app.post('/api/enrollment', async (req, res) => {
   }
 })
 
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, phone, message, courses } = req.body || {}
+    if (!name || !email || !phone || !message) {
+      return res.status(400).json({ ok: false, error: 'name, email, phone, and message are required' })
+    }
+    const contact = await createDocument('contacts', {
+      name: String(name).trim(),
+      email: String(email).trim(),
+      phone: String(phone).trim(),
+      message: String(message).trim(),
+      courses: String(courses || '').trim(),
+      createdAt: new Date(),
+    })
+    res.json({ ok: true, message: 'Inquiry received.', contact })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to submit contact form.' })
+  }
+})
+
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
     const users = await find('signups', {}, { sort: { createdAt: -1 } })
@@ -392,7 +412,7 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
     }
 
     const isAdmin = account.role === 'admin' || account.role === 'hr'
-    if (account._id.toString() === req.admin.userId && !isAdmin) {
+    if (account._id.toString() === req.admin.userId && role !== 'admin' && role !== 'hr') {
       return res.status(400).json({ ok: false, error: 'You cannot remove your own admin/HR role.' })
     }
 
@@ -487,38 +507,7 @@ app.post('/api/admin/test-email', adminAuth, async (req, res) => {
 
 app.use('/api/mail', authMiddleware, createMailRouter({ find, findOne, updateById, sendEmail }))
 
-app.use('/api/cart', createCartRouter({ find, createDocument, updateById, deleteOne }))
-
-app.use('/api/checkout', createCheckoutRouter({ find, createDocument, updateById, deleteOne }))
-
-app.get('/api/certificates/:id/verify', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ ok: false, error: 'Certificate id is required.' });
-    }
-    const cert = await findOne('certificaterequests', { certificateId: String(id).trim() });
-    if (!cert) {
-      return res.status(404).json({ ok: false, error: 'Certificate not found.' });
-    }
-    const safe = {
-      _id: cert._id,
-      userId: cert.userId,
-      userName: cert.userName,
-      userEmail: cert.userEmail,
-      courseKey: cert.courseKey,
-      courseTitle: cert.courseTitle,
-      status: cert.status,
-      issuedAt: cert.issuedAt,
-      certificateId: cert.certificateId,
-      createdAt: cert.createdAt,
-    };
-    res.json({ ok: true, ...safe });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'Verification failed.' });
-  }
-})
+app.use('/api/admin/dashboard', staffAuth, createAdminRouter())
 
 if (fs.existsSync(distDir) && process.env.VERCEL !== '1') {
   app.get('/{*splat}', (req, res, next) => {
@@ -537,7 +526,7 @@ async function startServer() {
     console.log('✅ MongoDB connected successfully');
     
     if (process.env.VERCEL !== '1') {
-      app.listen(PORT, () => {
+      app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
       });
     }
@@ -546,7 +535,7 @@ async function startServer() {
     console.error('Server will continue but database operations will fail.');
     
     if (process.env.VERCEL !== '1') {
-      app.listen(PORT, () => {
+      app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Connect2Edtech Backend running on port ${PORT} (without DB)`);
       });
     }

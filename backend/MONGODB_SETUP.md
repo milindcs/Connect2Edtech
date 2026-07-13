@@ -78,30 +78,7 @@ Contact form submissions.
 }
 ```
 
-#### 4. checkouts
-Shopping cart checkout requests.
-```javascript
-{
-  _id: ObjectId,
-  sessionId: String,
-  submissionType: String,
-  name: String,
-  email: String,
-  phone: String,
-  note: String,
-  courseTitle: String,
-  totalAmount: Number,
-  courses: Array,
-  createdAt: Date
-}
-```
-
-#### 5. cart
-Shopping cart items.
-```javascript
-{
-  _id: ObjectId,
-  sessionId: String,
+## Next Steps
   courseKey: String,
   title: String,
   price: Number,
@@ -130,15 +107,6 @@ All indexes are created with `background: true` to avoid blocking operations.
 - `email_idx`: Index on email
 - `created_at_desc_idx`: Index on createdAt descending
 - `replied_created_idx`: Compound index on (replied, createdAt)
-
-### checkouts Collection
-- `email_created_idx`: Compound index on (email, createdAt)
-- `session_created_idx`: Compound index on (sessionId, createdAt)
-- `created_at_desc_idx`: Index on createdAt descending
-
-### cart Collection
-- `session_course_unique`: Unique compound index on (sessionId, courseKey)
-- `session_added_idx`: Compound index on (sessionId, addedAt)
 
 ## Setup Scripts
 

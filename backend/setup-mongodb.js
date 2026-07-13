@@ -41,19 +41,6 @@ async function setupMongoDB() {
           { key: { createdAt: -1 }, options: { name: 'created_at_idx' } },
           { key: { replied: 1 }, options: { name: 'replied_idx' } }
         ]
-      },
-      checkouts: {
-        indexes: [
-          { key: { email: 1, createdAt: -1 }, options: { name: 'email_created' } },
-          { key: { sessionId: 1 }, options: { name: 'session_idx' } },
-          { key: { createdAt: -1 }, options: { name: 'created_at_idx' } }
-        ]
-      },
-      cart: {
-        indexes: [
-          { key: { sessionId: 1, courseKey: 1 }, options: { unique: true, name: 'session_course_unique' } },
-          { key: { sessionId: 1, addedAt: -1 }, options: { name: 'session_added' } }
-        ]
       }
     };
 

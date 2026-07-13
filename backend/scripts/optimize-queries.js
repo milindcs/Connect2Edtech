@@ -16,7 +16,7 @@ async function analyzeQueries() {
     console.log();
 
     // Analyze each collection
-    const collections = ['signups', 'enrollments', 'contacts', 'checkouts', 'cart'];
+    const collections = ['signups', 'enrollments', 'contacts'];
     
     console.log('📊 Collection Analysis:\n');
     
@@ -52,12 +52,6 @@ async function analyzeQueries() {
       } else if (collectionName === 'contacts') {
         console.log(`     • findAll: {} → Sorted by createdAt → Uses created_at_desc_idx`);
         console.log(`     • findByReplied: { replied: true } → Uses replied_created_idx`);
-      } else if (collectionName === 'checkouts') {
-        console.log(`     • findByEmail: { email: "..." } → Uses email_created_idx`);
-        console.log(`     • findBySession: { sessionId: "..." } → Uses session_created_idx`);
-      } else if (collectionName === 'cart') {
-        console.log(`     • findBySession: { sessionId: "..." } → Uses session_added_idx`);
-        console.log(`     • findBySessionAndCourse: { sessionId: "...", courseKey: "..." } → Uses session_course_unique`);
       }
     }
 

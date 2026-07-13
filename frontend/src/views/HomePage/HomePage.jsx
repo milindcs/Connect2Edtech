@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
-
+import { enrollmentSubmit } from '../../shared/cartApi'
+import { useAuth } from '../../shared/AuthContext'
 
 export default function HomePage() {
+  const { user } = useAuth()
   useEffect(() => {
     document.title = 'Connect2Edtech - Home'
     const sections = document.querySelectorAll('.animate-on-scroll')
@@ -27,6 +29,52 @@ export default function HomePage() {
   }, [])
 
   const featuredCourses = useMemo(() => Object.values(coursesData).slice(0, 6), [])
+  const [selectedCourses, setSelectedCourses] = useState([])
+  const [adding, setAdding] = useState(false)
+  const [addedCount, setAddedCount] = useState(0)
+
+  const toggleCourse = (key) => {
+    setSelectedCourses((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
+  const handleAddSelectedToCart = async () => {
+    if (selectedCourses.length === 0) return
+    setAdding(true)
+    setAddedCount(0)
+    try {
+      const selected = featuredCourses.filter((c) => selectedCourses.includes(c.key))
+      const name = String(user?.name || '').trim()
+      const email = String(user?.email || '').trim()
+      const phone = String(user?.phone || '').trim()
+      if (!name || !email || !phone) {
+        alert('Please complete your profile with name, email, and phone before enrolling.')
+        return
+      }
+
+      await Promise.all(
+        selected.map((c) =>
+          enrollmentSubmit({
+            name,
+            email,
+            phone,
+            courseKey: c.key,
+            courseTitle: c.title,
+            message: `Enrolled from homepage featured courses`,
+          })
+        )
+      )
+      setAddedCount(selected.length)
+      setTimeout(() => setAddedCount(0), 2000)
+      setSelectedCourses([])
+    } catch (err) {
+      console.error(err)
+      alert(err.message || 'Failed to enroll selected courses.')
+    } finally {
+      setAdding(false)
+    }
+  }
 
   return (
     <>
@@ -36,7 +84,7 @@ export default function HomePage() {
           <div className="hero-content">
             <h1>Connect2Edtech</h1>
             <p>College partnerships that turn campus learning into job-ready careers. Practical training, real projects, certification, and placement support.</p>
-<div className="hero-buttons">
+            <div className="hero-buttons">
                 <Link to="/courses" className="btn primary">Explore Programs</Link>
                 <Link to="/enrollment" className="btn secondary">Course Enrollment Form</Link>
              </div>
@@ -50,7 +98,7 @@ export default function HomePage() {
           <h2 className="section-title">Quick Access</h2>
           <p className="section-subtitle">Jump directly to any Connect2Edtech page from the homepage.</p>
 
-<div className="hub-grid">
+          <div className="hub-grid">
             <Link to="/about" className="hub-card">
               <span className="hub-icon">ℹ️</span>
               <div className="hub-content">
@@ -121,7 +169,7 @@ export default function HomePage() {
               <span className="hub-icon">🏫</span>
               <div className="hub-content">
                 <h3>On-Campus Training</h3>
-                <p>Practical sessions and workshops delivered at the college, aligned with the curriculum.</p>
+                <p>Practical sessions and workshops are delivered at the college, aligned with the curriculum.</p>
               </div>
               <span className="hub-arrow">→</span>
             </Link>
@@ -208,40 +256,68 @@ export default function HomePage() {
           <div className="card-grid">
             {featuredCourses.map((c) => (
               <div key={c.key} className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <Link to={`/course/${c.key}`} style={{ textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
-                  <div className="card-number">{c.price === 0 ? 'Free' : `₹${c.price}`}</div>
-                  <h3 style={{ marginBottom: 8, color: 'var(--text-primary)' }}>{c.title}</h3>
-                  <p style={{ marginBottom: 10 }}>{c.subtitle}</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>
-                    {c.meta}
-                  </p>
-<ul style={{ listStyle: 'none', marginBottom: 20 }}>
-                    {c.features.slice(0, 2).map((f, i) => (
-                      <li
-                        key={i}
-                        style={{
-                          fontSize: '0.9rem',
-                          color: 'var(--text-muted)',
-                          marginBottom: 8,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8
-                        }}
-                      >
-                        <span style={{ color: '#ec4899' }}>✦</span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </Link>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedCourses.includes(c.key)}
+                    onChange={() => toggleCourse(c.key)}
+                    style={{ marginTop: 6, width: 18, height: 18, cursor: 'pointer' }}
+                  />
+                  <Link to={`/course/${c.key}`} style={{ textDecoration: 'none', color: 'inherit', flexGrow: 1 }}>
+                    <div className="card-number">
+                      {c.price === 0 ? 'Free Training' : `₹${c.price}`}
+                    </div>
+                    <h3 style={{ fontSize: '1.4rem', marginBottom: 8 }}>{c.title}</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>{c.meta}</p>
+                    <p style={{ fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: 20 }}>{c.subtitle}</p>
+
+                    <ul style={{ listStyle: 'none', marginBottom: 24 }}>
+                      {c.features.slice(0, 3).map((f, i) => (
+                        <li key={i} style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ color: 'var(--border-focus)' }}>✦</span> {f}
+                        </li>
+                      ))}
+                      {c.features.length > 3 && (
+                        <li style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          + {c.features.length - 3} more modules
+                        </li>
+                      )}
+                    </ul>
+                  </Link>
+                </div>
+
                 <div className="card-actions" style={{ marginTop: 'auto' }}>
-                  <Link to={`/course/${c.key}`} className="btn primary" style={{ flexGrow: 1 }}>View Details</Link>
+                  <Link
+                    to={`/course/${c.key}`}
+                    className="btn primary"
+                    style={{ flexGrow: 1, textAlign: 'center' }}
+                  >
+                    View Details
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
 
-<div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+          {selectedCourses.length > 0 && (
+            <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', position: 'sticky', bottom: 16, zIndex: 10 }}>
+              <button
+                className="btn primary"
+                onClick={handleAddSelectedToCart}
+                disabled={adding}
+                style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+              >
+                {adding ? 'Enrolling...' : `Enroll ${selectedCourses.length} Selected`}
+              </button>
+              {addedCount > 0 && (
+                <span style={{ color: 'green', fontWeight: 700, alignSelf: 'center' }}>
+                  ✓ Enrolled {addedCount} course(s)
+                </span>
+              )}
+            </div>
+          )}
+
+  <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
              <Link to="/courses" className="btn primary">Open Full Courses Catalog</Link>
            </div>
         </div>
@@ -287,7 +363,7 @@ export default function HomePage() {
             </div>
           </div>
 
-<div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 28 }}>
+  <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 28 }}>
              <Link to="/enrollment" className="btn primary">Start Enrollment</Link>
            </div>
         </div>
@@ -315,7 +391,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      
+
 
 
       {/* CONTACT PREVIEW */}
@@ -342,9 +418,9 @@ export default function HomePage() {
                 </p>
               </div>
               <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-<Link to="/contact" className="btn primary">Contact Us</Link>
-                 <Link to="/courses" className="btn secondary">Browse Courses</Link>
-              </div>
+  <Link to="/contact" className="btn primary">Contact Us</Link>
+                   <Link to="/courses" className="btn secondary">Browse Courses</Link>
+               </div>
             </div>
 
             <div className="card" style={{ height: 'fit-content' }}>
