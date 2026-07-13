@@ -423,6 +423,16 @@ app.get('/api/me/contacts', authMiddleware, async (req, res) => {
   }
 })
 
+app.get('/api/me/checkouts', authMiddleware, async (req, res) => {
+  try {
+    const items = await find('checkouts', { email: req.user.email }, { sort: { createdAt: -1 } })
+    res.json({ ok: true, checkouts: items })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to fetch purchases.' })
+  }
+})
+
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
     const users = await find('signups', {}, { sort: { createdAt: -1 } })
