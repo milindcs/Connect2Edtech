@@ -93,6 +93,14 @@ const WHATSAPP_PHONE = '917019436720';
 const JWT_SECRET = process.env.JWT_SECRET || 'connect2edtech-jwt-secret-change-in-production';
 const JWT_EXPIRY = '7d';
 
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'connect2edtech-jwt-secret-change-in-production') {
+  console.warn('⚠️  WARNING: Using default JWT_SECRET in production. Set a strong JWT_SECRET environment variable.');
+}
+
+if (process.env.NODE_ENV === 'production' && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+  console.warn('⚠️  WARNING: Hardcoded admin credentials are active in production. Consider using database-only admin accounts.');
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT || 587),
@@ -182,7 +190,7 @@ app.post('/api/admin/bootstrap', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'email is required.' })
     }
 
-    const cleanEmail = String(email).trim()
+    const cleanEmail = String(email).trim().toLowerCase()
     const existing = await findOne('signups', { email: cleanEmail })
     if (existing) {
       await updateById('signups', existing._id, { $set: { role: 'admin', verified: true } })
@@ -308,6 +316,20 @@ app.post('/api/auth/google', async (req, res) => {
 
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {
+    if (req.user.userId === 'admin-bootstrap') {
+      return res.json({
+        ok: true,
+        user: {
+          name: req.user.name,
+          email: req.user.email,
+          phone: req.user.phone || '',
+          whatsappNumber: '',
+          verified: true,
+          role: 'admin',
+        },
+      })
+    }
+
     const account = await findOne('signups', { _id: req.user.userId })
     if (!account) {
       return res.status(404).json({ ok: false, error: 'User not found.' })
