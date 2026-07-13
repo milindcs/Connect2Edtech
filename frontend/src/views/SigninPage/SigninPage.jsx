@@ -105,7 +105,7 @@ export default function SigninPage() {
         return
       }
 
-      const client = google.accounts.id.initialize({
+      google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
         callback: async (response) => {
           try {
@@ -120,7 +120,7 @@ export default function SigninPage() {
         },
       })
 
-      client.prompt()
+      google.accounts.id.prompt()
     } catch (err) {
       showToast('Google Sign-In is not available.', 'error')
       setGoogleLoading(false)
