@@ -5,19 +5,12 @@ const email = "dash_" + Date.now() + "@example.com";
 const password = "Password123";
 
 async function main() {
-  let r = await fetch(BASE + "/api/auth/signup", {
+  await fetch(BASE + "/api/auth/signup", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: "Dash", email, phone: "9999999999", password }),
   });
-  const db = await getDb();
-  const acc = await db.collection("signups").findOne({ email });
-  await fetch(BASE + "/api/auth/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, otp: acc?.otp }),
-  });
-  r = await fetch(BASE + "/api/auth/signin", {
+  const r = await fetch(BASE + "/api/auth/signin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

@@ -3,7 +3,8 @@
 export const ALLOWED_ROLES = ['user', 'hr', 'admin']
 
 export function isValidEmail(value) {
-  return typeof String(value || '').trim() === 'string' && String(value || '').trim().length > 0
+  const email = String(value || '').trim()
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 export function phoneDigits(value) {
   return String(value || '').replace(/\D/g, '')

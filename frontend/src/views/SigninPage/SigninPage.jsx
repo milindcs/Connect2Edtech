@@ -38,7 +38,7 @@ function PasswordInput({ label, name, value, onChange, placeholder, error, autoC
 
 export default function SigninPage() {
   const navigate = useNavigate()
-  const { signin, isAuthenticated, user, resendOtp } = useAuth()
+  const { signin, isAuthenticated, user } = useAuth()
 
   const [toasts, setToasts] = useState([])
   const [formData, setFormData] = useState(() => {
@@ -51,10 +51,7 @@ export default function SigninPage() {
   })
 
   const [errors, setErrors] = useState({})
-  const [showResend, setShowResend] = useState(false)
-  const [resendEmail, setResendEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isResending, setIsResending] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   useEffect(() => {
@@ -126,25 +123,6 @@ export default function SigninPage() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }))
-    if (showResend && name === 'email') {
-      setResendEmail(value)
-      setShowResend(false)
-    }
-  }
-
-  const handleResend = async () => {
-    const email = resendEmail || formData.email.trim()
-    if (!email) return
-    setIsResending(true)
-    try {
-      await resendOtp(email)
-      showToast('New verification code sent to your email.', 'success')
-      setShowResend(false)
-    } catch (err) {
-      showToast(err.message || 'Could not resend code.', 'error')
-    } finally {
-      setIsResending(false)
-    }
   }
 
   const handleSubmit = async (e) => {
@@ -162,14 +140,11 @@ export default function SigninPage() {
     try {
       await signin(email, formData.password)
       showToast('Signed in! Redirecting...', 'success')
+      navigate('/dashboard')
     } catch (err) {
       const message = err.message || 'Could not sign in. Please try again.'
       showToast(message, 'error')
       setFormData((prev) => ({ ...prev, password: '' }))
-      if (message.toLowerCase().includes('verify')) {
-        setResendEmail(email)
-        setShowResend(true)
-      }
     } finally {
       setIsSubmitting(false)
     }
@@ -239,23 +214,6 @@ export default function SigninPage() {
             </svg>
             {googleLoading ? 'Signing in...' : 'Continue with Google'}
           </button>
-
-          {showResend && (
-            <div className="resend-card">
-              <p className="resend-text">
-                📩 Your email isn't verified yet. Didn't receive the code?
-              </p>
-              <button type="button" className="btn secondary auth-submit" onClick={handleResend} disabled={isResending}>
-                {isResending ? 'Resending…' : 'Resend Verification Code'}
-              </button>
-              <Link
-                to={`/verify-otp?email=${encodeURIComponent(resendEmail || formData.email)}`}
-                className="link-button"
-              >
-                Already have a code? Verify email
-              </Link>
-            </div>
-          )}
 
           <p className="auth-footer">
             New here? <Link to="/signup">Create an account</Link>.

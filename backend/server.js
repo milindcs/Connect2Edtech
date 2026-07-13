@@ -104,17 +104,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendOtpEmail(toEmail, otp) {
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com';
-  await transporter.sendMail({
-    from,
-    to: toEmail,
-    subject: 'Verify your email - Connect2Edtech',
-    text: `Your verification code is ${otp}. It expires in 10 minutes.`,
-    html: `<p>Your verification code is <strong>${otp}</strong>.</p><p>It expires in 10 minutes.</p>`,
-  });
-}
-
 async function sendEmail({ to, subject, text, html, replyTo }) {
   const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@connect2edtech.com';
   await transporter.sendMail({
@@ -125,10 +114,6 @@ async function sendEmail({ to, subject, text, html, replyTo }) {
     html,
     ...(replyTo ? { replyTo } : {}),
   });
-}
-
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 function signJwt(user) {
@@ -242,7 +227,7 @@ function buildWhatsAppUrl(message) {
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-app.use('/api/auth/signup', createSignupRouter({ connectStore: find, createDocument, updateById, sendOtpEmail }))
+app.use('/api/auth/signup', createSignupRouter({ connectStore: find, createDocument, updateById }))
 
 app.use('/api/auth/signin', createSigninRouter({ findOne, signJwt }))
 
@@ -321,75 +306,6 @@ app.post('/api/auth/google', async (req, res) => {
   }
 })
 
-app.post('/api/auth/verify-otp', async (req, res) => {
-  try {
-    const { email, otp } = req.body || {}
-    if (!email || !otp) {
-      return res.status(400).json({ ok: false, error: 'email and otp are required' })
-    }
-
-    const account = await findOne('signups', { email: String(email).trim() })
-    if (!account) {
-      return res.status(404).json({ ok: false, error: 'Account not found.' })
-    }
-
-    if (account.verified) {
-      return res.json({ ok: true, message: 'Email already verified.', verified: true })
-    }
-
-    if (!account.otp || !account.otpExpiry || new Date() > new Date(account.otpExpiry)) {
-      return res.status(400).json({ ok: false, error: 'OTP expired. Please request a new one.' })
-    }
-
-    if (account.otp !== String(otp).trim()) {
-      return res.status(400).json({ ok: false, error: 'Invalid OTP.' })
-    }
-
-    await updateById('signups', account._id, { verified: true, otp: '', otpExpiry: null })
-    const token = signJwt({ ...account, verified: true })
-    res.json({ ok: true, message: 'Email verified successfully.', token, user: { name: account.name, email: account.email, phone: account.phone, whatsappNumber: account.whatsappNumber || '', verified: true, role: account.role || 'user' } })
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Verification failed.' })
-  }
-})
-
-app.post('/api/auth/resend-otp', async (req, res) => {
-  try {
-    const { email } = req.body || {}
-    if (!email) {
-      return res.status(400).json({ ok: false, error: 'email is required' })
-    }
-
-    const account = await findOne('signups', { email: String(email).trim() })
-    if (!account) {
-      return res.status(404).json({ ok: false, error: 'Account not found.' })
-    }
-
-    if (account.verified) {
-      return res.json({ ok: true, message: 'Email already verified.' })
-    }
-
-    const otp = generateOtp()
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
-    await updateById('signups', account._id, { otp, otpExpiry })
-
-    try {
-      await sendOtpEmail(String(email).trim(), otp)
-    } catch (mailErr) {
-      console.error('[Mail] OTP resend failed:', mailErr.message)
-    }
-
-    res.json({
-      ok: true,
-      message: 'New verification code sent to your email.',
-      ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
-    })
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Resend failed.' })
-  }
-})
 
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
   try {

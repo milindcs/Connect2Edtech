@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
   // If token exists but user/role might be stale (e.g. refresh), fetch authoritative user.
   useEffect(() => {
     if (!token) return
-    const shouldRefresh = !user?.role || !user?.verified
+    const shouldRefresh = !user?.role
     if (!shouldRefresh) return
 
     let cancelled = false
@@ -69,7 +69,7 @@ export function AuthProvider({ children }) {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.role, user?.verified])
+  }, [token, user?.role])
 
   const signup = async (payload) => {
     const data = await apiFetch('/api/auth/signup', {
@@ -77,27 +77,6 @@ export function AuthProvider({ children }) {
       body: JSON.stringify(payload),
     })
     if (!data.ok) throw new Error(data.error || 'Signup failed')
-    return data
-  }
-
-  const verifyOtp = async (email, otp, { autoLogin = true } = {}) => {
-    const data = await apiFetch('/api/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email, otp }),
-    })
-    if (!data.ok) throw new Error(data.error || 'Verification failed')
-    if (autoLogin && data.token && data.user) {
-      setState({ token: data.token, user: data.user })
-    }
-    return data
-  }
-
-  const resendOtp = async (email) => {
-    const data = await apiFetch('/api/auth/resend-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    })
-    if (!data.ok) throw new Error(data.error || 'Resend failed')
     return data
   }
 
@@ -144,8 +123,6 @@ export function AuthProvider({ children }) {
     isAdmin: user?.role === 'admin',
     isStaff: user?.role === 'admin' || user?.role === 'hr',
     signup,
-    verifyOtp,
-    resendOtp,
     signin,
     googleSignin,
     fetchMe,

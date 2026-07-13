@@ -11,10 +11,6 @@ function isValidEmail(value) {
   return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString()
-}
-
 // connectStore is the store "find" helper: connectStore(collection, query) -> array
 async function findAccountByEmail(connectStore, email) {
   const matches = await connectStore('signups', {
@@ -24,7 +20,7 @@ async function findAccountByEmail(connectStore, email) {
   return matches || null
 }
 
-export function createSignupRouter({ connectStore, createDocument, updateById, sendOtpEmail }) {
+export function createSignupRouter({ connectStore, createDocument, updateById }) {
   const router = express.Router()
 
   router.post('/', async (req, res) => {
@@ -71,49 +67,15 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
       const existing = await findAccountByEmail(connectStore, cleanEmail)
 
       if (existing) {
-        if (existing.verified) {
-          return res.status(409).json({
-            ok: false,
-            error: 'An account with this email already exists.',
-            code: 'EMAIL_EXISTS',
-          })
-        }
-
-        const salt = await bcrypt.genSalt(10)
-        const passwordHash = await bcrypt.hash(cleanPassword, salt)
-        const otp = generateOtp()
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
-
-        await updateById('signups', existing._id, {
-          name: cleanName,
-          phone: cleanPhone,
-          passwordHash,
-          role: userRole,
-          whatsappNumber: linkedWhatsapp || existing.whatsappNumber || '',
-          otp,
-          otpExpiry,
-          verified: false,
-        })
-
-        try {
-          await sendOtpEmail(cleanEmail, otp)
-        } catch (mailErr) {
-          console.error('[Mail] OTP send failed:', mailErr.message)
-        }
-
-        return res.status(200).json({
-          ok: true,
-          requiresVerification: true,
-          email: cleanEmail,
-          message: 'Account updated. Please verify your email.',
-          ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
+        return res.status(409).json({
+          ok: false,
+          error: 'An account with this email already exists.',
+          code: 'EMAIL_EXISTS',
         })
       }
 
       const salt = await bcrypt.genSalt(10)
       const passwordHash = await bcrypt.hash(cleanPassword, salt)
-      const otp = generateOtp()
-      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
 
       await createDocument('signups', {
         name: cleanName,
@@ -122,23 +84,13 @@ export function createSignupRouter({ connectStore, createDocument, updateById, s
         passwordHash,
         role: userRole,
         whatsappNumber: linkedWhatsapp,
-        otp,
-        otpExpiry,
-        verified: false,
+        verified: true,
       })
-
-      try {
-        await sendOtpEmail(cleanEmail, otp)
-      } catch (mailErr) {
-        console.error('[Mail] OTP send failed:', mailErr.message)
-      }
 
       return res.status(200).json({
         ok: true,
-        requiresVerification: true,
         email: cleanEmail,
-        message: 'Account created. Please verify your email.',
-        ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
+        message: 'Account created successfully.',
       })
     } catch (err) {
       console.error(err)

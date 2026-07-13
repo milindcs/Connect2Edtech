@@ -131,7 +131,7 @@ export default function CartPage() {
               </div>
 
               <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label htmlFor="name" style={{ fontWeight: 500 }}>Full Name *</label>
                     <input id="name" name="name" className="search-input" required placeholder="Enter your full name" />

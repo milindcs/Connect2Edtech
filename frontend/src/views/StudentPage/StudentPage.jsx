@@ -35,7 +35,6 @@ export default function StudentPage() {
       return
     }
     let cancelled = false
-    const headers = { Authorization: `Bearer ${token}` }
 
     const load = async () => {
       setLoading(true)
@@ -138,7 +137,7 @@ export default function StudentPage() {
         style={{ padding: 24, marginBottom: 32, background: 'linear-gradient(135deg, rgba(236,72,153,0.06) 0%, rgba(219,39,119,0.03) 100%)' }}
       >
         <h3 style={{ margin: '0 0 16px' }}>My Profile</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
           <div>
             <div style={{ fontSize: '0.8rem', color: '#9d174d', fontWeight: 700, textTransform: 'uppercase' }}>Name</div>
             <div>{user?.name || '—'}</div>
@@ -150,23 +149,6 @@ export default function StudentPage() {
           <div>
             <div style={{ fontSize: '0.8rem', color: '#9d174d', fontWeight: 700, textTransform: 'uppercase' }}>Phone</div>
             <div>{user?.phone || '—'}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', color: '#9d174d', fontWeight: 700, textTransform: 'uppercase' }}>Status</div>
-            <div>
-              <span style={{
-                display: 'inline-block',
-                padding: '2px 10px',
-                borderRadius: 999,
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                background: user?.verified ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                color: user?.verified ? '#15803d' : '#854d0e',
-                border: `1px solid ${user?.verified ? 'rgba(34,197,94,0.25)' : 'rgba(234,179,8,0.25)'}`,
-              }}>
-                {user?.verified ? 'Verified' : 'Unverified'}
-              </span>
-            </div>
           </div>
         </div>
       </div>

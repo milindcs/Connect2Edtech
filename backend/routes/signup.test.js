@@ -6,13 +6,7 @@ import express from 'express';
 import { createSignupRouter } from './signup.js';
 import { createDocument, findOne, clearCollection, find } from '../store.js';
 
-let sentOtps = [];
-
 const ALLOWED_ROLES = ['user', 'hr', 'admin'];
-
-async function sendOtpEmail(email, otp) {
-  sentOtps.push({ email, otp });
-}
 
 function updateByIdSignup(collectionName, id, update) {
   const storeRow = findOne('signups', { _id: id });
@@ -26,7 +20,7 @@ function updateByIdSignup(collectionName, id, update) {
 function makeServer() {
   const app = express();
   app.use(express.json());
-  app.use('/api/signup', createSignupRouter({ connectStore: find, createDocument, updateById: updateByIdSignup, sendOtpEmail }));
+  app.use('/api/signup', createSignupRouter({ connectStore: find, createDocument, updateById: updateByIdSignup }));
   return http.createServer(app);
 }
 
@@ -48,7 +42,6 @@ after(() => {
 });
 
 beforeEach(() => {
-  sentOtps = [];
   clearCollection('signups');
 });
 
@@ -89,7 +82,7 @@ test('rejects empty email', async () => {
   }
 });
 
-test('creates account and sends OTP', async () => {
+test('creates verified account and returns success', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
@@ -97,34 +90,30 @@ test('creates account and sends OTP', async () => {
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.ok, true);
-    assert.equal(body.requiresVerification, true);
 
     const saved = find('signups', { email: 'jane@test.com' })[0];
     assert.ok(saved);
     assert.notEqual(saved.passwordHash, 'longenough');
-    assert.ok(saved.otp.length === 6);
-    assert.equal(sentOtps.length, 1);
-    assert.equal(sentOtps[0].email, 'jane@test.com');
+    assert.equal(saved.verified, true);
   } finally {
     server.close();
   }
 });
 
-test('updates unverified existing account instead of duplicate', async () => {
+test('rejects existing account with 409', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
     const payload = { name: 'Jane', email: 'jane@test.com', phone: '999', password: 'longenough' };
-    await postSignup(server, payload);
-    const first = find('signups', { email: 'jane@test.com' })[0];
+    const res1 = await postSignup(server, payload);
+    assert.equal(res1.status, 200);
 
-    const res = await postSignup(server, { ...payload, name: 'Jane Doe', password: 'newerpass1' });
-    assert.equal(res.status, 200);
+    const res2 = await postSignup(server, { ...payload, name: 'Jane Doe', password: 'newerpass1' });
+    assert.equal(res2.status, 409);
 
     assert.equal(find('signups', { email: 'jane@test.com' }).length, 1);
-    const updated = find('signups', { email: 'jane@test.com' })[0];
-    assert.equal(updated.name, 'Jane Doe');
-    assert.notEqual(updated.passwordHash, first.passwordHash);
+    const saved = find('signups', { email: 'jane@test.com' })[0];
+    assert.equal(saved.name, 'Jane');
   } finally {
     server.close();
   }

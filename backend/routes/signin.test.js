@@ -89,15 +89,15 @@ test('rejects wrong password with 401', async () => {
   }
 });
 
-test('rejects unverified account with 403 and requiresVerification', async () => {
+test('signs in unverified account (verification no longer required)', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
     await seedAccount({ email: 'jane@test.com', password: 'correct123', verified: false });
     const res = await postSignin(server, { email: 'jane@test.com', password: 'correct123' });
-    assert.equal(res.status, 403);
+    assert.equal(res.status, 200);
     const body = await res.json();
-    assert.equal(body.requiresVerification, true);
+    assert.equal(body.token, 'jwt:jane@test.com');
   } finally {
     server.close();
   }

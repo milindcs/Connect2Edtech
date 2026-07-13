@@ -5,10 +5,14 @@ import { AuthProvider, useAuth } from '../shared/AuthContext'
 
 // Redirect the generic "Dashboard" link to the user's actual dashboard by role.
 function DashboardRedirect() {
-  const { user, isAuthenticated, isStaff } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   if (!isAuthenticated) return <Navigate to="/signin" replace />
   const role = user?.role
-  const target = isStaff ? '/admin' : role === 'student' || role === 'user' ? '/student' : '/'
+  const target =
+    role === 'admin' ? '/admin'
+    : role === 'hr' ? '/hr'
+    : role === 'student' || role === 'user' ? '/student'
+    : '/'
   return <Navigate to={target} replace />
 }
 
@@ -20,7 +24,6 @@ import EnrollmentPage from '../views/EnrollmentPage/EnrollmentPage'
 import ContactPage from '../views/ContactPage/ContactPage'
 import SignupPage from '../views/SignupPage/SignupPage'
 import SigninPage from '../views/SigninPage/SigninPage'
-import VerifyOtpPage from '../views/VerifyOtpPage/VerifyOtpPage'
 import AdminDashboard from '../views/AdminDashboard/AdminDashboard'
 import AdminRoute from '../views/AdminDashboard/AdminRoute'
 import StudentPage from '../views/StudentPage/StudentPage'
@@ -42,7 +45,6 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />
-          <Route path="/verify-otp" element={<VerifyOtpPage />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/hr" element={<AdminRoute><HrDashboard /></AdminRoute>} />

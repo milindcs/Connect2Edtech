@@ -38,14 +38,6 @@ export function createSigninRouter({ findOne, signJwt }) {
         return res.status(401).json({ ok: false, error: 'Invalid email or password.' })
       }
 
-      if (!account.verified) {
-        return res.status(403).json({
-          ok: false,
-          error: 'Please verify your email before signing in.',
-          requiresVerification: true,
-        })
-      }
-
       const token = signJwt(account)
 
       return res.status(200).json({
