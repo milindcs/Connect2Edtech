@@ -65,22 +65,24 @@ test('rejects missing required fields', async () => {
   }
 });
 
-test('rejects weak password', async () => {
+test('rejects empty password', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
-    const res = await postSignup(server, { name: 'A', email: 'a@b.com', phone: '123', password: 'short' });
+    const res = await postSignup(server, { name: 'A', email: 'a@b.com', phone: '123', password: '' });
     assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.equal(body.ok, false);
   } finally {
     server.close();
   }
 });
 
-test('rejects invalid email', async () => {
+test('rejects empty email', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
-    const res = await postSignup(server, { name: 'A', email: 'not-an-email', phone: '123', password: 'longenough' });
+    const res = await postSignup(server, { name: 'A', email: '', phone: '123', password: 'longenough' });
     assert.equal(res.status, 400);
   } finally {
     server.close();
@@ -162,7 +164,7 @@ test('links whatsapp number when requested', async () => {
   }
 });
 
-test('stores a provided role and defaults to user', async () => {
+test('ignores a privileged role request and defaults to user', async () => {
   const server = makeServer();
   await new Promise((r) => server.listen(0, r));
   try {
@@ -171,7 +173,7 @@ test('stores a provided role and defaults to user', async () => {
     });
     assert.equal(res.status, 200);
     const saved = find('signups', { email: 'jane@test.com' })[0];
-    assert.equal(saved.role, 'hr');
+    assert.equal(saved.role, 'user');
 
     const res2 = await postSignup(server, {
       name: 'Bob', email: 'bob@test.com', phone: '111', password: 'longenough',

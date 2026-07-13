@@ -1,48 +1,73 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
+import express from 'express'
+import bcrypt from 'bcryptjs'
 
-// Builds the /api/signin router. Dependencies are injected so the route can be
-// unit-tested against an in-memory MongoDB without loading the whole server.
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function isValidEmail(value) {
+  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
 export function createSigninRouter({ findOne, signJwt }) {
-  const router = express.Router();
+  const router = express.Router()
 
   router.post('/', async (req, res) => {
     try {
-      const { email, password } = req.body || {};
-      if (!email || !password || String(password).trim().length === 0) {
-        return res.status(400).json({ ok: false, error: 'email and password are required' });
+      const { email, password } = req.body || {}
+      const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+      const cleanPassword = typeof password === 'string' ? password : ''
+
+      if (!isValidEmail(cleanEmail) || !cleanPassword) {
+        return res.status(400).json({ ok: false, error: 'Email and password are required.' })
       }
 
-      const safe = String(email).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const account = await findOne('signups', { email: new RegExp('^' + safe + '$', 'i') });
+      const account = await findOne('signups', {
+        email: new RegExp(`^${escapeRegExp(cleanEmail)}$`, 'i'),
+      })
+
       if (!account) {
-
-        return res.status(401).json({ ok: false, error: 'No account found for this email. Please sign up first.' });
+        return res.status(401).json({ ok: false, error: 'Invalid email or password.' })
       }
 
-      const matched = await bcrypt.compare(String(password).trim(), account.passwordHash || '');
-      if (!matched) {
-        return res.status(401).json({ ok: false, error: 'Incorrect password.' });
+      const passwordMatches = account.passwordHash
+        ? await bcrypt.compare(cleanPassword, account.passwordHash)
+        : false
+
+      if (!passwordMatches) {
+        return res.status(401).json({ ok: false, error: 'Invalid email or password.' })
       }
 
       if (!account.verified) {
-        return res.status(403).json({ ok: false, error: 'Please verify your email before signing in.', requiresVerification: true });
+        return res.status(403).json({
+          ok: false,
+          error: 'Please verify your email before signing in.',
+          requiresVerification: true,
+        })
       }
 
-      const token = signJwt(account);
-      res.json({
+      const token = signJwt(account)
+
+      return res.status(200).json({
         ok: true,
         token,
         user: {
-          name: account.name, email: account.email, phone: account.phone,
-          whatsappNumber: account.whatsappNumber || '', verified: account.verified, role: account.role || 'user',
+          name: account.name,
+          email: account.email,
+          phone: account.phone,
+          whatsappNumber: account.whatsappNumber || '',
+          verified: account.verified,
+          role: account.role || 'user',
+          picture: account.picture || '',
         },
-      });
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ ok: false, error: 'Sign in failed' });
+      })
+    } catch (err) {
+      console.error(err)
+      res.status(500).json({ ok: false, error: 'Sign in failed. Please try again.' })
     }
-  });
+  })
 
-  return router;
+  return router
 }
+
+export default createSigninRouter

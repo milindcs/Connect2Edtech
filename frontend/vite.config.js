@@ -17,7 +17,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      '/api': { target: 'https://connect2edtech.onrender.com', changeOrigin: true },
+      '/api': { target: 'http://localhost:10000', changeOrigin: true },
     },
   },
   publicDir: 'public',

@@ -118,19 +118,19 @@ export default function StudentPage() {
           </div>
         )}
         {isOffline && (
-        <div
-          style={{
-            padding: 12,
-            background: 'rgba(234, 179, 8, 0.1)',
-            border: '1px solid rgba(234, 179, 8, 0.3)',
-            borderRadius: 8,
-            marginBottom: 16,
-            color: '#854d0e',
-          }}
-        >
-          ⚠️ You are currently offline. Showing cached data.
-        </div>
-      )}
+          <div
+            style={{
+              padding: 12,
+              background: 'rgba(234, 179, 8, 0.1)',
+              border: '1px solid rgba(234, 179, 8, 0.3)',
+              borderRadius: 8,
+              marginBottom: 16,
+              color: '#854d0e',
+            }}
+          >
+            ⚠️ You are currently offline. Showing cached data.
+          </div>
+        )}
       {error && <p style={{ color: 'var(--error)', marginBottom: 16 }}>{error}</p>}
 
       <div

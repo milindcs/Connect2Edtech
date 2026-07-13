@@ -1,109 +1,152 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
+import express from 'express'
+import bcrypt from 'bcryptjs'
 
-const trimmed = (v) => (typeof v === 'string' ? v.trim() : '');
-
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+// Signup always creates a standard "user". Privileged roles (hr/admin) can only
+// be granted via the admin role-management endpoint to prevent privilege escalation.
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// Builds the /api/signup router. Dependencies are injected so the route can be
-// unit-tested against an in-memory MongoDB without loading the whole server.
-const ALLOWED_ROLES = ['user', 'hr', 'admin'];
+function isValidEmail(value) {
+  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+// connectStore is the store "find" helper: connectStore(collection, query) -> array
+async function findAccountByEmail(connectStore, email) {
+  const matches = await connectStore('signups', {
+    email: new RegExp(`^${escapeRegExp(email)}$`, 'i'),
+  })
+  if (Array.isArray(matches)) return matches[0] || null
+  return matches || null
+}
 
 export function createSignupRouter({ connectStore, createDocument, updateById, sendOtpEmail }) {
-  const router = express.Router();
+  const router = express.Router()
 
   router.post('/', async (req, res) => {
     try {
-      const { name, email, phone, password, whatsappNumber, connectWhatsapp, role } = req.body || {};
-      if (!name || !email || !phone) {
-        return res.status(400).json({ ok: false, error: 'name, email, phone are required' });
+      const {
+        name,
+        email,
+        phone,
+        password,
+        confirmPassword,
+        role,
+        whatsappNumber,
+        connectWhatsapp,
+      } = req.body || {}
+
+      const cleanName = typeof name === 'string' ? name.trim() : ''
+      const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+      const cleanPhone = typeof phone === 'string' ? phone.trim() : ''
+      const cleanPassword = typeof password === 'string' ? password : ''
+
+      const missingFields = []
+      if (!cleanName) missingFields.push('name')
+      if (!isValidEmail(cleanEmail)) missingFields.push('email')
+      if (!cleanPhone) missingFields.push('phone')
+      if (!cleanPassword) missingFields.push('password')
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Please provide all required fields.',
+          fields: missingFields,
+        })
       }
-      if (!password || typeof password !== 'string' || password.length < 8) {
-        return res.status(400).json({ ok: false, error: 'password is required (min 8 chars)' });
-      }
-      if (!/^\S+@\S+\.\S+$/.test(String(email).trim())) {
-        return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
+
+      if (confirmPassword !== undefined && cleanPassword !== String(confirmPassword)) {
+        return res.status(400).json({ ok: false, error: 'Passwords do not match.' })
       }
 
-      const accountRole = 'user'
+      const userRole = 'user'
+      const linkedWhatsapp = connectWhatsapp
+        ? String(whatsappNumber || cleanPhone).trim()
+        : ''
 
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password, salt);
-      const otp = generateOtp();
-      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-      const linkedWhatsapp = connectWhatsapp ? trimmed(whatsappNumber) || trimmed(phone) : '';
-
-      let existing = null;
-      try {
-        const results = await connectStore('signups', { email: String(email).trim() });
-        existing = results.length > 0 ? results[0] : null;
-
-      } catch {
-        existing = null;
-      }
+      const existing = await findAccountByEmail(connectStore, cleanEmail)
 
       if (existing) {
         if (existing.verified) {
-          return res.status(409).json({ ok: false, error: 'An account with this email already exists. Please sign in.' });
+          return res.status(409).json({
+            ok: false,
+            error: 'An account with this email already exists.',
+            code: 'EMAIL_EXISTS',
+          })
         }
-        await updateById('signups', existing._id, {
-          $set: { name: trimmed(name), phone: trimmed(phone), whatsappNumber: linkedWhatsapp, passwordHash, role: accountRole, otp, otpExpiry }
-        });
 
-      } else {
-        await createDocument('signups', {
-          name: trimmed(name),
-          email: String(email).trim(),
-          phone: trimmed(phone),
-          whatsappNumber: linkedWhatsapp,
+        const salt = await bcrypt.genSalt(10)
+        const passwordHash = await bcrypt.hash(cleanPassword, salt)
+        const otp = generateOtp()
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
+
+        await updateById('signups', existing._id, {
+          name: cleanName,
+          phone: cleanPhone,
           passwordHash,
-          role: accountRole,
+          role: userRole,
+          whatsappNumber: linkedWhatsapp || existing.whatsappNumber || '',
           otp,
           otpExpiry,
-        });
+          verified: false,
+        })
 
+        try {
+          await sendOtpEmail(cleanEmail, otp)
+        } catch (mailErr) {
+          console.error('[Mail] OTP send failed:', mailErr.message)
+        }
+
+        return res.status(200).json({
+          ok: true,
+          requiresVerification: true,
+          email: cleanEmail,
+          message: 'Account updated. Please verify your email.',
+          ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
+        })
       }
 
+      const salt = await bcrypt.genSalt(10)
+      const passwordHash = await bcrypt.hash(cleanPassword, salt)
+      const otp = generateOtp()
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000)
+
+      await createDocument('signups', {
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        passwordHash,
+        role: userRole,
+        whatsappNumber: linkedWhatsapp,
+        otp,
+        otpExpiry,
+        verified: false,
+      })
+
       try {
-        await sendOtpEmail(String(email).trim(), otp);
+        await sendOtpEmail(cleanEmail, otp)
       } catch (mailErr) {
-        console.error('[Mail] OTP send failed:', mailErr?.message || mailErr);
+        console.error('[Mail] OTP send failed:', mailErr.message)
       }
 
-      // Also store a raw signup submission (without password/OTP)
-      try {
-        const ipAddress = (req.headers?.['x-forwarded-for']?.toString()?.split(',')?.[0]?.trim() || req.ip || '').toString();
-        await createDocument('signupsubmissions', {
-          name: trimmed(name),
-          email: String(email).trim(),
-          phone: trimmed(phone),
-          whatsappNumber: linkedWhatsapp,
-          connectWhatsapp: !!connectWhatsapp,
-          role: accountRole,
-          hostname: process.env.HOSTNAME || '',
-          ip: ipAddress,
-        });
-      } catch (subErr) {
-        // Do not break signup if submission logging fails.
-        console.error('[SignupSubmissions] failed:', subErr?.message || subErr);
-      }
-
-      res.json({
+      return res.status(200).json({
         ok: true,
-        message: 'Account created. Verification code sent to your email.',
         requiresVerification: true,
+        email: cleanEmail,
+        message: 'Account created. Please verify your email.',
         ...(process.env.NODE_ENV === 'production' ? {} : { devOtp: otp }),
-      });
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ ok: false, error: 'Signup failed. Please try again.' });
+      })
+    } catch (err) {
+      console.error(err)
+      res.status(500).json({ ok: false, error: 'Signup failed. Please try again.' })
     }
-  });
+  })
 
-  return router;
+  return router
 }
 
-export { trimmed, generateOtp };
+export default createSignupRouter

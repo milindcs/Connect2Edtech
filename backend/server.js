@@ -12,7 +12,9 @@ import nodemailer from 'nodemailer';
 import { createSignupRouter } from './routes/signup.js';
 import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
-import { createDocument, findOne, updateById, find, countDocuments, clearCollection, getDb } from './store.js';
+import { createCartRouter } from './routes/cart.js';
+import { createCheckoutRouter } from './routes/checkout.js';
+import { createDocument, findOne, updateById, find, countDocuments, clearCollection, deleteOne, getDb } from './store.js';
 
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
@@ -567,7 +569,40 @@ app.post('/api/admin/test-email', adminAuth, async (req, res) => {
   }
 })
 
-app.use('/api/mail', authMiddleware, createMailRouter({ findOne, updateById, sendEmail }))
+app.use('/api/mail', authMiddleware, createMailRouter({ find, findOne, updateById, sendEmail }))
+
+app.use('/api/cart', createCartRouter({ find, createDocument, updateById, deleteOne }))
+
+app.use('/api/checkout', createCheckoutRouter({ find, createDocument, updateById, deleteOne }))
+
+app.get('/api/certificates/:id/verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ ok: false, error: 'Certificate id is required.' });
+    }
+    const cert = await findOne('certificaterequests', { certificateId: String(id).trim() });
+    if (!cert) {
+      return res.status(404).json({ ok: false, error: 'Certificate not found.' });
+    }
+    const safe = {
+      _id: cert._id,
+      userId: cert.userId,
+      userName: cert.userName,
+      userEmail: cert.userEmail,
+      courseKey: cert.courseKey,
+      courseTitle: cert.courseTitle,
+      status: cert.status,
+      issuedAt: cert.issuedAt,
+      certificateId: cert.certificateId,
+      createdAt: cert.createdAt,
+    };
+    res.json({ ok: true, ...safe });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: 'Verification failed.' });
+  }
+})
 
 if (fs.existsSync(distDir) && process.env.VERCEL !== '1') {
   app.get('/{*splat}', (req, res, next) => {

@@ -8,9 +8,9 @@ export default function Footer() {
 
   const handleSubscribe = async (e) => {
     e.preventDefault()
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+    if (!email || !String(email).trim()) {
       setStatus('error')
-      setMsg('Please enter a valid email address.')
+      setMsg('Please enter your email address.')
       return
     }
     setStatus('sending')

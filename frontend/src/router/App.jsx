@@ -20,11 +20,14 @@ import EnrollmentPage from '../views/EnrollmentPage/EnrollmentPage'
 import ContactPage from '../views/ContactPage/ContactPage'
 import SignupPage from '../views/SignupPage/SignupPage'
 import SigninPage from '../views/SigninPage/SigninPage'
+import VerifyOtpPage from '../views/VerifyOtpPage/VerifyOtpPage'
 import AdminDashboard from '../views/AdminDashboard/AdminDashboard'
 import AdminRoute from '../views/AdminDashboard/AdminRoute'
 import StudentPage from '../views/StudentPage/StudentPage'
 import HrDashboard from '../views/HrDashboard/HrDashboard'
 import MailPage from '../views/MailPage/MailPage'
+import CartPage from '../views/CartPage/CartPage'
+import VerifyCertificatePage from '../views/VerifyCertificatePage/VerifyCertificatePage'
 
 export default function App() {
   return (
@@ -39,10 +42,13 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />
+          <Route path="/verify-otp" element={<VerifyOtpPage />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/hr" element={<AdminRoute><HrDashboard /></AdminRoute>} />
           <Route path="/mail" element={<MailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/verify-certificate/:id" element={<VerifyCertificatePage />} />
           <Route path="/dashboard" element={<DashboardRedirect />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

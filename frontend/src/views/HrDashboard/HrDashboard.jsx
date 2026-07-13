@@ -47,7 +47,7 @@ export default function HrDashboard() {
 
       // Try to load from cache first
       const cached = getCachedData(CACHE_KEY)
-       if (cached) {
+      if (cached) {
         if (!cancelled) {
           setStats(cached.stats || null)
           setContacts(cached.contacts || [])

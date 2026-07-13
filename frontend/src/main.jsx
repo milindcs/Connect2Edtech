@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './router/App'
 import './styles/global.css'
-import '../assets/whatsapp-cta.css'
+import './assets/whatsapp-cta.css'
 
 
 createRoot(document.getElementById('root')).render(

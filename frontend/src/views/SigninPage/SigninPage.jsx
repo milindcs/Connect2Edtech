@@ -5,19 +5,6 @@ import { isValidEmail } from '../../shared/authValidation'
 
 const STORAGE_KEY = 'signin_form_data'
 
-function dashboardForRole(role) {
-  switch (role) {
-    case 'admin':
-      return '/admin'
-    case 'hr':
-      return '/hr'
-    case 'student':
-      return '/student'
-    default:
-      return '/student'
-  }
-}
-
 function PasswordInput({ label, name, value, onChange, placeholder, error, autoComplete }) {
   const [visible, setVisible] = useState(false)
   return (
@@ -81,7 +68,7 @@ export default function SigninPage() {
   useEffect(() => {
     if (!isAuthenticated) return
     localStorage.removeItem(STORAGE_KEY)
-    navigate(dashboardForRole(user?.role))
+    navigate('/dashboard')
   }, [isAuthenticated, user?.role, navigate])
 
   useEffect(() => {
@@ -111,7 +98,7 @@ export default function SigninPage() {
           try {
             const data = await googleSignin(response.credential)
             showToast('Signed in with Google!', 'success')
-            setTimeout(() => navigate(dashboardForRole(data.user?.role)), 500)
+            setTimeout(() => navigate('/dashboard'), 500)
           } catch (err) {
             showToast(err.message || 'Google sign-in failed', 'error')
           } finally {
@@ -261,6 +248,12 @@ export default function SigninPage() {
               <button type="button" className="btn secondary auth-submit" onClick={handleResend} disabled={isResending}>
                 {isResending ? 'Resending…' : 'Resend Verification Code'}
               </button>
+              <Link
+                to={`/verify-otp?email=${encodeURIComponent(resendEmail || formData.email)}`}
+                className="link-button"
+              >
+                Already have a code? Verify email
+              </Link>
             </div>
           )}
 

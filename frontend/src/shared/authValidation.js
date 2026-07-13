@@ -1,13 +1,10 @@
 // Shared validation + formatting helpers for the auth flows.
 
-export const EMAIL_RE = /^\S+@\S+\.\S+$/
 export const ALLOWED_ROLES = ['user', 'hr', 'admin']
 
 export function isValidEmail(value) {
-  return EMAIL_RE.test(String(value || '').trim())
+  return typeof String(value || '').trim() === 'string' && String(value || '').trim().length > 0
 }
-
-// Phone is accepted in international or local form; we only check digit count.
 export function phoneDigits(value) {
   return String(value || '').replace(/\D/g, '')
 }
@@ -18,7 +15,7 @@ export function isValidPhone(value) {
 }
 
 export function isValidPassword(value) {
-  return typeof value === 'string' && value.length >= 8
+  return typeof value === 'string' && value.length > 0
 }
 
 // Returns a 0-4 strength score and a human label for the meter.
@@ -43,13 +40,13 @@ export function passwordStrength(value) {
 // Validates the signup payload and returns a field -> error map (empty when valid).
 export function validateSignup({ name, email, phone, password, confirmPassword, whatsappNumber, connectWhatsapp }) {
   const errors = {}
-  if (!name || name.trim().length < 2) errors.name = 'Please enter your full name.'
-  if (!isValidEmail(email)) errors.email = 'Please enter a valid email address.'
+  if (!name || !name.trim()) errors.name = 'Please enter your full name.'
+  if (!email || !String(email).trim()) errors.email = 'Please enter a valid email address.'
   if (!isValidPhone(phone)) errors.phone = 'Please enter a valid phone number (10–15 digits).'
   if (connectWhatsapp && !isValidPhone(whatsappNumber || phone)) {
     errors.whatsappNumber = 'Please enter a valid WhatsApp number (10–15 digits).'
   }
-  if (!isValidPassword(password)) errors.password = 'Password must be at least 8 characters.'
+  if (!isValidPassword(password)) errors.password = 'Please enter your password.'
   if (confirmPassword !== undefined && password !== confirmPassword) {
     errors.confirmPassword = 'Passwords do not match.'
   }

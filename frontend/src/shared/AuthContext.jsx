@@ -36,6 +36,7 @@ export function AuthProvider({ children }) {
       const res = await api.request({
         url: path,
         method: options.method || 'get',
+        headers: { 'Content-Type': 'application/json', ...options.headers },
         data: options.body,
         ...options,
       })
