@@ -106,7 +106,7 @@ export default function StudentPage() {
   return (
     <DashboardShell
       title="Student Portal"
-      roleLabel={user?.role === 'admin' ? 'Admin' : 'Student'}
+      roleLabel={user?.role === 'admin' ? 'Admin' : user?.role === 'hr' ? 'HR' : 'Student'}
       stats={stats}
       breadcrumbs={[
         { label: 'Home', href: '/' },

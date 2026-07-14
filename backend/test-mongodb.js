@@ -59,7 +59,7 @@ async function testMongoDB() {
 
     // Test 7: Check collections used by the app
     console.log('\n7. Checking application collections...');
-    const appCollections = ['signups', 'enrollments', 'contacts'];
+    const appCollections = ['signups', 'enrollments', 'contacts', 'dashboard', 'settings'];
     const existingCollections = collections.map(c => c.name);
     
     for (const colName of appCollections) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { buildWhatsAppUrl } from '../../shared/whatsappUtils';
+import { buildWhatsAppUrl, buildWhatsAppUrlFor, WHATSAPP_PHONES } from '../../shared/whatsappUtils';
 
 const HIDDEN_FIELD_NAMES = new Set([
   '_captcha',
@@ -14,10 +14,27 @@ function clean(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
+const WhatsAppGlyph = () => (
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    strokeWidth="0"
+    viewBox="0 0 448 512"
+    height="1.2em"
+    width="1.2em"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L32 503l139.7-36.6c32.7 17.7 69 27 106.3 27 122.4 0 222-99.6 222-222 0-59.3-23-115.1-65-157.1zM223.9 474c-33.1 0-65.6-8.9-93.9-25.7l-6.7-4-82.8 21.7 22.1-80.7-4.4-7C41.2 344 28.6 302.2 28.6 259c0-107.4 87.4-194.8 194.8-194.8 52 0 100.9 20.3 137.8 57.2 36.9 36.9 57.2 85.8 57.2 137.8.1 107.4-87.3 194.8-194.5 194.8zm110.1-150.9c-6-3-35.6-17.5-41.1-19.5-5.5-2-9.6-3-13.7 3-4.1 6-16 20-19.6 24-3.6 4-7.2 4.5-13.2 1.5-6-3-25.3-9.3-48.2-29.8-17.8-15.9-29.8-35.5-33.3-41.5-3.6-6-.4-9.2 2.6-12.2 2.7-2.7 6-7 9-10.5 3-3.5 4-6 6-10 2-4 1-7.5-.5-10.5-1.5-3-13.7-33-18.8-45.2-5-12.2-10-10.5-13.7-10.7-3.6-.2-7.7-.2-11.8-.2-4.1 0-10.8 1.5-16.5 7.8-5.7 6.3-21.7 21.2-21.7 51.7 0 30.5 22.2 60 25.2 64 3 4 43.8 66.8 106.1 93.7 14.8 6.4 26.3 10.2 35.4 13.1 14.9 4.7 28.4 4 39.1 2.4 12-1.8 35.6-14.5 40.6-28.5 5-14 5-26 3.5-28.5-1.5-2.5-5.5-4-11.5-7z"></path>
+  </svg>
+);
+
 export default function WhatsAppCTA() {
-  const [href, setHref] = useState(buildWhatsAppUrl(''));
+  const [message, setMessage] = useState('Hello Connect2Edtech!\nI need more details about your services.');
+  const [open, setOpen] = useState(false);
+  const [phones, setPhones] = useState(WHATSAPP_PHONES);
   const [position, setPosition] = useState({ x: null, y: null });
   const dragState = useRef({ dragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0, moved: false });
+  const wrapperRef = useRef(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -113,17 +130,17 @@ export default function WhatsAppCTA() {
 
     async function updateWhatsAppLinks() {
       const details = (await getPageDetails()).concat(getFormDetails());
-      let message = '';
+      let msg = '';
 
 
 
       if (!details.length) {
-        message = 'Hello Connect2Edtech!\nI need more details about your services.';
+        msg = 'Hello Connect2Edtech!\nI need more details about your services.';
       } else {
-        message = 'Hello Connect2Edtech!\n' + details.map(d => `${d.label}: ${d.value}`).join('\n');
+        msg = 'Hello Connect2Edtech!\n' + details.map(d => `${d.label}: ${d.value}`).join('\n');
       }
 
-      setHref(buildWhatsAppUrl(message));
+      setMessage(msg);
     }
 
     updateWhatsAppLinks();
@@ -138,6 +155,22 @@ export default function WhatsAppCTA() {
       window.removeEventListener('storage', updateWhatsAppLinks);
     };
   }, [location]);
+
+  // Load WhatsApp numbers from MongoDB site settings (falls back to defaults).
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const fetched = data?.settings?.whatsappPhones;
+        if (Array.isArray(fetched) && fetched.length) setPhones(fetched);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const getInitialX = () => {
     if (position.x !== null) return position.x;
@@ -199,39 +232,73 @@ export default function WhatsAppCTA() {
     if (dragState.current.moved) {
       e.preventDefault();
       dragState.current.moved = false;
+      return;
     }
+    e.preventDefault();
+    setOpen((v) => !v);
   };
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+    };
+  }, [open]);
 
   const left = getInitialX();
   const top = getInitialY();
 
   return (
-    <a
-      id="whatsappFloatingCta"
-      href={href}
-      className="whatsapp-floating-cta"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp"
-      style={{ left, top, right: 'auto', bottom: 'auto' }}
-      onMouseDown={handlePointerDown}
-      onTouchStart={handlePointerDown}
-      onClick={handleClick}
+    <div
+      ref={wrapperRef}
+      className="whatsapp-cta-wrapper"
+      style={{ position: 'fixed', left, top, right: 'auto', bottom: 'auto', zIndex: 10000 }}
     >
-      <span className="whatsapp-floating-icon" aria-hidden="true">
-        <svg
-          stroke="currentColor"
-          fill="currentColor"
-          strokeWidth="0"
-          viewBox="0 0 448 512"
-          height="1.2em"
-          width="1.2em"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L32 503l139.7-36.6c32.7 17.7 69 27 106.3 27 122.4 0 222-99.6 222-222 0-59.3-23-115.1-65-157.1zM223.9 474c-33.1 0-65.6-8.9-93.9-25.7l-6.7-4-82.8 21.7 22.1-80.7-4.4-7C41.2 344 28.6 302.2 28.6 259c0-107.4 87.4-194.8 194.8-194.8 52 0 100.9 20.3 137.8 57.2 36.9 36.9 57.2 85.8 57.2 137.8.1 107.4-87.3 194.8-194.5 194.8zm110.1-150.9c-6-3-35.6-17.5-41.1-19.5-5.5-2-9.6-3-13.7 3-4.1 6-16 20-19.6 24-3.6 4-7.2 4.5-13.2 1.5-6-3-25.3-9.3-48.2-29.8-17.8-15.9-29.8-35.5-33.3-41.5-3.6-6-.4-9.2 2.6-12.2 2.7-2.7 6-7 9-10.5 3-3.5 4-6 6-10 2-4 1-7.5-.5-10.5-1.5-3-13.7-33-18.8-45.2-5-12.2-10-10.5-13.7-10.7-3.6-.2-7.7-.2-11.8-.2-4.1 0-10.8 1.5-16.5 7.8-5.7 6.3-21.7 21.2-21.7 51.7 0 30.5 22.2 60 25.2 64 3 4 43.8 66.8 106.1 93.7 14.8 6.4 26.3 10.2 35.4 13.1 14.9 4.7 28.4 4 39.1 2.4 12-1.8 35.6-14.5 40.6-28.5 5-14 5-26 3.5-28.5-1.5-2.5-5.5-4-11.5-7z"></path>
-        </svg>
-      </span>
-      <span className="whatsapp-floating-text">WhatsApp Chat</span>
-    </a>
+      {open && (
+        <div className="whatsapp-number-popover" role="menu" aria-label="Choose a WhatsApp number">
+          <p className="whatsapp-popover-title">Chat with us on WhatsApp</p>
+          {phones.map((num) => (
+            <a
+              key={num}
+              className="whatsapp-popover-number"
+              href={buildWhatsAppUrlFor(num, message)}
+              target="_blank"
+              rel="noopener noreferrer"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              <WhatsAppGlyph />
+              +91 {num.slice(2)}
+            </a>
+          ))}
+        </div>
+      )}
+      <a
+        id="whatsappFloatingCta"
+        href={buildWhatsAppUrl(message)}
+        className="whatsapp-floating-cta"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        aria-expanded={open}
+        style={{ position: 'static', left: 'auto', top: 'auto', right: 'auto', bottom: 'auto' }}
+        onMouseDown={handlePointerDown}
+        onTouchStart={handlePointerDown}
+        onClick={handleClick}
+      >
+        <span className="whatsapp-floating-icon" aria-hidden="true">
+          <WhatsAppGlyph />
+        </span>
+        <span className="whatsapp-floating-text">WhatsApp Chat</span>
+      </a>
+    </div>
   );
 }

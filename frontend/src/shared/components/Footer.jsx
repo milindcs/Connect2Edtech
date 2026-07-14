@@ -41,7 +41,8 @@ export default function Footer() {
           <h3>Connect2Edtech</h3>
           <p>Empowering Students with Industry-Ready Skills. Learn Today. Lead Tomorrow.</p>
           <ul className="contact-info">
-            <li>📞 +91 7019436720</li>
+            <li>📞 +91 7019426720</li>
+            <li>📞 +91 7019045849</li>
             <li>
               <a href="mailto:hr@connect2future.com">✉️ hr@connect2future.com</a>
             </li>

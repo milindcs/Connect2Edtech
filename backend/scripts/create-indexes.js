@@ -72,6 +72,30 @@ async function createIndexes() {
           options: { name: 'replied_created_idx', background: true },
           description: 'Compound index for replied messages'
         }
+      ],
+      dashboard: [
+        { 
+          key: { type: 1 }, 
+          options: { unique: true, name: 'type_unique', background: true },
+          description: 'Unique index for dashboard snapshot type'
+        },
+        { 
+          key: { updatedAt: -1 }, 
+          options: { name: 'updated_at_desc_idx', background: true },
+          description: 'Index for most-recent dashboard snapshot'
+        }
+      ],
+      settings: [
+        { 
+          key: { type: 1 }, 
+          options: { unique: true, name: 'type_unique', background: true },
+          description: 'Unique index for site settings type'
+        },
+        { 
+          key: { updatedAt: -1 }, 
+          options: { name: 'updated_at_desc_idx', background: true },
+          description: 'Index for most-recent settings'
+        }
       ]
     };
 

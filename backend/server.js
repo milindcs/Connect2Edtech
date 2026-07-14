@@ -13,7 +13,7 @@ import { createSignupRouter } from './routes/signup.js';
 import { createSigninRouter } from './routes/signin.js';
 import { createMailRouter } from './routes/mail.js';
 import { createAdminRouter } from './routes/admin.js';
-import { createDocument, findOne, updateById, find, countDocuments, clearCollection, deleteOne, getDb } from './store.js';
+import { createDocument, findOne, updateById, find, countDocuments, clearCollection, deleteOne, getDb, upsertOne } from './store.js';
 
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
@@ -88,7 +88,7 @@ if (fs.existsSync(distDir)) {
   app.use(express.static(distDir));
 }
 
-const WHATSAPP_PHONE = '917019436720';
+const WHATSAPP_PHONE = '917019426720';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'connect2edtech-jwt-secret-change-in-production';
 const JWT_EXPIRY = '7d';
@@ -236,7 +236,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.use('/api/auth/signup', createSignupRouter({ connectStore: find, createDocument, updateById }))
 
-app.use('/api/auth/signin', createSigninRouter({ findOne, signJwt }))
+app.use('/api/auth/signin', createSigninRouter({ findOne, signJwt, upsertOne }))
 
 app.post('/api/auth/google', async (req, res) => {
   try {
@@ -410,6 +410,28 @@ app.post('/api/contact', async (req, res) => {
   }
 })
 
+// Public site settings (contact / WhatsApp numbers). Safe defaults if unset.
+app.get('/api/settings', async (req, res) => {
+  try {
+    const doc = await findOne('settings', { type: 'site' })
+    const settings = doc
+      ? {
+          whatsappPhones: Array.isArray(doc.whatsappPhones) ? doc.whatsappPhones : [],
+          contactPhones: Array.isArray(doc.contactPhones) ? doc.contactPhones : [],
+          email: doc.email || '',
+        }
+      : {
+          whatsappPhones: ['917019426720', '917019045849'],
+          contactPhones: ['7019426720', '7019045849'],
+          email: 'hr@connect2future.com',
+        }
+    res.json({ ok: true, settings })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ ok: false, error: 'Failed to load settings.' })
+  }
+})
+
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
     const users = await find('signups', {}, { sort: { createdAt: -1 } })
@@ -446,26 +468,6 @@ app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
   }
 })
 
-app.get('/api/admin/stats', staffAuth, async (req, res) => {
-  try {
-    const totalUsers = await countDocuments('signups')
-    const verifiedUsers = await countDocuments('signups', { verified: true })
-    const admins = await countDocuments('signups', { role: 'admin' })
-    const hrs = await countDocuments('signups', { role: 'hr' })
-    const enrollments = await countDocuments('enrollments')
-    const contacts = await countDocuments('contacts')
-    const recentEnroll = await find('enrollments', {}, { sort: { createdAt: -1 } })
-
-    res.json({
-      ok: true,
-      stats: { totalUsers, verifiedUsers, admins, hrs, enrollments, contacts },
-      recentEnrollments: recentEnroll,
-    })
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ ok: false, error: 'Failed to load stats.' })
-  }
-})
 
 app.get('/api/admin/contacts', staffAuth, async (req, res) => {
   try {
@@ -540,13 +542,79 @@ if (fs.existsSync(distDir) && process.env.VERCEL !== '1') {
 
 const PORT = process.env.PORT || 10000;
 
+async function ensureSiteSettings() {
+  try {
+    await upsertOne('settings', { type: 'site' }, {
+      whatsappPhones: ['917019426720', '917019045849'],
+      contactPhones: ['7019426720', '7019045849'],
+      email: 'hr@connect2future.com',
+      updatedAt: new Date(),
+    })
+  } catch (e) {
+    console.error('Failed to ensure site settings:', e.message)
+  }
+}
+
+async function ensureAdminUser() {
+  try {
+    const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || "";
+
+    if (!adminEmail || !adminPassword) {
+      console.log("⚠️ ADMIN_EMAIL or ADMIN_PASSWORD is not configured.");
+      return;
+    }
+
+    let admin = await findOne("signups", { email: adminEmail });
+
+    if (admin) {
+      if (admin.role !== "admin" || !admin.verified) {
+        await updateById("signups", admin._id, {
+          $set: {
+            role: "admin",
+            verified: true,
+            ...(admin.name ? {} : { name: "Administrator" }),
+          },
+        });
+      }
+
+      console.log("✅ Admin account already exists.");
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(adminPassword, salt);
+
+    await createDocument("signups", {
+      name: "Administrator",
+      email: adminEmail,
+      phone: "",
+      whatsappNumber: "",
+      passwordHash,
+      role: "admin",
+      verified: true,
+      createdAt: new Date(),
+    });
+
+    console.log("✅ Default admin account created.");
+  } catch (err) {
+    console.error("❌ Failed to create admin user:", err.message);
+  }
+}
+
 async function startServer() {
   try {
     await ensureWorkingDns();
     // Test MongoDB connection on startup
     const db = await getDb();
     console.log('✅ MongoDB connected successfully');
-    
+
+    // Make sure the admin account exists as a real user so it appears in dashboards.
+    await ensureAdminUser();
+
+    // Make sure site settings (contact / WhatsApp numbers) exist in MongoDB.
+    await ensureSiteSettings();
+
     if (process.env.VERCEL !== '1') {
       app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Connect2Edtech Backend running on port ${PORT}`);
@@ -567,3 +635,4 @@ async function startServer() {
 startServer();
 
 export default app;
+

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
 import { enrollmentSubmit } from '../../shared/cartApi'
 import { useAuth } from '../../shared/AuthContext'
+import { useToast } from '../../shared/useToast'
 
 export default function CoursesPage() {
   const { user } = useAuth()
+  const { showToast, ToastContainer } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedCourses, setSelectedCourses] = useState([])
@@ -77,7 +79,7 @@ export default function CoursesPage() {
       const email = String(user?.email || '').trim()
       const phone = String(user?.phone || '').trim()
       if (!name || !email || !phone) {
-        alert('Please complete your profile with name, email, and phone before enrolling.')
+        showToast('Please complete your profile with name, email, and phone before enrolling.', 'error')
         return
       }
 
@@ -98,7 +100,7 @@ export default function CoursesPage() {
       setSelectedCourses([])
     } catch (err) {
       console.error(err)
-      alert(err.message || 'Failed to enroll selected courses.')
+      showToast(err.message || 'Failed to enroll selected courses.', 'error')
     } finally {
       setAdding(false)
     }
@@ -210,6 +212,8 @@ export default function CoursesPage() {
       <div style={{ marginTop: 32, textAlign: 'center' }}>
         <Link to="/" className="btn secondary">← Back to Home</Link>
       </div>
+
+      {ToastContainer}
     </div>
   )
 }

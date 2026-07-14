@@ -9,8 +9,11 @@ export default function DashboardShell({
   stats,
   children,
   rightHeader,
+  loading,
+  error,
+  onRetry,
 }) {
-  const { user } = useAuth()
+  const { signout, user } = useAuth()
 
   const headerBadgeStyle = useMemo(() => {
     return {
@@ -44,32 +47,54 @@ export default function DashboardShell({
                 {title}
               </h2>
               <div style={{ marginTop: 10 }}>
-                <span style={headerBadgeStyle}>{roleLabel}</span>
+                <span style={headerBadgeStyle} aria-label={`Role: ${roleLabel}`}>
+                  {roleLabel}
+                </span>
               </div>
               {breadcrumbs && breadcrumbs.length > 0 && (
-                <div style={{ marginTop: 10, color: '#6b2a4a', fontWeight: 600, fontSize: '0.95rem' }}>
+                <nav style={{ marginTop: 10, color: '#6b2a4a', fontWeight: 600, fontSize: '0.95rem' }} aria-label="Breadcrumb">
                   {breadcrumbs.map((b, idx) => (
                     <span key={b.label}>
-                      {idx > 0 && <span style={{ margin: '0 10px', opacity: 0.7 }}>›</span>}
+                      {idx > 0 && <span style={{ margin: '0 10px', opacity: 0.7 }} aria-hidden="true">›</span>}
                       {b.href ? (
                         <Link to={b.href} style={{ color: '#be185d' }}>
                           {b.label}
                         </Link>
                       ) : (
-                        b.label
+                        <span aria-current="page">{b.label}</span>
                       )}
                     </span>
                   ))}
-                </div>
+                </nav>
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               {rightHeader}
+              <button onClick={signout} className="btn secondary" aria-label="Sign out">
+                Sign Out
+              </button>
             </div>
           </div>
 
-          {stats && stats.length > 0 && (
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#6b2a4a' }}>
+              <p>Loading dashboard data...</p>
+            </div>
+          )}
+
+          {error && !loading && (
+            <div style={{ textAlign: 'center', padding: '24px', color: '#dc2626', background: '#fef2f2', borderRadius: 12, marginBottom: 24 }}>
+              <p style={{ marginBottom: 12, fontWeight: 600 }}>Error: {error}</p>
+              {onRetry && (
+                <button onClick={onRetry} className="btn primary" style={{ marginTop: '10px' }}>
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
+
+          {!loading && !error && stats && stats.length > 0 && (
             <div className="card-grid" style={{ margin: '8px 0 32px' }}>
               {stats.map((s) => (
                 <div key={s.label} className="card" style={{ padding: 20 }}>
@@ -94,10 +119,9 @@ export default function DashboardShell({
             </div>
           )}
 
-          {children}
+          {!loading && !error && children}
         </div>
       </div>
     </div>
   )
 }
-

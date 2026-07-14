@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dns from 'dns';
+import bcrypt from 'bcryptjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
@@ -45,6 +46,10 @@ async function seedDatabase() {
     console.log('✅ Connected to database:', db.databaseName);
     console.log();
 
+    // Pre-hash passwords so seeded accounts can actually authenticate.
+    const adminHash = await bcrypt.hash('@2026C2f', 10);
+    const userHash = await bcrypt.hash('Milind@2000', 10);
+
     const signups = db.collection('signups');
     const enrollments = db.collection('enrollments');
     const contacts = db.collection('contacts');
@@ -60,7 +65,7 @@ async function seedDatabase() {
       name: 'Milind',
       email: 'shmilind2000@gmail.com',
       phone: '9876543210',
-      passwordHash: '$2b$10$KfiQlEBEGsFSBrUpGLiZUOeIgCQXvVKjlCiANvL/QQWtw1q/nefBe',
+      passwordHash: userHash,
       role: 'user',
       verified: true,
       whatsappNumber: '919876543210',
@@ -71,11 +76,11 @@ async function seedDatabase() {
     const adminResult = await signups.insertOne({
       name: 'Connect2Edtech Admin',
       email: 'hr@connect2future.com',
-      phone: '7019436720',
-      passwordHash: '$2b$10$KfiQlEBEGsFSBrUpGLiZUOeIgCQXvVKjlCiANvL/QQWtw1q/nefBe',
+      phone: '7019426720',
+      passwordHash: adminHash,
       role: 'admin',
       verified: true,
-      whatsappNumber: '917019436720',
+      whatsappNumber: '917019426720',
       createdAt: new Date('2026-07-13T21:43:14+05:30'),
     });
     console.log('✅ Admin user created:', adminResult.insertedId);
@@ -84,7 +89,7 @@ async function seedDatabase() {
       name: 'Test Student',
       email: 'student@test.com',
       phone: '9876543210',
-      passwordHash: '$2b$10$KfiQlEBEGsFSBrUpGLiZUOeIgCQXvVKjlCiANvL/QQWtw1q/nefBe',
+      passwordHash: adminHash,
       role: 'user',
       verified: true,
       whatsappNumber: '919876543210',
@@ -96,7 +101,7 @@ async function seedDatabase() {
       name: 'HR Manager',
       email: 'hr@test.com',
       phone: '9123456789',
-      passwordHash: '$2b$10$KfiQlEBEGsFSBrUpGLiZUOeIgCQXvVKjlCiANvL/QQWtw1q/nefBe',
+      passwordHash: adminHash,
       role: 'hr',
       verified: true,
       whatsappNumber: '919123456789',

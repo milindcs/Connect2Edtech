@@ -16,7 +16,7 @@ async function analyzeQueries() {
     console.log();
 
     // Analyze each collection
-    const collections = ['signups', 'enrollments', 'contacts'];
+    const collections = ['signups', 'enrollments', 'contacts', 'dashboard', 'settings'];
     
     console.log('📊 Collection Analysis:\n');
     

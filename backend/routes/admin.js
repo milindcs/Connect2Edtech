@@ -1,5 +1,5 @@
 import express from 'express';
-import { createDocument, find, findOne, updateById, deleteOne, countDocuments } from '../store.js';
+import { createDocument, find, findOne, updateById, deleteOne, countDocuments, upsertOne } from '../store.js';
 import { normalizeCourse, normalizeStudent, normalizeContact } from '../models/AdminModel.js';
 
 export function createAdminRouter() {
@@ -15,16 +15,26 @@ export function createAdminRouter() {
       const contacts = await countDocuments('contacts')
       const courses = await countDocuments('courses')
 
-      res.json({
-        ok: true,
-        stats: {
-          students: totalUsers,
-          hrUsers: admins + hrs,
-          courses: courses || 0,
-          enrollments: enrollments,
-          contacts,
-        },
-      })
+      const stats = {
+        students: totalUsers,
+        hrUsers: admins + hrs,
+        courses: courses || 0,
+        enrollments: enrollments,
+        contacts,
+      }
+
+      // Persist a snapshot of the dashboard stats into the dedicated
+      // "dashboard" collection so the overview is also stored in MongoDB.
+      try {
+        await upsertOne('dashboard', { type: 'overview' }, {
+          stats,
+          updatedAt: new Date(),
+        })
+      } catch (snapshotErr) {
+        console.error('Failed to persist dashboard snapshot:', snapshotErr.message)
+      }
+
+      res.json({ ok: true, stats })
     } catch (e) {
       console.error(e)
       res.status(500).json({ ok: false, error: 'Failed to load stats.' })

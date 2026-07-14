@@ -15,7 +15,7 @@ const data = JSON.stringify({
   email: 'hr@connect2future.com',
   password: '@2026C2f',
   name: 'HR Admin',
-  phone: '7019436720'
+  phone: '7019426720'
 });
 
 const req = http.request(options, (res) => {

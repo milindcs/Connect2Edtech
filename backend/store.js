@@ -103,11 +103,23 @@ export async function updateById(collectionName, id, update) {
   return res.value || null;
 }
 
+export async function upsertOne(collectionName, query, update) {
+  const coll = await getCollection(collectionName)
+  const mongoQuery = toMongoQuery(query)
+  const updateDoc = update?.$set ? update : { $set: update || {} }
+
+  const res = await coll.findOneAndUpdate(mongoQuery, updateDoc, {
+    upsert: true,
+    returnDocument: 'after',
+  })
+  return res.value || null
+}
+
 export async function deleteOne(collectionName, query) {
-  const coll = await getCollection(collectionName);
-  const mongoQuery = toMongoQuery(query);
-  const res = await coll.deleteOne(mongoQuery);
-  return res.deletedCount > 0;
+  const coll = await getCollection(collectionName)
+  const mongoQuery = toMongoQuery(query)
+  const res = await coll.deleteOne(mongoQuery)
+  return res.deletedCount > 0
 }
 
 export async function deleteMany(collectionName, query = {}) {

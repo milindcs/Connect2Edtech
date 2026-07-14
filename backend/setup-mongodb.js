@@ -41,6 +41,18 @@ async function setupMongoDB() {
           { key: { createdAt: -1 }, options: { name: 'created_at_idx' } },
           { key: { replied: 1 }, options: { name: 'replied_idx' } }
         ]
+      },
+      dashboard: {
+        indexes: [
+          { key: { type: 1 }, options: { unique: true, name: 'type_unique' } },
+          { key: { updatedAt: -1 }, options: { name: 'updated_at_idx' } }
+        ]
+      },
+      settings: {
+        indexes: [
+          { key: { type: 1 }, options: { unique: true, name: 'type_unique' } },
+          { key: { updatedAt: -1 }, options: { name: 'updated_at_idx' } }
+        ]
       }
     };
 

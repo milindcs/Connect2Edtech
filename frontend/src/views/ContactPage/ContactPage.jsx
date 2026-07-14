@@ -142,7 +142,7 @@ export default function ContactPage() {
                   required
                   type="tel"
                   name="phone"
-                  placeholder="+91 7019436720"
+                  placeholder="+91 7019426720"
                   value={formData.phone}
                   onChange={handleInputChange}
                 />
@@ -175,7 +175,9 @@ export default function ContactPage() {
               <span style={{ fontSize: '1.4rem' }}>📞</span>
               <div>
                 <p style={{ fontWeight: 600 }}>Phone Number</p>
-                <a href="tel:+917019436720" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>+91 7019436720</a>
+                <a href="tel:+917019426720" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>+91 7019426720</a>
+                <br />
+                <a href="tel:+917019045849" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>+91 7019045849</a>
               </div>
             </div>
 

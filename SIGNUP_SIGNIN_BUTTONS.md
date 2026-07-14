@@ -338,7 +338,7 @@ await signin(email, password)
   "user": {
     "name": "John Doe",
     "email": "john@example.com",
-    "phone": "+91 7019436720",
+    "phone": "+91 7019426720",
     "verified": true,
     "role": "user"
   }

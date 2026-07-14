@@ -29,6 +29,7 @@ import AdminRoute from '../views/AdminDashboard/AdminRoute'
 import StudentPage from '../views/StudentPage/StudentPage'
 import HrDashboard from '../views/HrDashboard/HrDashboard'
 import MailPage from '../views/MailPage/MailPage'
+import NotFoundPage from '../views/NotFoundPage'
 
 export default function App() {
   return (
@@ -49,7 +50,7 @@ export default function App() {
           <Route path="/mail" element={<MailPage />} />
           <Route path="/dashboard" element={<DashboardRedirect />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </SiteLayout>
     </AuthProvider>

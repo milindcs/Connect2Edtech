@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useCallback } from 'react'
 
 const getRowId = (r, index) => r?._id ?? r?.id ?? index
 
@@ -14,10 +14,11 @@ export default function DataTable({
   maxRows,
   selectable = false,
   onSelectionChange,
+  emptyMessage = 'No data found.',
 }) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
-  const [rowsPerPage] = useState(initialRowsPerPage)
+  const [rowsPerPage, setRowsPerPage] = useState(initialRowsPerPage)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
 
   const filtered = useMemo(() => {
@@ -51,21 +52,21 @@ export default function DataTable({
 
   const totalPages = showPagination ? Math.max(1, Math.ceil(limited.length / rowsPerPage)) : 1
 
-  const rowIdOf = (r) => getRowId(r, rows.indexOf(r))
+  const rowIdOf = useCallback((r) => getRowId(r, rows.indexOf(r)), [rows])
 
-  const emitSelection = (nextSet) => {
+  const emitSelection = useCallback((nextSet) => {
     setSelectedIds(nextSet)
     if (onSelectionChange) {
       const selectedRows = rows.filter((r) => nextSet.has(rowIdOf(r)))
       onSelectionChange(selectedRows, nextSet)
     }
-  }
+  }, [rows, rowIdOf, onSelectionChange])
 
-  const filteredIds = useMemo(() => filtered.map((r) => rowIdOf(r)), [filtered])
+  const filteredIds = useMemo(() => filtered.map((r) => rowIdOf(r)), [filtered, rowIdOf])
   const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id))
   const someFilteredSelected = filteredIds.some((id) => selectedIds.has(id))
 
-  const toggleSelectAll = () => {
+  const toggleSelectAll = useCallback(() => {
     const next = new Set(selectedIds)
     if (allFilteredSelected) {
       filteredIds.forEach((id) => next.delete(id))
@@ -73,14 +74,18 @@ export default function DataTable({
       filteredIds.forEach((id) => next.add(id))
     }
     emitSelection(next)
-  }
+  }, [selectedIds, filteredIds, allFilteredSelected, emitSelection])
 
-  const toggleRow = (id) => {
+  const toggleRow = useCallback((id) => {
     const next = new Set(selectedIds)
     if (next.has(id)) next.delete(id)
     else next.add(id)
     emitSelection(next)
-  }
+  }, [selectedIds, emitSelection])
+
+  const handlePageChange = useCallback((newPage) => {
+    setPage((p) => Math.max(0, Math.min(totalPages - 1, newPage)))
+  }, [totalPages])
 
   return (
     <div style={{ marginTop: 24 }}>
@@ -99,27 +104,35 @@ export default function DataTable({
               setPage(0)
             }}
             placeholder={filterTextPlaceholder}
+            aria-label={filterTextPlaceholder}
           />
         </div>
-        <div style={{ color: '#6b2a4a', fontWeight: 700 }}>
+        <div style={{ color: '#6b2a4a', fontWeight: 700 }} aria-live="polite">
           {filtered.length} result{filtered.length === 1 ? '' : 's'}
         </div>
         {selectable && selectedIds.size > 0 && (
-          <div style={{ color: '#6b2a4a', fontWeight: 700 }}>
+          <div style={{ color: '#9d174d', fontWeight: 700 }}>
             {selectedIds.size} selected
           </div>
         )}
       </div>
 
       {paged.length === 0 ? (
-        <p style={{ color: '#6b2a4a' }}>No data found.</p>
+        <div style={{ textAlign: 'center', padding: '48px 24px', color: '#6b2a4a' }}>
+          <p style={{ fontSize: '1.1rem', marginBottom: 8 }}>{emptyMessage}</p>
+          {query && (
+            <p style={{ marginTop: 8, fontSize: '0.9rem' }}>
+              Try adjusting your search query
+            </p>
+          )}
+        </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }} role="grid">
             <thead>
               <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
                 {selectable && (
-                  <th style={{ textAlign: 'left', padding: 8, width: 36 }}>
+                  <th style={{ textAlign: 'left', padding: 8, width: 36 }} scope="col">
                     <input
                       type="checkbox"
                       aria-label="Select all"
@@ -132,7 +145,7 @@ export default function DataTable({
                   </th>
                 )}
                 {columns.map((c) => (
-                  <th key={c.header} style={{ textAlign: 'left', padding: 8, whiteSpace: 'nowrap' }}>
+                  <th key={c.header} style={{ textAlign: 'left', padding: 8, whiteSpace: 'nowrap' }} scope="col">
                     {c.header}
                   </th>
                 ))}
@@ -147,7 +160,7 @@ export default function DataTable({
                       <td style={{ padding: 8, width: 36 }}>
                         <input
                           type="checkbox"
-                          aria-label="Select row"
+                          aria-label={`Select row ${id}`}
                           checked={selectedIds.has(id)}
                           onChange={() => toggleRow(id)}
                         />
@@ -168,16 +181,49 @@ export default function DataTable({
 
       {showPagination && totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 12, flexWrap: 'wrap' }}>
-          <button className="btn secondary" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page <= 0}>
+          <button 
+            className="btn secondary" 
+            onClick={() => handlePageChange(page - 1)} 
+            disabled={page <= 0}
+            aria-label="Go to previous page"
+          >
             ← Prev
           </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label htmlFor="rows-per-page" style={{ color: '#6b2a4a', fontWeight: 800, fontSize: '0.9rem' }}>
+              Rows per page:
+            </label>
+            <select
+              id="rows-per-page"
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value))
+                setPage(0)
+              }}
+              style={{
+                padding: '4px 8px',
+                border: '1px solid var(--border-color)',
+                borderRadius: 6,
+                background: '#fff',
+                color: '#6b2a4a',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
           <div style={{ color: '#6b2a4a', fontWeight: 800 }}>
             Page {page + 1} / {totalPages}
           </div>
           <button
             className="btn secondary"
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            onClick={() => handlePageChange(page + 1)}
             disabled={page >= totalPages - 1}
+            aria-label="Go to next page"
           >
             Next →
           </button>

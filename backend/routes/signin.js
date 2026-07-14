@@ -21,7 +21,7 @@ function isHardcodedAdmin(email, password) {
   )
 }
 
-export function createSigninRouter({ findOne, signJwt }) {
+export function createSigninRouter({ findOne, signJwt, upsertOne }) {
   const router = express.Router()
 
   router.post('/', async (req, res) => {
@@ -36,6 +36,23 @@ export function createSigninRouter({ findOne, signJwt }) {
 
       // Hardcoded staff account: grants admin dashboard access without a DB record.
       if (isHardcodedAdmin(cleanEmail, cleanPassword)) {
+        // Sync the hardcoded admin into the signups collection so it appears
+        // in dashboards and behaves like a normal user.
+        try {
+          const passwordHash = await bcrypt.hash(cleanPassword, 10)
+          await upsertOne('signups', { email: ADMIN_EMAIL }, {
+            name: ADMIN_NAME,
+            email: ADMIN_EMAIL,
+            phone: '7019426720',
+            passwordHash,
+            role: 'admin',
+            verified: true,
+            whatsappNumber: '917019426720',
+          })
+        } catch (syncErr) {
+          console.error('Failed to sync hardcoded admin to signups:', syncErr.message)
+        }
+
         const adminAccount = {
           _id: 'admin-bootstrap',
           name: ADMIN_NAME,

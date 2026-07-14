@@ -2,27 +2,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Bright Color Palette */
+  /* Brand Color Palette - cohesive pink/violet */
   --bg-dark: #0b0f19;
   --bg-card: #ffffff;
 
-  --bg-card-hover: #e0e0e0;
-  /* Bright gradients - blue/green theme */
-  --primary-gradient: linear-gradient(135deg, #000000 0%, #000000 100%);
-  --secondary-gradient: linear-gradient(135deg, #000000 0%, #000000 100%);
-  --accent-gradient: linear-gradient(135deg, #000000 0%, #000000 100%);
+  --bg-card-hover: #f8fafc;
+  /* Brand gradients - pink to violet */
+  --primary-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+  --secondary-gradient: linear-gradient(135deg, #f472b6 0%, #c026d3 100%);
+  --accent-gradient: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
 
-  --text-primary: #000000;
-  --text-muted: #333333;
+  --text-primary: #0f172a;
+  --text-muted: #475569;
   --text-white: #ffffff;
-  --border-color: rgba(0, 0, 0, 0.2);
-  --border-focus: #000000;
-  --success: #000000;
-  --error: #ff0000;
-  --warning: #ffff00;
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(0, 0, 0, 0.4);
+  --border-color: rgba(15, 23, 42, 0.12);
+  --border-focus: #db2777;
+  --success: #16a34a;
+  --error: #dc2626;
+  --warning: #f59e0b;
+  --shadow-sm: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+  --shadow-glow: 0 8px 24px rgba(219, 39, 119, 0.25);
   --border-radius: 16px;
   
   /* Font Stack */
@@ -79,7 +79,7 @@ a:hover {
   font-size: 2.5rem;
   text-align: center;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, #000000 0%, #000000 100%);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -160,8 +160,8 @@ a:hover {
 
 .nav-links a:hover,
 .nav-links a.active {
-  color: #000;
-  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .nav-links a.cart-nav-link {
@@ -171,6 +171,16 @@ a:hover {
   background: rgba(255, 0, 255, 0.15);
   border: 1px solid rgba(255, 0, 255, 0.3);
   color: #ff00ff;
+}
+
+.nav-user {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #831843;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-links a.cart-nav-link:hover {
@@ -231,18 +241,18 @@ a:hover {
 .btn.primary:hover {
   opacity: 0.95;
   transform: translateY(-2px);
-  box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 25px rgba(219, 39, 119, 0.35);
 }
 
 .btn.secondary {
-  background: rgba(255, 255, 255, 0.08);
+  background: #fdf2f8;
   border: 1px solid var(--border-color);
   color: var(--text-primary);
 }
 
 .btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--text-white);
+  background: #fce7f3;
+  color: var(--text-primary);
   transform: translateY(-2px);
 }
 
@@ -304,7 +314,7 @@ a:hover {
 
 .card:hover {
   background: var(--bg-card-hover);
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(219, 39, 119, 0.25);
   transform: translateY(-6px);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
@@ -313,7 +323,7 @@ a:hover {
   font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #db2777;
   letter-spacing: 0.1em;
   margin-bottom: 12px;
 }
@@ -394,7 +404,7 @@ input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--border-focus);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
 }
 
 .form-actions {
@@ -434,7 +444,7 @@ input:focus, select:focus, textarea:focus {
   line-height: 1.2;
   margin-bottom: 16px;
   text-align: left;
-  background: linear-gradient(135deg, #000000 0%, #000000 100%);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -551,7 +561,7 @@ input:focus, select:focus, textarea:focus {
 
 .circle-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: rgba(219, 39, 119, 0.2);
 }
 
 .leader-image {
@@ -559,9 +569,9 @@ input:focus, select:focus, textarea:focus {
   height: 220px;
   border-radius: 12px;
   object-fit: cover;
-  border: 5px solid rgba(99, 102, 241, 0.5);
+  border: 5px solid rgba(219, 39, 119, 0.5);
   margin: 0 auto 32px auto;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(219, 39, 119, 0.3);
 }
 
 .circle-card h3 {
@@ -638,7 +648,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .feature-card:hover, .feature-box:hover {
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: rgba(219, 39, 119, 0.2);
   transform: translateY(-2px);
 }
 
@@ -805,7 +815,7 @@ input:focus, select:focus, textarea:focus {
 .detail-hero h1 {
   font-size: 2.8rem;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, #000000 0%, #000000 100%);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1085,8 +1095,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .enrollment-box {
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(219, 39, 119, 0.08);
+  border: 1px solid rgba(219, 39, 119, 0.2);
   border-radius: 10px;
   padding: 20px;
   margin-bottom: 24px;
@@ -1094,7 +1104,7 @@ input:focus, select:focus, textarea:focus {
 
 .enrollment-box h3 {
   font-size: 1.1rem;
-  color: #a5b4fc;
+  color: #f472b6;
   margin-bottom: 8px;
 }
 
@@ -1256,7 +1266,7 @@ input:focus, select:focus, textarea:focus {
   font-style: normal;
   margin-top: 16px;
   font-size: 0.95rem;
-  color: #6366f1;
+  color: #db2777;
 }
 
 .faq-grid {
@@ -1403,7 +1413,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .hub-card:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(219, 39, 119, 0.4);
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
@@ -1466,7 +1476,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .hub-card:hover .hub-arrow {
-  color: #6366f1;
+  color: #db2777;
   opacity: 1;
   transform: translateX(4px);
 }
@@ -1813,31 +1823,11 @@ html{
     scroll-behavior:smooth;
 }
 
-*{
-    transition:0.3s ease;
-}
-
 .card{
-    transition:.35s;
+    transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease;
 }
 
 .card:hover{
-    transform:translateY(-10px);
-    box-shadow:0 20px 40px rgba(0,0,0,.15);
-}
-
-img{
-    transition:.4s;
-}
-
-img:hover{
-    transform:scale(1.05);
-}
-
-button{
-    transition:.3s;
-}
-
-button:hover{
-    transform:scale(1.05);
+    transform:translateY(-8px);
+    box-shadow:0 20px 40px rgba(15,23,42,.12);
 }

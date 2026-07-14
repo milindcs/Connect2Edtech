@@ -643,9 +643,9 @@ Creates a new user account and sends OTP email.
 {
   "name": "John Doe",
   "email": "john@example.com",
-  "phone": "+91 7019436720",
+  "phone": "+91 7019426720",
   "password": "SecurePass123",
-  "whatsappNumber": "+91 7019436720",
+  "whatsappNumber": "+91 7019426720",
   "connectWhatsapp": true,
   "role": "user"
 }
@@ -687,8 +687,8 @@ Authenticates user and returns JWT token.
   "user": {
     "name": "John Doe",
     "email": "john@example.com",
-    "phone": "+91 7019436720",
-    "whatsappNumber": "+91 7019436720",
+    "phone": "+91 7019426720",
+    "whatsappNumber": "+91 7019426720",
     "verified": true,
     "role": "user"
   }
@@ -723,8 +723,8 @@ Verifies email with OTP and returns JWT token.
   "user": {
     "name": "John Doe",
     "email": "john@example.com",
-    "phone": "+91 7019436720",
-    "whatsappNumber": "+91 7019436720",
+    "phone": "+91 7019426720",
+    "whatsappNumber": "+91 7019426720",
     "verified": true,
     "role": "user"
   }

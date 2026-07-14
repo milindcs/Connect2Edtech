@@ -1,7 +1,9 @@
-export const API_BASE = import.meta.env.VITE_API_URL || ""
+export const API_BASE = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api` 
+  : '';
 
 export async function enrollmentSubmit(payload) {
-  const res = await fetch(API_BASE + '/api/enrollment', {
+  const res = await fetch(`${API_BASE}/enrollment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

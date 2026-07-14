@@ -295,4 +295,62 @@
     font-weight:600;
 }
 
+/* WhatsApp number chooser popover */
+.whatsapp-cta-wrapper {
+  /* Positioning is applied inline; nothing needed here. */
+}
+
+.whatsapp-number-popover {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  width: 240px;
+  max-width: calc(100vw - 24px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  padding: 14px;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: whatsapp-pop-in 0.18s ease;
+}
+
+@keyframes whatsapp-pop-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.whatsapp-popover-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.whatsapp-popover-number {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #075e54;
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: background 0.18s ease;
+}
+
+.whatsapp-popover-number:hover {
+  background: #dcfce7;
+}
+
+.whatsapp-popover-number svg {
+  color: #25D366;
+  flex-shrink: 0;
+}
+
 

@@ -135,7 +135,7 @@ export default function EnrollmentPage() {
               rel="noopener noreferrer"
               style={{ color: '#25D366', fontWeight: 700 }}
             >
-              +91 7019436720
+              +91 7019426720 / +91 7019045849
             </a>
           </p>
           <div className="btn-row" style={{ justifyContent: 'center' }}>

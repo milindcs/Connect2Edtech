@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { coursesData } from '../../shared/coursesData'
 import { enrollmentSubmit } from '../../shared/cartApi'
 import { useAuth } from '../../shared/AuthContext'
+import { useToast } from '../../shared/useToast'
 
 export default function HomePage() {
   const { user } = useAuth()
+  const { showToast, ToastContainer } = useToast()
   useEffect(() => {
     document.title = 'Connect2Edtech - Home'
     const sections = document.querySelectorAll('.animate-on-scroll')
@@ -49,7 +51,7 @@ export default function HomePage() {
       const email = String(user?.email || '').trim()
       const phone = String(user?.phone || '').trim()
       if (!name || !email || !phone) {
-        alert('Please complete your profile with name, email, and phone before enrolling.')
+        showToast('Please complete your profile with name, email, and phone before enrolling.', 'error')
         return
       }
 
@@ -70,7 +72,7 @@ export default function HomePage() {
       setSelectedCourses([])
     } catch (err) {
       console.error(err)
-      alert(err.message || 'Failed to enroll selected courses.')
+      showToast(err.message || 'Failed to enroll selected courses.', 'error')
     } finally {
       setAdding(false)
     }
@@ -414,7 +416,8 @@ export default function HomePage() {
                   📧 Email: <a href="mailto:hr@connect2future.com" style={{ color: 'var(--text-primary)' }}>hr@connect2future.com</a>
                 </p>
                 <p style={{ color: 'var(--text-primary)' }}>
-                  📞 Phone: <a href="tel:+917019436720" style={{ color: 'var(--text-primary)' }}>+91 7019436720</a>
+                   📞 Phone: <a href="tel:+917019426720" style={{ color: 'var(--text-primary)' }}>+91 7019426720</a> /{' '}
+                  <a href="tel:+917019045849" style={{ color: 'var(--text-primary)' }}>+91 7019045849</a>
                 </p>
               </div>
               <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -455,6 +458,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {ToastContainer}
     </>
   )
 }

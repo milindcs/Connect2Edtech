@@ -78,6 +78,23 @@ Contact form submissions.
 }
 ```
 
+#### 4. dashboard
+Persisted snapshots of admin dashboard statistics (one document per `type`).
+```javascript
+{
+  _id: ObjectId,
+  type: String (unique),   // e.g. "overview"
+  stats: {
+    students: Number,
+    hrUsers: Number,
+    courses: Number,
+    enrollments: Number,
+    contacts: Number
+  },
+  updatedAt: Date
+}
+```
+
 ## Next Steps
   courseKey: String,
   title: String,
@@ -107,6 +124,10 @@ All indexes are created with `background: true` to avoid blocking operations.
 - `email_idx`: Index on email
 - `created_at_desc_idx`: Index on createdAt descending
 - `replied_created_idx`: Compound index on (replied, createdAt)
+
+### dashboard Collection
+- `type_unique`: Unique index on type (one snapshot document per type)
+- `updated_at_desc_idx`: Index on updatedAt descending
 
 ## Setup Scripts
 

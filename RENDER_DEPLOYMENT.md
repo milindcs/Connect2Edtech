@@ -171,7 +171,7 @@ curl -X POST https://connect2edtech.onrender.com/api/admin/bootstrap \
     "secret": "c2f-bootstrap-9f3a7b21e8d4a6c0b5e1f79a2d34c68",
     "email": "admin@connect2future.com",
     "name": "Admin User",
-    "phone": "7019436720",
+    "phone": "7019426720",
     "password": "YourSecurePassword123"
   }'
 ```

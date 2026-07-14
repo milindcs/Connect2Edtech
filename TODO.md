@@ -1,9 +1,7 @@
-# TODO - Move Dashboard to Frontend
+- [x] Gather repo context: inspected AuthContext, SigninPage, and router for dashboard redirect logic.
+- [x] Approved edit plan: route sign-in success to generic `/dashboard` so App redirects by role.
+- [x] Implemented: updated `frontend/src/views/SigninPage/SigninPage.jsx` to navigate to `/dashboard` after authentication.
+- [x] Test: frontend production build passed (manual runtime testing pending).
 
-- [x] Inspect frontend dashboard components + routing (Admin/Hr/Student + `/dashboard` redirect)
-- [x] Inspect backend `server.js` to confirm only API routes + static SPA fallback exist (no server-side dashboard pages)
-- [ ] Ensure frontend `/dashboard` and role routes are the only dashboard entrypoints (keep backend API + SPA fallback)
-- [ ] Optional cleanup: consolidate duplicate dashboard UI components (`frontend/src/views/dashboard/*` vs `frontend/src/views/shared/dashboard/*`)
-- [ ] Test manually: navigate to `/dashboard`, `/admin`, `/hr`, `/student` while authenticated/unauthenticated.
-- [ ] Build/run checks (frontend + backend) and fix any issues.
+
 

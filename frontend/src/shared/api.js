@@ -23,9 +23,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status
+    // Don't force a redirect for the background auth-refresh check or optional
+    // requests — that would bounce guests off public pages (e.g. the homepage).
+    const url = error?.config?.url || ''
     if (status === 401) {
-      localStorage.removeItem('connect2edtech-user')
-      window.location.href = '/signin'
+      if (url.includes('/api/auth/me')) {
+        // Stale/invalid token: clear it so the UI reflects a logged-out state
+        // instead of showing a broken "authenticated" experience.
+        localStorage.removeItem('connect2edtech-user')
+      } else {
+        localStorage.removeItem('connect2edtech-user')
+        window.location.href = '/signin'
+      }
     }
     return Promise.reject(error)
   }

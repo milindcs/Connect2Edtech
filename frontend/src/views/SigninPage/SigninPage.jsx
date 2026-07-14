@@ -65,10 +65,12 @@ export default function SigninPage() {
   useEffect(() => {
     if (!isAuthenticated) return
     localStorage.removeItem(STORAGE_KEY)
-    const role = user?.role
-    const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
-    navigate(target)
-  }, [isAuthenticated, user?.role, navigate])
+
+    // Always go through the generic dashboard route so it redirects by role.
+    // If role/user payload is missing, App's redirect will still work after refresh.
+    navigate('/dashboard', { replace: true })
+  }, [isAuthenticated, navigate])
+
 
   useEffect(() => {
     const script = document.createElement('script')

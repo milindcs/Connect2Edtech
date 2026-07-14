@@ -103,7 +103,7 @@ export default function HrDashboard() {
   const hrStats = stats ? [
     { label: 'Total Contacts', value: stats.contacts },
     { label: 'Enrollments', value: stats.enrollments },
-    { label: 'Revenue', value: `₹${stats.revenue || 0}` },
+    { label: 'Total Students', value: stats.students },
   ] : []
 
   return (
@@ -113,7 +113,7 @@ export default function HrDashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <div>
               <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 0 }}>HR Dashboard</h2>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>Admin</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#9d174d', background: 'rgba(236, 72, 153, 0.08)', padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(219, 39, 119, 0.15)' }}>{user?.role === 'hr' ? 'HR' : 'Admin'}</span>
             </div>
           </div>
 
