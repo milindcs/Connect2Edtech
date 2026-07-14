@@ -38,7 +38,8 @@ function PasswordInput({ label, name, value, onChange, placeholder, error, autoC
 
 export default function SigninPage() {
   const navigate = useNavigate()
-  const { signin, isAuthenticated, user } = useAuth()
+  // FIX: Destructured googleSignin from useAuth hook
+  const { signin, googleSignin, isAuthenticated, user } = useAuth()
 
   const [toasts, setToasts] = useState([])
   const [formData, setFormData] = useState(() => {
@@ -62,15 +63,17 @@ export default function SigninPage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: formData.email }))
   }, [formData.email])
 
+  // FIX: Centralized navigation rules based on your state.
+  // Instead of conflicting callbacks, this now handles all role-based redirecting seamlessly.
   useEffect(() => {
     if (!isAuthenticated) return
     localStorage.removeItem(STORAGE_KEY)
 
-    // Always go through the generic dashboard route so it redirects by role.
-    // If role/user payload is missing, App's redirect will still work after refresh.
-    navigate('/dashboard', { replace: true })
-  }, [isAuthenticated, navigate])
-
+    const role = user?.role
+    const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : role === 'user' ? '/user' : '/dashboard'
+    
+    navigate(target, { replace: true })
+  }, [isAuthenticated, user, navigate])
 
   useEffect(() => {
     const script = document.createElement('script')
@@ -90,6 +93,7 @@ export default function SigninPage() {
       const google = window.google
       if (!google) {
         showToast('Google Sign-In is loading. Please try again.', 'error')
+        setGoogleLoading(false)
         return
       }
 
@@ -97,14 +101,11 @@ export default function SigninPage() {
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
         callback: async (response) => {
           try {
-          const data = await googleSignin(response.credential)
-          showToast('Signed in with Google!', 'success')
-          const role = data?.user?.role
-          const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/user'
-          setTimeout(() => navigate(target), 500)
+            await googleSignin(response.credential)
+            showToast('Signed in with Google!', 'success')
+            // Navigation handled safely by the centralized useEffect hook above now
           } catch (err) {
             showToast(err.message || 'Google sign-in failed', 'error')
-          } finally {
             setGoogleLoading(false)
           }
         },
@@ -144,11 +145,9 @@ export default function SigninPage() {
 
     setIsSubmitting(true)
     try {
-      const data = await signin(email, formData.password)
+      await signin(email, formData.password)
       showToast('Signed in! Redirecting...', 'success')
-      const role = data?.user?.role
-      const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/user'
-      navigate(target)
+      // Navigation handled safely by the centralized useEffect hook above now
     } catch (err) {
       const message = err.message || 'Could not sign in. Please try again.'
       showToast(message, 'error')
@@ -193,7 +192,7 @@ export default function SigninPage() {
             autoComplete="current-password"
           />
 
-          <button className="btn primary auth-submit" type="submit" disabled={isSubmitting}>
+          <button className="btn primary auth-submit" type="submit" disabled={isSubmitting || googleLoading}>
             {isSubmitting ? (
               <>
                 <span className="spinner"></span>
