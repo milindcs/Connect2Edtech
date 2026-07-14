@@ -5,7 +5,6 @@ import dns from 'dns';
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import os from 'os';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
@@ -633,6 +632,4 @@ async function startServer() {
 }
 
 startServer();
-
-export default app;
 

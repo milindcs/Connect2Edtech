@@ -42,7 +42,7 @@ export default function NavBar({ pathname }) {
             {!isStaff && (
               <Link
                 to="/dashboard"
-                className={pathname === '/student' || pathname === '/dashboard' ? 'active' : ''}
+                className={pathname === '/user' || pathname === '/student' || pathname === '/dashboard' ? 'active' : ''}
               >
                 Dashboard
               </Link>

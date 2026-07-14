@@ -23,19 +23,26 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status
-    // Don't force a redirect for the background auth-refresh check or optional
-    // requests — that would bounce guests off public pages (e.g. the homepage).
     const url = error?.config?.url || ''
+
     if (status === 401) {
-      if (url.includes('/api/auth/me')) {
-        // Stale/invalid token: clear it so the UI reflects a logged-out state
-        // instead of showing a broken "authenticated" experience.
-        localStorage.removeItem('connect2edtech-user')
-      } else {
+      // Only force redirect for actual authentication endpoints that should never
+      // return 401 while the user is successfully authenticated. For everything
+      // else, just clear the stored credentials and let the UI handle it.
+      const authPaths = ['/api/auth/signin', '/api/auth/google', '/api/auth/signup']
+      const isAuthEndpoint = authPaths.some((p) => url.includes(p))
+
+      if (isAuthEndpoint) {
         localStorage.removeItem('connect2edtech-user')
         window.location.href = '/signin'
+      } else {
+        // For non-auth endpoints (e.g. /api/enrollment, /api/contact, etc.),
+        // clear stale tokens without an aggressive redirect so public pages
+        // don't bounce logged-out users unexpectedly.
+        localStorage.removeItem('connect2edtech-user')
       }
     }
+
     return Promise.reject(error)
   }
 )

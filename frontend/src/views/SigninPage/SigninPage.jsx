@@ -100,7 +100,7 @@ export default function SigninPage() {
           const data = await googleSignin(response.credential)
           showToast('Signed in with Google!', 'success')
           const role = data?.user?.role
-          const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+          const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/user'
           setTimeout(() => navigate(target), 500)
           } catch (err) {
             showToast(err.message || 'Google sign-in failed', 'error')
@@ -147,7 +147,7 @@ export default function SigninPage() {
       const data = await signin(email, formData.password)
       showToast('Signed in! Redirecting...', 'success')
       const role = data?.user?.role
-      const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/student'
+      const target = role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/user'
       navigate(target)
     } catch (err) {
       const message = err.message || 'Could not sign in. Please try again.'

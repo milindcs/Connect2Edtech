@@ -11,7 +11,7 @@ function DashboardRedirect() {
   const target =
     role === 'admin' ? '/admin'
     : role === 'hr' ? '/hr'
-    : role === 'student' || role === 'user' ? '/student'
+    : role === 'student' || role === 'user' ? '/user'
     : '/'
   return <Navigate to={target} replace />
 }
@@ -27,6 +27,7 @@ import SigninPage from '../views/SigninPage/SigninPage'
 import AdminDashboard from '../views/AdminDashboard/AdminDashboard'
 import AdminRoute from '../views/AdminDashboard/AdminRoute'
 import StudentPage from '../views/StudentPage/StudentPage'
+import UserDashboard from '../pages/user/UserDashboard'
 import HrDashboard from '../views/HrDashboard/HrDashboard'
 import MailPage from '../views/MailPage/MailPage'
 import NotFoundPage from '../views/NotFoundPage'
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />
           <Route path="/student" element={<StudentPage />} />
+          <Route path="/user" element={<UserDashboard />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/hr" element={<AdminRoute><HrDashboard /></AdminRoute>} />
           <Route path="/mail" element={<MailPage />} />
