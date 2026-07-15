@@ -1,0 +1,103 @@
+/* Basic styles for the SigninPage component */
+
+.signin-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at top, rgba(219, 39, 119, 0.10), transparent 60%),
+    linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(147, 51, 234, 0.06));
+}
+
+.signin-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(219, 39, 119, 0.25);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.signin-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.signin-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.signin-header h2 span {
+  color: #db2777;
+}
+
+.signin-header p {
+  margin: 8px 0 0;
+  color: #6b2a4a;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.signin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #831843;
+}
+
+.input-group input {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(131, 24, 67, 0.25);
+  padding: 0 12px;
+  outline: none;
+}
+
+.input-group input:focus {
+  border-color: rgba(219, 39, 119, 0.55);
+  box-shadow: 0 0 0 4px rgba(219, 39, 119, 0.12);
+}
+
+.signin-btn {
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: #db2777;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.05s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.signin-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.signin-btn:active {
+  transform: scale(0.99);
+}
+
