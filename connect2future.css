@@ -1,0 +1,1079 @@
+/* Reset */
+* { box-sizing: border-box; }
+:root {
+  color-scheme: dark;
+  color: #111111;
+  background: #f5f7fb;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+/* Site-wide generic layout helpers (used by multiple pages) */
+.content-center {
+  text-align: center;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+/* Page header */
+header { padding: 12px 0 8px; text-align: center; }
+/* Hero panel / auth / common sections */
+.hero-panel { display: flex; align-items: center; justify-content: center; }
+.auth-section { padding: 20px 0 28px; }
+.auth-container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+.auth-card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.auth-header { margin-bottom: 10px; }
+.auth-header h3 { margin: 0 0 6px; font-size: 1.6rem; color: #0f172a; }
+.auth-header p { margin: 0; color: #64748b; }
+/* Auth form basics */
+.contact-form { display: grid; gap: 12px; }
+.form-group { display: grid; gap: 6px; text-align: left; }
+.form-group label { font-weight: 650; color: #0f172a; font-size: 0.95rem; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #ffffff;
+  outline: none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+}
+.hint { font-size: 0.88rem; color: #6b7280; }
+.form-options { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; color: #0f172a; font-weight: 550; }
+.form-note { margin: 12px 0 0; color: rgba(15, 23, 42, 0.72); }
+.form-note a { color: #1d4ed8; text-decoration: underline; }
+/* Services / lists */
+.service-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: center;
+  gap: 14px;
+  margin-top: 8px;
+  width: 100%;
+}
+@media (max-width: 1024px) { .service-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1025px) { .service-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .service-list { grid-template-columns: 1fr; } }
+.service-list article {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: none;
+  border: none;
+  text-align: center;
+}
+.service-list article h3 { margin: 0 0 4px; color: #0f172a; }
+.service-list article p { margin: 0; color: #334155; }
+/* Reduce service images size */
+.service-list article img {
+  width: 100%;
+  height: auto;
+  max-height: 180px;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+}
+@media (max-width: 640px) { .service-list article img { max-width: 100%; } }
+
+/* Reviews (Homepage) */
+/* Force entire Reviews section centered regardless of global page text alignment */
+section:has(.Reviews-grid) {
+  text-align: center;
+}
+
+/*
+ * review card content kept at center via consolidated rule at line 131
+ */
+
+/* Ensure stars row is centered */
+.Reviews-grid .Homepage-stars {
+  justify-content: center !important;
+}
+
+/* Ensure avatar photo is centered */
+.Reviews-grid img[alt*="photo"],
+.Reviews-grid img[alt$="photo"] {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+
+.Reviews-container {
+  text-align: center;
+}
+
+
+/* Force each review card to size equally and keep content centered */
+.Reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.Reviews-grid > .reveal {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+
+/* Make stars appear next to the avatar photo (same row) */
+.Reviews-grid .Homepage-stars {
+  display: inline-flex !important;
+  vertical-align: middle;
+}
+
+.Reviews-grid .reveal {
+  align-items: center;
+}
+
+/* Ensure photo sits next to the stars by using flex row for the immediate children */
+.Reviews-grid .reveal .Homepage-stars {
+  width: fit-content;
+  display: inline-flex !important;
+}
+
+.Reviews-grid .reveal img[alt*="photo"],
+.Reviews-grid .reveal img[alt$="photo"] {
+  margin: 0 !important;
+  height: 50px;
+}
+
+/* Place stars next to the avatar photo by making the parent flow horizontally */
+.Reviews-grid .reveal {
+  /* keep layout stable for centered content */
+  display: flex !important;
+  flex-direction: column;
+}
+
+
+.Reviews-grid .reveal .Homepage-stars + img[alt*="photo"],
+.Reviews-grid .reveal .Homepage-stars + img[alt$="photo"] {
+  margin-left: 10px !important;
+}
+
+
+
+
+/* Homepage review alignment only: center photo + stars row without shifting other sections */
+.Reviews-grid .reveal img[alt$="photo"],
+.Reviews-grid .reveal img[alt*="photo"],
+.Reviews-grid .reveal .Homepage-stars {
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 0 !important;
+  white-space: nowrap;
+  transform: translateY(-1px);
+}
+
+
+
+
+/* keep photo + stars aligned without affecting other sections */
+.Reviews-grid .reveal img[alt$="photo"],
+.Reviews-grid .reveal img[alt*="photo"] {
+  margin-bottom: 0;
+  padding: 0;
+  display: block;
+  line-height: 0;
+}
+
+
+
+
+
+
+
+
+
+
+.Homepage-stars > svg,
+.Homepage-stars svg.stars {
+  display: inline-block !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Reviews images inside cards */
+.Reviews-grid img[alt$="photo"],
+.Reviews-grid img[alt*="photo"] {
+  display: block;
+  margin: 0 auto;
+  height: 50px;
+  width: auto;
+}
+
+.Homepage-stars > svg,
+.Homepage-stars svg.stars {
+  display: inline-block !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+
+/* For non-wrapped stars (the existing HTML has <svg> directly under the card)
+   Force them into a horizontal row so they render left-to-right. */
+.Reviews-grid > .reveal > .stars {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure any immediate svg list under a review card doesn't stack vertically */
+
+.Reviews-grid > .reveal > svg.stars {
+  margin: 0;
+  display: inline-block;
+}
+
+/* Reviews images inside cards */
+.Reviews-grid img[alt$="photo"],
+.Reviews-grid img[alt*="photo"] {
+  display: block;
+  margin: 0 auto;
+  height: 50px;
+  width: auto;
+}
+
+/* Apply same alignment to all star icons (no internal margins/gaps) */
+.Reviews-grid .Homepage-stars > svg.stars,
+.Reviews-grid .Homepage-stars svg.stars {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  line-height: 0;
+}
+
+/* Ensure no text-node whitespace affects inline rendering */
+.Reviews-grid .Homepage-stars {
+  font-size: 0;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  column-gap: 0;
+}
+
+/* Final override (wins over earlier legacy rules) */
+.Reviews-grid .Homepage-stars {
+  justify-content: center !important;
+}
+
+
+
+
+/* Ensure inline SVG stars don't create gaps between each other */
+.Reviews-grid .Homepage-stars svg.stars {
+  flex: 0 0 auto;
+}
+
+/* Override inline margins (even margin:auto) so stars touch */
+.Reviews-grid .Homepage-stars svg.stars {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 0 !important;
+}
+
+
+
+
+
+
+
+
+
+/* Reviews Section - force all stars into horizontal rows */
+.Homepage-stars {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0 !important;
+  white-space: nowrap !important;
+  font-size: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+
+.stars-row .stars {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+
+/* Reviews images inside cards */
+.Reviews-grid img[alt$="photo"],
+.Reviews-grid img[alt*="photo"] {
+  display: block;
+  margin: 0 auto;
+  height: 50px;
+  width: auto;
+}
+
+.Reviews-grid p {
+  margin-top: 0;
+  text-align: center;
+  width: 100%;
+}
+
+
+
+
+
+@media (max-width: 1024px) {
+  .Reviews-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .Reviews-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reachoutous (Homepage) alignment */
+.Reachoutous-container,
+.Reachouttous-container {
+  text-align: center;
+}
+
+.Reachoutous-grid,
+.Reachouttous-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  align-items: start;
+}
+
+.Reachoutous-grid > .reveal,
+.Reachouttous-grid > .reveal {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .Reachoutous-grid,
+  .Reachouttous-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard */
+.dashboard-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+.stat-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.stat-number { display: inline-block; font-size: 2rem; font-weight: 800; color: #1e3a8a; margin-bottom: 6px; }
+.stat-card p { margin: 0; color: #0f172a; }
+.dashboard-features { margin-top: 24px; }
+.features-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.feature-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  text-decoration: none;
+  color: #0f172a;
+}
+.feature-icon { font-size: 1.4rem; margin-bottom: 6px; }
+.dashboard-progress { margin-top: 24px; }
+.progress-item {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  margin-top: 12px;
+}
+.progress-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.progress-percent { font-weight: 700; color: #1e3a8a; }
+.progress-bar { width: 100%; height: 10px; border-radius: 999px; background: rgba(30, 58, 138, 0.12); overflow: hidden; }
+.progress-bar-fill { height: 100%; width: var(--progress, 0%); background: linear-gradient(90deg, #ff69b4 0%, #4169e1 100%); border-radius: 999px; transition: width 0.6s ease; }
+@media (max-width: 1024px) {
+  .dashboard-overview { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .auth-card { padding: 16px; }
+}
+body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #ff69b4 0%, #4169e1 100%); color: #111827; line-height: 1.6; }
+/* Skip link for accessibility */
+.skip-link { position: absolute; top: -100%; left: 0; background: #1e3a8a; color: white; padding: 10px 20px; z-index: 2000; transition: top 0.3s ease; }
+.skip-link:focus { top: 6px; }
+/* ============================================
+   ALIGNMENT UTILITIES
+   ============================================ */
+/* Text alignment utilities */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+/* Responsive text alignment utilities (mobile-first overrides) */
+@media (max-width: 768px) {
+  .text-left-on-mobile { text-align: left !important; }
+  .text-center-on-mobile { text-align: center !important; }
+  .text-right-on-mobile { text-align: right !important; }
+}
+/* Vertical alignment utilities */
+.valign-top { vertical-align: top; }
+.valign-middle { vertical-align: middle; }
+.valign-bottom { vertical-align: bottom; }
+/* Flex alignment utilities */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-start { display: flex; align-items: center; justify-content: flex-start; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-around { display: flex; align-items: center; justify-content: space-around; }
+/* Margin auto for centering */
+.mx-auto { margin-left: auto; margin-right: auto; }
+.my-auto { margin-top: auto; margin-bottom: auto; }
+/* Buttons alignment */
+.button-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.button-group.center { justify-content: center; }
+.button-group.right { justify-content: flex-end; }
+.button-group.between { justify-content: space-between; }
+/* Image alignment */
+.img-left { text-align: left; }
+.img-center { text-align: center; }
+.img-right { text-align: right; }
+.align-left { float: left; margin: 0 16px 16px 0; }
+.align-right { float: right; margin: 0 0 16px 16px; }
+.align-center { display: block; margin-left: auto; margin-right: auto; }
+.clearfix::after { content: ""; display: table; clear: both; }
+/* ============================================
+   ANIMATIONS & LOADING
+   ============================================ */
+/* Scroll reveal animation */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+/* Scroll reveal classes */
+.reveal { opacity: 1; transform: none; transition: none; }
+.reveal.visible { opacity: 1; transform: none; }
+.reveal.delay-1 { transition-delay: 0.1s; }
+.reveal.delay-2 { transition-delay: 0.2s; }
+.reveal.delay-3 { transition-delay: 0.3s; }
+.reveal.delay-4 { transition-delay: 0.4s; }
+/* Animation utility classes */
+.animate-fade-in { animation: fadeIn 0.6s ease-out; }
+.animate-slide-up { animation: slideInUp 0.6s ease-out; }
+.animate-slide-left { animation: slideInLeft 0.6s ease-out; }
+.animate-slide-right { animation: slideInRight 0.6s ease-out; }
+.animate-scale-in { animation: scaleIn 0.4s ease-out; }
+/* Skeleton loading */
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+.skeleton-circle { border-radius: 50%; }
+.skeleton-text { height: 1em; margin-bottom: 0.5em; }
+/* ==========================================
+   Modals
+   ========================================== */
+.modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.55); padding: 20px; overflow: auto; }
+.modal.open { display: flex; align-items: center; justify-content: center; }
+.modal-content { background: #ffffff; border-radius: 14px; max-width: 680px; width: 100%; padding: 16px; position: relative; }
+.modal-close { position: absolute; top: 10px; right: 10px; border: 0; background: transparent; font-size: 24px; cursor: pointer; line-height: 1; }
+/* Progress indicator */
+.progress-indicator { display: inline-block; width: 18px; height: 18px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+/* Loading overlay */
+.loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 10000; transition: opacity 0.3s ease; }
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+/* Reduced motion override */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.visible { transition: none; opacity: 1; transform: none; }
+  .animate-fade-in, .animate-slide-up, .animate-slide-left, .animate-slide-right, .animate-scale-in, .skeleton { animation: none; }
+}
+/* Hero & card images */
+.hero-image-card { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.hero-image-card img { width: 100%; height: 100%; object-fit: cover; object-position: center; background-color: #e5e7eb; display: block; }
+.image-showcase { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+.image-showcase .image-card { height: 100%; align-self: stretch; }
+@media (max-width: 1024px) { .image-showcase { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 768px) { .image-showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .image-showcase { grid-template-columns: 1fr; } }
+.hero-image-card img, .image-card img { width: 100%; height: 100%; object-fit: cover; object-position: center; background-color: #e5e7eb; display: block; }
+/* Testimonials */
+.testimonials-section { padding: 40px 0; }
+.testimonials-section .section-header { margin-bottom: 20px; }
+.testimonials-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.testimonial-card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 24px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.testimonial-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14); }
+.testimonial-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.testimonial-avatar { width: 48px; height: 48px; border-radius: 14px; object-fit: cover; background: #f3f4f6; }
+.testimonial-meta { display: flex; flex-direction: column; gap: 3px; }
+.testimonial-name { color: #1e3a8a; font-size: 1rem; letter-spacing: 0.01em; line-height: 1.2; }
+.testimonial-role { color: #6b7280; font-size: 0.88rem; line-height: 1.2; }
+.testimonial-quote { margin: 0; color: #0f172a; font-size: 1.05rem; line-height: 1.6; font-weight: 500; }
+@media (max-width: 1024px) { .testimonials-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .testimonials-section { padding: 30px 0; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .section-intro { text-align: center; margin-left: auto; margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-card { transition: none; }
+  .testimonial-card:hover { transform: none; }
+}
+/* Nav */
+nav { background: white; color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 20; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+.nav-toggle { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.nav-toggle-label { display: none; cursor: pointer; padding: 8px; z-index: 25; }
+.nav-toggle-label span { display: block; width: 22px; height: 3px; background: #ffffff; margin: 4px 0; transition: all 0.3s ease; border-radius: 2px; }
+.nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.brand-link { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-logo { height: 38px; width: auto; display: block; border-radius: 10px; object-fit: contain; }
+.brand-text { color: #ffffff; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.nav-links { display: flex; gap: 16px; list-style: none; margin: 0; padding: 0; }
+.nav-links a { color: #1e3a8a; text-decoration: none; transition: color 0.2s ease; }
+.nav-links a:hover { color: #0c2340; }
+.page-content { max-width: 1200px; margin: 0 auto; padding: 4px 0 4px 0; }
+/* Hero */
+.hero { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 20px; align-items: center; padding: 32px 28px; background: linear-gradient(135deg, rgba(255, 105, 180, 0.95), rgba(65, 105, 225, 0.95)); color: #ffffff; border-radius: 20px; box-shadow: 0 16px 44px rgba(15, 23, 42, 0.16); }
+.hero-copy { max-width: 600px; }
+.hero.left-align .hero-copy, .hero-left .hero-copy { text-align: left; }
+.hero.center-align .hero-copy, .hero-center .hero-copy { text-align: center; }
+.hero.right-align .hero-copy, .hero-right .hero-copy { text-align: right; }
+.eyebrow { display: inline-block; margin: 0 0 14px; font-size: 0.82rem; letter-spacing: 0.16em; text-transform: uppercase; color: #c7d2fe; }
+.hero h2 { margin: 0; font-size: clamp(2.2rem, 3.5vw, 4rem); line-height: 0.95; }
+.hero-text { margin: 18px 0 0; font-size: 1rem; line-height: 1.7; max-width: 580px; color: rgba(255, 255, 255, 0.9); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.hero-left .hero-copy { text-align: left; }
+.hero-center .hero-copy { text-align: center; margin-left: auto; margin-right: auto; }
+.hero-right .hero-copy { text-align: right; margin-left: auto; }
+.button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 999px; padding: 14px 28px; font-weight: 600; transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; font-size: 0.95rem; }
+.primary-button { background: #ffffff; color: #0c2340; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12); }
+.primary-button:hover { transform: translateY(-2px); }
+.secondary-button { background: rgba(255, 255, 255, 0.18); color: #ffffff; }
+@media (max-width: 768px) {
+  .nav-toggle-label { display: flex; flex-direction: column; position: absolute; top: 50%; right: 16px; transform: translateY(-50%); z-index: 30; }
+  .nav-links { position: fixed; top: 0; right: -100%; width: 75%; max-width: 280px; height: 100vh; background: #1e3a8a; flex-direction: column; padding: 70px 20px 20px; transition: right 0.3s ease; gap: 0; box-shadow: -8px 0 24px rgba(0,0,0,0.15); z-index: 25; }
+  .nav-toggle:checked ~ .nav-inner .nav-links { right: 0; }
+  .nav-links li { width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+  .nav-links a { display: block; padding: 14px 0; font-size: 1rem; }
+}
+@media (max-width: 640px) { .hero { padding: 24px 16px; grid-template-columns: 1fr; } }
+@media print { nav, .join-button, .nav-toggle-label { display: none !important; } body { background: white; color: black; } .hero { background: none !important; color: black !important; } img { max-width: 100%; height: auto; } }
+/* Stats counters (Homepage) */
+.stats-section { padding: 20px 0 16px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.stat-item { background: rgba(255, 255, 255, 0.92); border-radius: 16px; border: 1px solid rgba(226, 232, 240, 0.85); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); padding: 14px 12px; text-align: center; }
+.stat-value { font-size: 1.6rem; font-weight: 850; color: #1e3a8a; margin-bottom: 4px; }
+.stat-label { font-size: 0.9rem; color: #0f172a; font-weight: 650; }
+@media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } .stat-value { font-size: 1.6rem; } }
+/* Section layout helpers (Homepage) */
+.page-section { padding: 2px 0; overflow: hidden; }
+/* Join form (Homepage) */
+.form-section { width: 100%; box-sizing: border-box; padding: 20px 16px 10px; background: rgba(255, 255, 255, 0.05); display: flex; justify-content: center; }
+@media (max-width: 640px) { .form-section { justify-content: center; } }
+.form-container { max-width: 680px; margin: 0 auto; }
+.form-section form h1 { margin: 0 0 6px; font-size: 1.6rem; color: #0f172a; text-align: center; }
+.form-intro { margin: 0 0 14px; color: rgba(15, 23, 42, 0.72); text-align: center; }
+.form-section .contact-form { background: rgba(255, 255, 255, 0.98); border-radius: 22px; padding: 20px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12); border: 1px solid rgba(226, 232, 240, 0.8); }
+.form-section .button-group { margin-top: 6px; }
+/* Homepage global alignment (ALL sections) */
+.explore-page .page-content { text-align: left; }
+.explore-page .page-content .content-center { text-align: left; max-width: 100%; padding-left: 0; padding-right: 0; }
+.explore-page header { text-align: center; }
+.explore-page .page-section { text-align: left; }
+.page-content .content-center { text-align: left; max-width: 100%; padding-left: 4px; padding-right: 4px; }
+.page-content .page-section { text-align: left; }
+/* Ensure EdTech stays left aligned even with global rules */
+.edtech-section .content-center { text-align: left; padding-left: 0 !important; padding-right: 0 !important; }
+.edtech-section.page-section { padding: 2px 0; }
+.edtech-section h2,
+.edtech-section p { text-align: left; }
+
+/* Connect2job banner/cards (match EdTech alignment) */
+
+/* Align Connect2EdTech banner like Connect2Job */
+.connect2edtech-logo { display: block; margin: 0 auto 2px; max-width: 240px; }
+@media (max-width: 640px) { .connect2edtech-logo { max-width: 200px; margin-bottom: 2px; } }
+/* Also used to force EdTech alignment to behave like Connect2Job */
+.connect2job-like { text-align: left; }
+.connect2job-like-inner { text-align: left; max-width: 100%; padding: 0; margin: 0; }
+
+.connect2job-section { text-align: left; }
+.connect2job-section.page-section { padding: 2px 0; }
+.connect2job-section .content-center { text-align: left; max-width: 100%; padding: 0 !important; margin: 0 !important; }
+.connect2job-section .connect2job-banner { margin: 0 0 2px; }
+.connect2job-section h2 { margin: 2px 0 2px; font-size: 1.2rem; color: #0f172a; text-align: left; }
+.connect2job-section .content-center > p { color: #334155; margin: 0 0 2px; }
+
+/* Reuse same grid layout as EdTech section */
+.connect2job-section .edtech-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 2px; width: 100%; }
+.connect2job-section .edtech-grid article { background: rgba(255, 255, 255, 0.95); border-radius: 6px; padding: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.6); text-align: left; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; }
+.connect2job-section .edtech-grid article h3 { margin: 0 0 2px; color: #0f172a; font-size: 0.85rem; }
+.connect2job-section .edtech-grid article p { margin: 0; color: #334155; font-size: 0.75rem; }
+.connect2job-section .edtech-grid article p:nth-last-child(2) { margin-bottom: 0; }
+.connect2job-section .edtech-grid article .connect2job-card-img,
+.edtech-section .edtech-grid article .edtech-card-img,
+.edtech-grid article .connect2job-card-img { width: 100%; height: auto; max-height: 100px; display: block; margin: 0 auto 0; object-fit: contain; border-radius: 4px; }
+.connect2job-section .edtech-grid article img { max-width: 100%; height: auto; max-height: 100px; }
+@media (max-width: 1024px) { .connect2job-section .edtech-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .connect2job-section .edtech-grid { grid-template-columns: 1fr; } }
+.connect2job-banner { display: block; width: 100%; max-width: 240px; height: auto; margin: 0 auto 2px; }
+@media (max-width: 640px) { .connect2job-banner { max-width: 200px; margin-bottom: 2px; } }
+
+/* Apply same alignment/grid/card styling to Connect2EdTech */
+.edtech-section .edtech-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 2px; width: 100%; }
+.edtech-section .edtech-grid article { background: rgba(255, 255, 255, 0.95); border-radius: 6px; padding: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.6); text-align: left; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; }
+.edtech-section .edtech-grid article h3 { margin: 0 0 2px; color: #0f172a; font-size: 0.85rem; }
+.edtech-section .edtech-grid article p { margin: 0 0 2px; color: #334155; font-size: 0.75rem; }
+.edtech-section .edtech-grid article p:nth-last-child(2) { margin-bottom: 0; }
+.edtech-section .edtech-grid article .edtech-card-img { width: 100%; height: auto; max-height: 100px; display: block; margin: 2px auto 0; object-fit: contain; border-radius: 4px; }
+@media (max-width: 1024px) { .edtech-section .edtech-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .edtech-section .edtech-grid { grid-template-columns: 1fr; } }
+
+/* Add-on services: show 3 items per row (and can be reused by other sections) */
+.addon-services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+/* Remove duplicate/extra whitespace effects */
+
+
+/* How it works: remove card-box look */
+.howitworks-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px !important;
+  width: 100%;
+  justify-content: center;
+  align-items: start;
+}
+
+
+
+
+
+/* Keep boxes only for the 3 How-it-works articles */
+.howitworks-grid > .reveal:nth-child(2),
+.howitworks-grid > .reveal:nth-child(3),
+.howitworks-grid > .reveal:nth-child(4) {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+}
+
+/* Boxes only for steps 1..3 (exclude first article: “How It Works”) */
+.howitworks-grid > .reveal:nth-child(2),
+.howitworks-grid > .reveal:nth-child(3),
+.howitworks-grid > .reveal:nth-child(4) {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+}
+
+/* Centering helper for the CONNECT2FUTURE block */
+.CONNECT2FUTURE-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  align-content: start;
+}
+
+
+
+/* No boxes for CONNECT2FUTURE cards */
+.CONNECT2FUTURE-grid > .reveal {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove card/styling on Explore page (card = plain flex column) so content determines height */
+.explore-page .connect2job-section .edtech-grid article,
+.explore-page .edtech-section .edtech-grid article {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  /* article height is determined by its content — no forced minimum */
+  min-height: auto !important;
+  /* consistent flex column for content flow */
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* Flush all article direct children on Explore page — no extra padding/margin between h3, p, and img */
+.explore-page .connect2job-section .edtech-grid article > *,
+.explore-page .edtech-section .edtech-grid article > * {
+  margin: 0;
+  padding: 0;
+}
+.explore-page .connect2job-section .edtech-grid article > h3,
+.explore-page .edtech-section .edtech-grid article > h3 {
+  margin-bottom: 2px;
+}
+.explore-page .connect2job-section .edtech-grid article > p,
+.explore-page .edtech-section .edtech-grid article > p {
+  margin-bottom: 2px;
+}
+
+
+/* Reduce the "Time 4.jpg" image size inside CONNECT2FUTURE */
+
+
+
+/* Reduce the “Time 4.jpg” image size inside CONNECT2FUTURE */
+.CONNECT2FUTURE-grid img {
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+@media (max-width: 640px) {
+  .CONNECT2FUTURE-grid img {
+    max-width: 110px;
+  }
+}
+
+
+
+@media (max-width: 640px) {
+  .CONNECT2FUTURE-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+
+@media (max-width: 640px) {
+  .howitworks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Why2Choose section grid: align in one row */
+.why2choose-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+  justify-items: center;
+  text-align: center;
+}
+.why2choose-container .reveal {
+  width: 100%;
+}
+.why2choose-container .reveal h3,
+.why2choose-container .reveal p {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 1024px) {
+  .why2choose-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+
+
+.addon-services-grid article {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+}
+.addon-services-grid article h3 {
+  margin: 0 0 2px;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+.addon-services-grid article p {
+  margin: 0;
+  color: #334155;
+  font-size: 0.75rem;
+}
+@media (max-width: 640px) {
+  .addon-services-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Reachout logo sizing (Homepage) */
+.reachout-logo {
+  display: block;
+  width: 160px;
+  max-width: 70vw;
+  height: auto;
+  margin: 0 auto;
+}
+@media (max-width: 640px) {
+  .reachout-logo {
+    width: 130px;
+    max-width: 80vw;
+  }
+}
+
+/* Header students cover image */
+.header-students-cover { width: 40vw; max-width: 460px; height: auto; display: block; margin: 24px auto 0; }
+@media (max-width: 1024px) { .header-students-cover { width: 50vw; max-width: 360px; } }
+@media (max-width: 640px) { .header-students-cover { width: 70vw; max-width: 280px; margin-top: 16px; } }
+/* Company logos strip (Homepage header) */
+.company-logos-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.company-logo {
+  height: 26px;
+  width: 120px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  display: block;
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+@media (max-width: 768px) {
+  .company-logos-strip { gap: 4px; }
+  .company-logo { height: 24px; width: 80px; }
+}
+@media (max-width: 640px) {
+  .company-logos-strip { gap: 4px; justify-content: flex-start; }
+  .company-logo { height: 36px; width: 110px; }
+}
+
+/* Footer */
+.site-footer { background: white; color: black; padding: 12px 4px 12px; margin-top: 0; }
+.site-footer p,
+.site-footer h3,
+.site-footer h4 { color: #000000; }
+.site-footer a { color: #0f172a; }
+
+
+
+.footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 18px; align-items: start; }
+
+/* Vertical separators between footer columns (left to right) */
+@media (min-width: 641px) {
+  .footer-inner > article {
+    position: relative;
+  }
+  .footer-inner > article:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(15, 23, 42, 0.15);
+  }
+}
+.footer-brand { display: flex; flex-direction: column; gap: 10px; }
+.footer-brand .brand-link { justify-content: flex-start; }
+
+/* Footer logo sizing/align */
+.site-footer .footer-logo {
+  margin: 0 auto;
+  display: block;
+}
+
+/* Standardise all footer element text styles on .site-footer */
+.site-footer p,
+.site-footer h3,
+.site-footer h4 { color: #000000; }
+
+.site-footer article.reveal { text-align: center; }
+.footer-logo { height: 46px; width: auto; display: block; border-radius: 10px; object-fit: contain; background: transparent; }
+
+.footer-brand p { margin: 0; color: #000000; line-height: 1.6; }
+.footer-bottom { grid-column: 1 / -1; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(15, 23, 42, 0.15); text-align: center; }
+.footer-bottom p { margin: 0; color: #000000; font-size: 0.9rem; }
+
+
+/* Explore page alignment: keep text left but do NOT break layout alignment (flex/grid) */
+.explore-page {
+  text-align: left !important;
+}
+
+/* Only affect text elements (not layout containers) */
+.explore-page h2,
+.explore-page h3,
+.explore-page p {
+  text-align: left !important;
+}
+
+/* Keep Explore header media centered */
+.explore-page header {
+  text-align: center !important;
+}
+
+
+/* Reduce oversized plain images placed directly inside Explore section content (e.g., Zepto.jpeg) */
+.explore-page #Franchise\ Module {
+  /* Franchise module: keep consistent alignment */
+  text-align: left;
+}
+
+/* Franchise module: align images in rows */
+.explore-page #Franchise\ Module {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* All direct images become fixed-size framed thumbnails */
+.explore-page #Franchise\ Module > img {
+  flex: 0 0 auto;
+  display: block;
+
+  /* thumbnail (reduced) */
+  width: 150px;
+  height: 90px;
+
+  /* center image inside the frame */
+  border: 1px solid rgba(15, 23, 42, 0.35);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
+
+  object-fit: contain;
+  margin: 0;
+}
+
+
+
+
+
+
+@media (max-width: 900px) {
+  .explore-page #Franchise\ Module {
+    gap: 18px;
+  }
+
+  .explore-page #Franchise\ Module > img {
+    width: 44vw;
+    max-width: 170px;
+  }
+}
+
+
+
+
+
+
+
+
+
+.Reviews-grid .Homepage-stars > svg.stars,
+
+.Reviews-grid .Homepage-stars svg.stars {
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 0 !important;
+}
+
+
+
+
+
